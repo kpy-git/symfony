@@ -1,0 +1,60 @@
+#!/bin/bash
+
+UID = $(shell id -u)
+DOCKER_BE = sf-kompy-php
+APP_PATH = /var/www/html/app
+
+help: ## Show this help message
+	@echo 'usage: make [target]'
+	@echo
+	@echo 'targets:'
+	@egrep '^(.+)\:\ ##\ (.+)' ${MAKEFILE_LIST} | column -t -c 2 -s ':#'
+
+up: ## Start the containers
+	# docker network create application-network || true
+	# cp -n docker-compose.yml.dist docker-compose.yml || true
+	U_ID=${UID} APP_PATH=${APP_PATH} docker compose up -d
+
+stop: ## Stop the containers
+	U_ID=${UID} APP_PATH=${APP_PATH} docker compose stop
+
+destroy:
+	U_ID=${UID} APP_PATH=${APP_PATH} docker compose down --remove-orphans
+
+restart: ## Restart the containers
+	$(MAKE) stop && $(MAKE) start
+
+build: ## Rebuilds all the containers
+	# docker network create pym-network || true
+	# cp -n docker-compose.yml.dist docker-compose.yml || true
+	U_ID=${UID} APP_PATH=${APP_PATH} docker compose build --no-cache
+
+prepare: ## Runs backend commands
+	$(MAKE) composer-install && $(MAKE) assets-install && $(MAKE) assets-compile
+
+start: ## starts the Symfony development server
+	U_ID=${UID} docker exec -it --user ${UID} ${DOCKER_BE} symfony server:start -d
+
+init: ## starts containers and starts the Symfony server
+	$(MAKE) up && $(MAKE) start
+
+cache-clear:
+	U_ID=${UID} docker exec -it --user ${UID} ${DOCKER_BE} symfony console cache:clear
+
+logs: ## Show Symfony logs in real time
+	U_ID=${UID} docker exec -it --user ${UID} ${DOCKER_BE} symfony server:log
+
+# Backend commands
+composer-install: ## Installs composer dependencies
+	U_ID=${UID} docker exec --user ${UID} ${DOCKER_BE} symfony composer install --no-interaction
+
+assets-install:
+	U_ID=${UID} docker exec --user ${UID} ${DOCKER_BE} symfony  console importmap:install
+
+assets-compile:
+	U_ID=${UID} docker exec --user ${UID} ${DOCKER_BE} symfony console sass:build
+	U_ID=${UID} docker exec --user ${UID} ${DOCKER_BE} symfony console asset-map:compile
+# End backend commands
+
+ssh: ## bash into the be container
+	U_ID=${UID} docker exec -it --user ${UID} ${DOCKER_BE} bash

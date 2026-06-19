@@ -8,3 +8,9 @@
 /var/
 /vendor/
 ###< symfony/framework-bundle ###
+
+.idea/
+.vscode/
+
+docker-compose.yml
+Makefile
