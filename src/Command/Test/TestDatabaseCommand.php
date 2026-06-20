@@ -59,7 +59,7 @@ class TestDatabaseCommand extends Command
     private function getSqlTestByDatabase(string $database): string
     {
         return match ($database) {
-            'aqua' => "SELECT TOP 1 RTRIM(NUMERO_DOC) AS PEDIDO FRM DATOP01 WITH(NOLOCK) WHERE TIPOOPER='C' ORDER BY NUMERO DESC",
+            'aqua' => "SELECT TOP 1 RTRIM(NUMERO_DOC) AS PEDIDO FROM DATOP01 WITH(NOLOCK) WHERE TIPOOPER='C' ORDER BY NUMERO DESC",
             default => 'SELECT NOW()'
         };
     }
