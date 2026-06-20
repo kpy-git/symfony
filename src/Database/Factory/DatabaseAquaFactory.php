@@ -6,11 +6,14 @@ use App\Database\Database;
 use App\Database\DatabaseInterface;
 use App\Database\DatabaseLoggerDecorator;
 use App\Database\DatabaseType;
+use App\Database\Trait\DSNParser;
 use Psr\Log\LoggerAwareInterface;
 use Psr\Log\LoggerInterface;
 
 class DatabaseAquaFactory implements DatabaseFactoryInterface, LoggerAwareInterface
 {
+    use DSNParser;
+
     private LoggerInterface $logger;
 
     public function __construct(
@@ -34,7 +37,7 @@ class DatabaseAquaFactory implements DatabaseFactoryInterface, LoggerAwareInterf
             return new DatabaseLoggerDecorator(
                 $database,
                 $this->logger,
-                $this->aquaDSN,
+                $this->getDatabaseFrom($this->aquaDSN),
                 DatabaseType::SQLServer
             );
         }
