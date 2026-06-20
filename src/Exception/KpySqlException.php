@@ -26,4 +26,14 @@ class KpySqlException extends \Exception
     {
         return $this->method;
     }
+
+    public function __toString(): string
+    {
+        return implode("\n", [
+            $this->message,
+            $this->method,
+            $this->lastSql,
+            $this->sqlError,
+        ]);
+    }
 }

@@ -2,15 +2,12 @@
 
 namespace App\Database;
 
-use App\Exception\KpySqlException;
 use PDO;
 use PDOException;
 use PDOStatement;
 
-class Database
+class Database implements DatabaseInterface
 {
-    public const int MAX_ROWS_BATCH = 500;
-
     protected ?PDO $link = null;
 
     private string $lastSql = '';
@@ -34,39 +31,21 @@ class Database
     }
 
     /**
-     * @throws KpySqlException
-     */
-    protected function initializeConnection(): void
-    {
-        $this->connect();
-        $this->lastSql = '';
-        $this->sqlError = '';
-    }
-
-    /**
-     * @throws KpySqlException
+     * @throws PDOException
      */
     protected function connect(): void
     {
-        if ($this->link !== null) {
-            return;
-        }
-
         try {
-            $this->link = new PDO($this->dsn, $this->username, $this->password);
+            $this->link = new PDO($this->dsn, $this->username, $this->password, $this->options);
 
-            $this->link->setAttribute(PDO::ATTR_ERRMODE, PDO::ERRMODE_EXCEPTION);
-            $this->link->setAttribute(PDO::ATTR_EMULATE_PREPARES, false);
-            $this->sqlError = '';
-
-        } catch (PDOException $e) {
-            $this->sqlError = $e->getMessage();
-            throw new KpySqlException($e->getMessage(), __METHOD__, '', '');
+        } catch (PDOException $exception) {
+            $this->sqlError = $exception->getMessage();
+            throw $exception;
         }
     }
 
     /**
-     * @throws KpySqlException
+     * @throws PDOException
      */
     public function execute(string $sql, int $mode = PDO::FETCH_ASSOC): bool|array
     {
@@ -81,6 +60,24 @@ class Database
         return $this->link->query($sql)->fetchAll($mode);
     }
 
+    /**
+     * @throws PDOException
+     */
+    private function initializeConnection(): void
+    {
+        if (!$this->isConnected()) {
+            $this->connect();
+        }
+
+        $this->lastSql = '';
+        $this->sqlError = '';
+    }
+
+    public function isConnected(): bool
+    {
+        return $this->link !== null;
+    }
+
     private function isDML(string $sql): bool
     {
         $sqlSanitized = mb_strtoupper(trim($sql));
@@ -91,7 +88,7 @@ class Database
     }
 
     /**
-     * @throws KpySqlException
+     * @throws PDOException
      */
     public function getRow(string $sql): array
     {
@@ -111,7 +108,7 @@ class Database
     }
 
     /**
-     * @throws KpySqlException
+     * @throws PDOException
      */
     public function insert(string $table, array $data): bool
     {
@@ -119,7 +116,7 @@ class Database
     }
 
     /**
-     * @throws KpySqlException
+     * @throws PDOException
      */
     public function insertMany(string $table, array $data, int $maxValueInsert = self::MAX_ROWS_BATCH): int
     {
@@ -178,7 +175,8 @@ class Database
 
     /**
      * Obtiene el valor de la primera fila y la primera columna de los resultados de la consulta
-     * @throws KpySqlException
+     *
+     * @throws PDOException
      */
     public function getValue(string $sql): mixed
     {
@@ -198,22 +196,34 @@ class Database
         return preg_replace('/\s\s+/', ' ', $this->lastSql);
     }
 
+    /**
+     * @throws PDOException
+     */
     public function beginTransaction(): void
     {
         $this->initializeConnection();
         $this->link->beginTransaction();
     }
 
+    /**
+     * @throws PDOException
+     */
     public function commit(): void
     {
         $this->link->commit();
     }
 
+    /**
+     * @throws PDOException
+     */
     public function rollback(): void
     {
         $this->link->rollback();
     }
 
+    /**
+     * @throws PDOException
+     */
     public function prepare(string $sql, array $options = []): PDOStatement
     {
         $this->initializeConnection();
@@ -222,6 +232,9 @@ class Database
         return $this->link->prepare($sql, $options);
     }
 
+    /**
+     * @throws PDOException
+     */
     public function prepareForSelect(string $sql): PDOStatement
     {
         $this->initializeConnection();

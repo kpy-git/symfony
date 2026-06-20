@@ -5,6 +5,7 @@ namespace App\Command\Test;
 use App\Database\DatabaseBus;
 use App\Exception\KpyNotFoundDatabaseException;
 use App\Exception\KpySqlException;
+use PDOException;
 use Symfony\Component\Console\Attribute\Argument;
 use Symfony\Component\Console\Attribute\AsCommand;
 use Symfony\Component\Console\Command\Command;
@@ -22,10 +23,12 @@ class TestDatabaseCommand extends Command
 
     public function __invoke(
         #[Argument] string $databaseName,
-        InputInterface $input,
-        OutputInterface $output)
+        InputInterface     $input,
+        OutputInterface    $output
+    ): int
     {
         $io = new SymfonyStyle($input, $output);
+        $database = null;
 
         try {
             $database = $this->databaseBus->getDatabaseBy(['name' => $databaseName]);
@@ -37,8 +40,18 @@ class TestDatabaseCommand extends Command
 
             return Command::SUCCESS;
 
-        } catch (KpyNotFoundDatabaseException|KpySqlException $exception) {
+        } catch (KpyNotFoundDatabaseException $exception) {
             $io->error($exception->getMessage());
+            return Command::FAILURE;
+
+        } catch (PDOException $exception) {
+            $kpySqlException = new KpySqlException(
+                $exception->getMessage(),
+                __METHOD__,
+                $database->getLastSql(),
+                $database->getSqlError()
+            );
+            $io->error($kpySqlException);
             return Command::FAILURE;
         }
     }
@@ -46,7 +59,7 @@ class TestDatabaseCommand extends Command
     private function getSqlTestByDatabase(string $database): string
     {
         return match ($database) {
-            'aqua' => "SELECT TOP 1 RTRIM(NUMERO_DOC) AS PEDIDO FROM DATOP01 WITH(NOLOCK) WHERE TIPOOPER='C' ORDER BY NUMERO DESC",
+            'aqua' => "SELECT TOP 1 RTRIM(NUMERO_DOC) AS PEDIDO FRM DATOP01 WITH(NOLOCK) WHERE TIPOOPER='C' ORDER BY NUMERO DESC",
             default => 'SELECT NOW()'
         };
     }

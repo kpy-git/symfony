@@ -3,6 +3,7 @@
 namespace App\Database\Factory;
 
 use App\Database\Database;
+use App\Database\DatabaseInterface;
 use App\Database\DatabaseLoggerDecorator;
 use App\Database\DatabaseType;
 use Psr\Log\LoggerAwareInterface;
@@ -20,18 +21,25 @@ class DatabaseAquaFactory implements DatabaseFactoryInterface, LoggerAwareInterf
 
     }
 
-    public function create(): Database
+    public function create(): DatabaseInterface
     {
-        $database = new DatabaseLoggerDecorator(
+        $database = new Database(
             $this->aquaDSN,
             $this->aquaUser,
             $this->aquaPassword,
             []
         );
 
-        return $database
-            ->setLogger($this->logger)
-            ->setType(DatabaseType::SQLServer);
+        if (strtolower($_ENV['LOG_DATABASE_QUERIES']) === 'enabled') {
+            return new DatabaseLoggerDecorator(
+                $database,
+                $this->logger,
+                $this->aquaDSN,
+                DatabaseType::SQLServer
+            );
+        }
+
+        return $database;
     }
 
     public function supports(array $context = []): bool
@@ -46,11 +54,6 @@ class DatabaseAquaFactory implements DatabaseFactoryInterface, LoggerAwareInterf
     public function isActive(): bool
     {
         return true;
-    }
-
-    public function getLocatorKey(): string
-    {
-        return $this->aquaDSN;
     }
 
     public function setLogger(LoggerInterface $logger): void

@@ -6,7 +6,7 @@ namespace App\Database;
 use App\Database\Factory\DatabaseFactoryInterface;
 use App\Exception\KpyNotFoundDatabaseException;
 
-class DatabaseBus
+readonly class DatabaseBus
 {
     /** @var DatabaseFactoryInterface[] $factories */
     public function __construct(
@@ -17,10 +17,10 @@ class DatabaseBus
     /**
      * @throws KpyNotFoundDatabaseException
      */
-    public function getDatabaseBy(array $context): Database
+    public function getDatabaseBy(array $context): DatabaseInterface
     {
         foreach ($this->factories as $factory) {
-            if ($factory->supports($context)) {
+            if ($factory->isActive() && $factory->supports($context)) {
                 return $factory->create();
             }
         }
