@@ -4,17 +4,11 @@ namespace App\Database\Factory;
 
 use App\Database\Database;
 use App\Database\DatabaseInterface;
-use App\Database\DatabaseLoggerDecorator;
 use App\Database\DatabaseType;
-use App\Database\Trait\DSNParser;
-use Psr\Log\LoggerAwareInterface;
-use Psr\Log\LoggerInterface;
 
-class DatabaseAquaFactory implements DatabaseFactoryInterface, LoggerAwareInterface
+class DatabaseAquaFactory implements DatabaseFactoryInterface
 {
-    use DSNParser;
 
-    private LoggerInterface $logger;
 
     public function __construct(
         private readonly string $aquaDSN,
@@ -26,23 +20,12 @@ class DatabaseAquaFactory implements DatabaseFactoryInterface, LoggerAwareInterf
 
     public function create(): DatabaseInterface
     {
-        $database = new Database(
+        return new Database(
             $this->aquaDSN,
             $this->aquaUser,
             $this->aquaPassword,
             []
         );
-
-        if (strtolower($_ENV['LOG_DATABASE_QUERIES']) === 'enabled') {
-            return new DatabaseLoggerDecorator(
-                $database,
-                $this->logger,
-                $this->getDatabaseFrom($this->aquaDSN),
-                DatabaseType::SQLServer
-            );
-        }
-
-        return $database;
     }
 
     public function supports(array $context = []): bool
@@ -59,8 +42,14 @@ class DatabaseAquaFactory implements DatabaseFactoryInterface, LoggerAwareInterf
         return true;
     }
 
-    public function setLogger(LoggerInterface $logger): void
+
+    public function getDatabaseType(): DatabaseType
     {
-        $this->logger = $logger;
+        return DatabaseType::SQLServer;
+    }
+
+    public function getDSN(): string
+    {
+        return $this->aquaDSN;
     }
 }
