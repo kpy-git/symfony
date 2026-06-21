@@ -1,7 +1,9 @@
 <?php
 
-namespace App\Database;
+namespace App\Database\Decorator;
 
+use App\Database\DatabaseInterface;
+use App\Database\DatabaseType;
 use PDO;
 use PDOException;
 use PDOStatement;

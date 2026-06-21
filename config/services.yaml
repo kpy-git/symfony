@@ -19,7 +19,10 @@ services:
             $aquaUser: '%env(AQUA_USER)%'
             $aquaPassword: '%env(AQUA_PASSWORD)%'
 
-
+            $kompyDbUser: '%env(KOMPY_DB_USER)%'
+            $kompyDbPassword: '%env(KOMPY_DB_PASSWORD)%'
+            $kompyDSN: '%env(KOMPY_DB_DSN)%'
+            $kompyDbPrefix: '%env(KOMPY_DB_PREFIX)%'
 
     # makes classes in src/ available to be used as services
     # this creates a service per class whose id is the fully-qualified class name

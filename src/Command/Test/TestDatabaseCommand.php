@@ -60,6 +60,7 @@ class TestDatabaseCommand extends Command
     {
         return match ($database) {
             'aqua' => "SELECT TOP 1 RTRIM(NUMERO_DOC) AS PEDIDO FROM DATOP01 WITH(NOLOCK) WHERE TIPOOPER='C' ORDER BY NUMERO DESC",
+            'kompy' => 'SELECT id_order FROM ps_orders ORDER BY id_order DESC LIMIT 1',
             default => 'SELECT NOW()'
         };
     }

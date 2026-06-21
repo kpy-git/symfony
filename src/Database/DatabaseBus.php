@@ -3,6 +3,7 @@
 namespace App\Database;
 
 
+use App\Database\Decorator\DatabaseLoggerDecorator;
 use App\Database\Factory\DatabaseFactoryInterface;
 use App\Database\Trait\DSNParser;
 use App\Exception\KpyNotFoundDatabaseException;
