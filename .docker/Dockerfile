@@ -46,6 +46,8 @@ RUN curl -1sLf 'https://dl.cloudsmith.io/public/symfony/stable/setup.alpine.sh' 
 
 RUN rm -rf /var/cache/apk/*
 
+COPY ./openssl.cnf /etc/ssl/openssl.cnf
+
 RUN mkdir ${APP_PATH}
 
 WORKDIR ${APP_PATH}

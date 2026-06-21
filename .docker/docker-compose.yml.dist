@@ -20,7 +20,6 @@ services:
             - ./:${APP_PATH}
             - .docker/custom-fpm.conf:/usr/local/etc/php-fpm.d/z-custom-fpm.conf:ro
             - .docker/custom-php.ini:/usr/local/etc/php/conf.d/z-custom-php.ini:ro
-            - .docker/openssl.cnf:/etc/ssl/openssl.cnf:ro
         user: ${U_ID}
         networks:
             - kompy-net
