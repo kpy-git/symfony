@@ -38,7 +38,7 @@ class DatabaseBus implements LoggerAwareInterface
                 return new DatabaseLoggerDecorator(
                     $database,
                     $this->logger,
-                    $this->getDatabaseFrom($factory->getDSN()),
+                    $this->getDatabaseNameFrom($factory->getDSN()),
                     $factory->getDatabaseType()
                 );
             }
@@ -47,6 +47,16 @@ class DatabaseBus implements LoggerAwareInterface
         throw new KpyNotFoundDatabaseException('No se ha encontrado ninguna base de datos soportada');
     }
 
+    public function getAllActiveDatabases(): array
+    {
+        $factories = [...$this->factories];
+        return array_reduce($factories, function (array $databases, DatabaseFactoryInterface $factory) {
+            if ($factory->isActive()) {
+                $databases[$this->getDatabaseNameFrom($factory->getDSN())] = $factory->create();
+            }
+            return $databases;
+        }, []);
+    }
 
     public function setLogger(LoggerInterface $logger): void
     {

@@ -13,15 +13,15 @@ use Symfony\Component\Console\Input\InputInterface;
 use Symfony\Component\Console\Output\OutputInterface;
 use Symfony\Component\Console\Style\SymfonyStyle;
 
-#[AsCommand(name: 'kpy:test:database', description: 'Test database connection')]
-class TestDatabaseCommand extends Command
+
+readonly class TestDatabaseCommand
 {
-    public function __construct(private DatabaseBus $databaseBus, ?string $name = null, ?callable $code = null)
+    public function __construct(private DatabaseBus $databaseBus)
     {
-        parent::__construct($name, $code);
     }
 
-    public function __invoke(
+    #[AsCommand(name: 'kpy:test:database', description: 'Test database connection')]
+    public function testDatabaseConnection(
         #[Argument] string $databaseName,
         InputInterface     $input,
         OutputInterface    $output
@@ -59,9 +59,36 @@ class TestDatabaseCommand extends Command
     private function getSqlTestByDatabase(string $database): string
     {
         return match ($database) {
-            'aqua' => "SELECT TOP 1 RTRIM(NUMERO_DOC) AS PEDIDO FROM DATOP01 WITH(NOLOCK) WHERE TIPOOPER='C' ORDER BY NUMERO DESC",
-            'kompy' => 'SELECT id_order FROM ps_orders ORDER BY id_order DESC LIMIT 1',
+            'aqua', 'PIENSOSDATA' => "SELECT TOP 1 RTRIM(NUMERO_DOC) AS PEDIDO FROM DATOP01 WITH(NOLOCK) WHERE TIPOOPER='C' ORDER BY NUMERO DESC",
+            'kompy', 'kompy_db', 'kompydev' => 'SELECT id_order FROM ps_orders ORDER BY id_order DESC LIMIT 1',
             default => 'SELECT NOW()'
         };
+    }
+
+    #[AsCommand(name: 'kpy:test:databases', description: 'Test all databases connection')]
+    public function testAllDatabasesConnection(InputInterface $input, OutputInterface $output): int
+    {
+        $io = new SymfonyStyle($input, $output);
+
+        foreach ($this->databaseBus->getAllActiveDatabases() as $databaseName => $database) {
+            try {
+                $io->success([
+                    $databaseName . ': conexión realizada correctamente',
+                    $database->getValue($this->getSqlTestByDatabase($databaseName))
+                ]);
+
+            } catch (PDOException $exception) {
+                $kpySqlException = new KpySqlException(
+                    $exception->getMessage(),
+                    __METHOD__,
+                    $database->getLastSql(),
+                    $database->getSqlError()
+                );
+                $io->error($kpySqlException);
+                return Command::FAILURE;
+            }
+        }
+
+        return Command::SUCCESS;
     }
 }

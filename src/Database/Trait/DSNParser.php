@@ -10,7 +10,7 @@ trait DSNParser
         'sqlite',
     ];
 
-    public function getDatabaseFrom(string $dsn): string
+    public function getDatabaseNameFrom(string $dsn): string
     {
         if (!str_contains($dsn, ':')) {
             return $dsn;
