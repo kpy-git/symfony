@@ -27,11 +27,7 @@ readonly class DatabaseLoggerDecorator implements DatabaseInterface
             str_repeat($char, 30)
         );
 
-        $this->logger->debug(
-            str_repeat($char, 5) .
-            str_repeat(' ', 100) .
-            str_repeat($char, 5)
-        );
+        $this->logger->debug(str_repeat($char, 110));
     }
 
     private function printFooterSeparator(string $char = '-'): void
