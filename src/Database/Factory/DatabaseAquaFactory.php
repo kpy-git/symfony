@@ -6,14 +6,14 @@ use App\Database\Database;
 use App\Database\DatabaseInterface;
 use App\Database\DatabaseType;
 
-class DatabaseAquaFactory implements DatabaseFactoryInterface
+readonly class DatabaseAquaFactory implements DatabaseFactoryInterface
 {
 
 
     public function __construct(
-        private readonly string $aquaDSN,
-        private readonly string $aquaUser,
-        private readonly string $aquaPassword)
+        private string $aquaDSN,
+        private string $aquaUser,
+        private string $aquaPassword)
     {
 
     }
@@ -23,8 +23,7 @@ class DatabaseAquaFactory implements DatabaseFactoryInterface
         return new Database(
             $this->aquaDSN,
             $this->aquaUser,
-            $this->aquaPassword,
-            []
+            $this->aquaPassword
         );
     }
 
