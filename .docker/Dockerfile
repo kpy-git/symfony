@@ -26,13 +26,16 @@ RUN chmod +x /usr/local/bin/install-php-extensions && \
                            pdo_mysql \
                            pdo_sqlsrv \
                            gd \
-                           ftp
+                           ftp \
+                           xdebug
 
 ENV TZ=Europe/Madrid
 # Alpine usa tzdata para manejar las zonas horarias
 RUN apk add --no-cache tzdata && \
     cp /usr/share/zoneinfo/$TZ /etc/localtime && \
     echo $TZ > /etc/timezone
+
+COPY ./xdebug.ini "${PHP_INI_DIR}/conf.d"
 
 RUN mv "$PHP_INI_DIR/php.ini-development" "$PHP_INI_DIR/php.ini"
 
