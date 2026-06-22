@@ -24,20 +24,21 @@ class DSNParserTest extends TestCase
         $this->assertEquals('test', $this->getDatabaseNameFrom('mysql:host=localhost;dbname=test'));
     }
 
-    public function testGetDSNWhenUnknownDriverGiven(): void
+    public function testFailWhenUnknownDriverGiven(): void
     {
-        $this->assertEquals(
-            'pgsql:host=localhost;port=5432;dbname=testdb;user=bruce;password=mypass',
-            $this->getDatabaseNameFrom('pgsql:host=localhost;port=5432;dbname=testdb;user=bruce;password=mypass')
-        );
+        $this->expectException(\InvalidArgumentException::class);
+        $this->expectExceptionMessageIsOrContains('Driver no permitido');
+
+        $this->getDatabaseNameFrom('pgsql:host=localhost;port=5432;dbname=testdb;user=bruce;password=mypass');
+
     }
 
-    public function testGetDSNWhenInvalidDSNGiven(): void
+    public function testFailNWhenInvalidDSNGiven(): void
     {
-        $this->assertEquals(
-            'invalid-dsn;host=localhost;port=5432;dbname=test',
-            $this->getDatabaseNameFrom('invalid-dsn;host=localhost;port=5432;dbname=test')
-        );
+        $this->expectException(\InvalidArgumentException::class);
+        $this->expectExceptionMessageIs('DSN mal formado');
+
+        $this->getDatabaseNameFrom('invalid-dsn;host=localhost;port=5432;dbname=test');
     }
 
     public function testParseParams(): void

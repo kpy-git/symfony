@@ -13,13 +13,13 @@ trait DSNParser
     public function getDatabaseNameFrom(string $dsn): string
     {
         if (!str_contains($dsn, ':')) {
-            return $dsn;
+            throw new \InvalidArgumentException('DSN mal formado');
         }
 
         [$driver, $params] = explode(':', $dsn);
 
         if (!in_array($driver, $this->acceptedDSNs)) {
-            return $dsn;
+            throw new \InvalidArgumentException('Driver no permitido, valores válidos: ' . implode(', ', $this->acceptedDSNs));
         }
 
         $parsedParams = $this->parseParams($params);
