@@ -3,8 +3,8 @@
 namespace App\Command\Test;
 
 use App\Database\DatabaseBus;
-use App\Exception\KpyNotFoundDatabaseException;
-use App\Exception\KpySqlException;
+use App\Database\Exception\KpyNotFoundDatabaseException;
+use App\Database\Exception\KpySqlException;
 use PDOException;
 use Symfony\Component\Console\Attribute\Argument;
 use Symfony\Component\Console\Attribute\AsCommand;

@@ -1,6 +1,6 @@
 <?php
 
-namespace App\Exception;
+namespace App\Database\Exception;
 
 class KpyNotFoundDatabaseException extends \Exception
 {
