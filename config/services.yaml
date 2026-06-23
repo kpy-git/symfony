@@ -9,6 +9,9 @@
 parameters:
     kpy.base_domain: '%env(BASE_DOMAIN)%'
 
+    kpy.feeds_dir: '%kernel.project_dir%/public/feeds'
+    kpy.google_merchant_feed_dir: '%kpy.feeds_dir%/google/'
+
 services:
     # default configuration for services in *this* file
     _defaults:
@@ -34,14 +37,26 @@ services:
     # please note that last definitions always *replace* previous ones
 
     _instanceof:
-        App\Database\Factory\DatabaseFactoryInterface:
+        App\Shared\Infrastructure\Database\Factory\DatabaseFactoryInterface:
             tags: ['kpy.database_factory']
 
-    # si queremos inyectar una instancia de Database para Aqua, symfony usara el factory para crear la instancia
+    # si queremos inyectar una instancia de Database para Aqua, Symfony usara el factory para crear la instancia
     aquaDatabase:
-        class: App\Database\Database
-        factory: [ '@App\Database\Factory\DatabaseAquaFactory', 'create' ]
+        class: App\Shared\Infrastructure\Database\Database
+        factory: [ '@App\Shared\Infrastructure\Database\Factory\DatabaseAquaFactory', 'create' ]
 
-    App\Database\DatabaseBus:
+    aquaDatabaseLogger:
+        class: App\Shared\Infrastructure\Database\Decorator\DatabaseLoggerDecorator
+        arguments:
+            $database: '@aquaDatabase'
+            $databaseName: ''
+            $type: !php/const App\Shared\Infrastructure\Database\DatabaseType::SQLServer
+
+
+    App\Shared\Infrastructure\Database\DatabaseBus:
         arguments:
             - !tagged_iterator kpy.database_factory
+
+    App\ShippingCostCalculator\Infrastructure\Persistence\Repository\RangeRepository:
+        arguments:
+            $aquaDatabase: '@aquaDatabaseLogger'

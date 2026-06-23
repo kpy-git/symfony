@@ -2,7 +2,7 @@
 
 namespace App\Tests\Database\Trait;
 
-use App\Database\Trait\DSNParser;
+use App\Shared\Infrastructure\Database\Trait\DSNParser;
 use PHPUnit\Framework\TestCase;
 
 class DSNParserTest extends TestCase
