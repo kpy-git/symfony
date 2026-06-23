@@ -27,7 +27,8 @@ RUN chmod +x /usr/local/bin/install-php-extensions && \
                            pdo_sqlsrv \
                            gd \
                            ftp \
-                           xdebug
+                           xdebug \
+                           bcmath
 
 ENV TZ=Europe/Madrid
 # Alpine usa tzdata para manejar las zonas horarias
