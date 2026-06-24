@@ -5,5 +5,5 @@ services:
     App\ShippingCostCalculator\Service\Calculator:
         public: true
 
-    App\ShippingCostCalculator\Infraestructure\Repository\RangeRepository:
+    App\ShippingCostCalculator\Infrastructure\Repository\RangeRepository:
         public: true
