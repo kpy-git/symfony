@@ -1,6 +1,6 @@
 <?php
 
-namespace App\ShippingCostCalculator\Domain;
+namespace App\Shared\Domain\Aggregate;
 
 enum Destination: string
 {

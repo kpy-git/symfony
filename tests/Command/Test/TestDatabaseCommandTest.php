@@ -4,10 +4,10 @@ declare(strict_types=1);
 
 namespace App\Tests\Command\Test;
 
-use Symfony\Bundle\FrameworkBundle\Test\WebTestCase;
+use Symfony\Bundle\FrameworkBundle\Test\KernelTestCase;
 use Symfony\Component\Console\Exception\RuntimeException;
 
-class TestDatabaseCommandTest extends WebTestCase
+class TestDatabaseCommandTest extends KernelTestCase
 {
     public function testCannotExecuteWithoutDatabaseArgument(): void
     {
@@ -45,6 +45,15 @@ class TestDatabaseCommandTest extends WebTestCase
     {
         $result = static::runCommand('kpy:test:database', [
             'database-name' => 'kompy',
+        ]);
+
+        $this->assertCommandIsSuccessful($result);
+    }
+
+    public function testExecuteDoctrineDatabase(): void
+    {
+        $result = static::runCommand('kpy:test:database', [
+            'database-name' => 'doctrine',
         ]);
 
         $this->assertCommandIsSuccessful($result);

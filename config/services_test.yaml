@@ -2,8 +2,5 @@
 services:
     # para poder probarlo hay que declararlo público o como no se usa en ningún servicio en la prueba el container lo eliminará
     # Hace que el servicio sea accesible vía $container->get() solo en tests
-    App\ShippingCostCalculator\Service\Calculator:
-        public: true
-
-    App\ShippingCostCalculator\Infrastructure\Repository\RangeRepository:
+    App\ShippingCostCalculator\Domain\Service\CalculatorShippingCost:
         public: true

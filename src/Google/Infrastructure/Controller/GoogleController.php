@@ -2,8 +2,8 @@
 
 namespace App\Google\Infrastructure\Controller;
 
+use App\Shared\Domain\Aggregate\Destination;
 use App\ShippingCostCalculator\Domain\Builder\CarrierBuilder;
-use App\ShippingCostCalculator\Domain\Destination;
 use App\ShippingCostCalculator\Domain\Service\CalculatorShippingCost;
 use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
 use Symfony\Component\HttpFoundation\JsonResponse;

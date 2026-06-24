@@ -1,6 +1,6 @@
 <?php
 
-namespace App\Shared\Service;
+namespace App\Shared\Domain\Service;
 
 class PriceConverter
 {

@@ -2,7 +2,9 @@
 
 namespace App\ShippingCostCalculator\Domain\Exception;
 
-class ShippingCostException extends \Exception
+use App\Shared\Domain\Exception\KpyException;
+
+class ShippingCostException extends KpyException
 {
 
 }

@@ -4,7 +4,7 @@ declare(strict_types=1);
 
 namespace App\Tests\Shared\Service;
 
-use App\Shared\Service\PriceConverter;
+use App\Shared\Domain\Service\PriceConverter;
 use PHPUnit\Framework\TestCase;
 
 class PriceConverterTest extends TestCase

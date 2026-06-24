@@ -2,7 +2,9 @@
 
 namespace App\ShippingCostCalculator\Domain\Exception;
 
-class CarrierNotFoundException extends \Exception
+use App\Shared\Domain\Exception\KpyException;
+
+class CarrierNotFoundException extends KpyException
 {
 
 }

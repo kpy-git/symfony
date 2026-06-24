@@ -2,10 +2,10 @@
 
 namespace App\Tests\ShippingCostCalculator\Service;
 
+use App\Shared\Domain\Aggregate\Destination;
 use App\ShippingCostCalculator\Domain\Aggregate\Range;
 use App\ShippingCostCalculator\Domain\Aggregate\RangeAdditionalPerKg;
 use App\ShippingCostCalculator\Domain\Carrier;
-use App\ShippingCostCalculator\Domain\Destination;
 use App\ShippingCostCalculator\Domain\Exception\ShippingCostException;
 use App\ShippingCostCalculator\Domain\Service\CalculatorShippingCost;
 use PHPUnit\Framework\Attributes\DataProvider;

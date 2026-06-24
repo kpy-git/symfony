@@ -2,8 +2,8 @@
 
 namespace App\ShippingCostCalculator\Domain\Builder;
 
+use App\Shared\Domain\Aggregate\Destination;
 use App\ShippingCostCalculator\Domain\Carrier;
-use App\ShippingCostCalculator\Domain\Destination;
 use App\ShippingCostCalculator\Domain\Repository\CarrierRepositoryInterface;
 use App\ShippingCostCalculator\Domain\Repository\RangeRepositoryInterface;
 

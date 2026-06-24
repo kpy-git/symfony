@@ -2,8 +2,8 @@
 
 namespace App\ShippingCostCalculator\Domain\Service;
 
+use App\Shared\Domain\Aggregate\Destination;
 use App\ShippingCostCalculator\Domain\Carrier;
-use App\ShippingCostCalculator\Domain\Destination;
 use App\ShippingCostCalculator\Domain\Exception\ShippingCostException;
 
 class CalculatorShippingCost

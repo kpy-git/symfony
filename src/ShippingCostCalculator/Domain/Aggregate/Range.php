@@ -2,7 +2,7 @@
 
 namespace App\ShippingCostCalculator\Domain\Aggregate;
 
-use App\Shared\Service\PriceConverter;
+use App\Shared\Domain\Service\PriceConverter;
 
 class Range implements RangeInterface
 {

@@ -62,4 +62,28 @@ class DatabaseBus implements LoggerAwareInterface
     {
         $this->logger = $logger;
     }
+
+    /**
+     * @throws KpyNotFoundDatabaseException
+     */
+    public function getAquaDatabase(): DatabaseInterface
+    {
+        return $this->getDatabaseBy(['name' => 'aqua']);
+    }
+
+    /**
+     * @throws KpyNotFoundDatabaseException
+     */
+    public function getKompyDatabase(): DatabaseInterface
+    {
+        return $this->getDatabaseBy(['name' => 'kompy']);
+    }
+
+    /**
+     * @throws KpyNotFoundDatabaseException
+     */
+    public function getDoctrineDatabase(): DatabaseInterface
+    {
+        return $this->getDatabaseBy(['name' => 'doctrine']);
+    }
 }

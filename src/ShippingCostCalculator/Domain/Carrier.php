@@ -2,6 +2,7 @@
 
 namespace App\ShippingCostCalculator\Domain;
 
+use App\Shared\Domain\Aggregate\Destination;
 use App\ShippingCostCalculator\Domain\Aggregate\Range;
 use App\ShippingCostCalculator\Domain\Aggregate\RangeAdditionalPerKg;
 use App\ShippingCostCalculator\Domain\Exception\ShippingCostException;

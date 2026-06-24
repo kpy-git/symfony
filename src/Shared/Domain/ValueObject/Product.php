@@ -1,0 +1,54 @@
+<?php
+
+namespace App\Shared\Domain\ValueObject;
+
+use App\Shared\Domain\Exception\KpyInvalidProductCode;
+
+class Product
+{
+    private string $sku;
+
+    private function __construct(private readonly int $productId, private readonly int $productAttributeId)
+    {
+        $this->setSku($productId, $productAttributeId);
+    }
+
+    /**
+     * @throws KpyInvalidProductCode
+     */
+    public static function fromSKU(string $sku): static
+    {
+        if (!str_contains($sku, '-')) {
+            throw new KpyInvalidProductCode('Código de producto incorrecto: ' . $sku);
+        }
+
+        [$id, $attr] = explode('-', $sku);
+
+        return new self((int)$id, (int)$attr);
+    }
+
+    public static function from(int $productId, int $productAttributeId): static
+    {
+        return new self($productId, $productAttributeId);
+    }
+
+    private function setSku(int $productId, int $productAttributeId): void
+    {
+        $this->sku = $productId . '-' . $productAttributeId;
+    }
+
+    public function getSku(): string
+    {
+        return $this->sku;
+    }
+
+    public function getProductId(): int
+    {
+        return $this->productId;
+    }
+
+    public function getProductAttributeId(): int
+    {
+        return $this->productAttributeId;
+    }
+}
