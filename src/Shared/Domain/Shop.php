@@ -1,14 +1,12 @@
 <?php
 
-namespace App\Google\Aggregate;
-
-use App\Shared\Domain\Aggregate\Destination;
+namespace App\Shared\Domain;
 
 enum Shop: string
 {
     case KOMPY_ES = 'KOMPY_ES';
 
-    public function getShopId(): int
+    public function getId(): int
     {
         return match ($this) {
             self::KOMPY_ES => 1,
@@ -49,10 +47,10 @@ enum Shop: string
         return $shippingsPrice[self::KOMPY_ES->value][$destination->value] ?? 0;
     }
 
-    public function getCountryISO(): string
+    public function getDefaultCountry(): Country
     {
         return match ($this) {
-            self::KOMPY_ES => 'ES',
+            self::KOMPY_ES => Country::SPAIN,
         };
     }
 
@@ -60,6 +58,13 @@ enum Shop: string
     {
         return match ($this) {
             self::KOMPY_ES => 'kompymascotas.com',
+        };
+    }
+
+    public function getKeyColumnSalePrice(): string
+    {
+        return match ($this) {
+            self::KOMPY_ES => 'PYM',
         };
     }
 }

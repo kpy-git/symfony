@@ -2,12 +2,21 @@
 
 namespace App\ShippingCostCalculator\Domain\Service;
 
-use App\Shared\Domain\Aggregate\Destination;
+use App\Shared\Domain\Destination;
 use App\ShippingCostCalculator\Domain\Carrier;
 use App\ShippingCostCalculator\Domain\Exception\ShippingCostException;
 
 class CalculatorShippingCost
 {
+    private ?Carrier $carrier;
+    private ?Destination $destination;
+
+    public function __construct()
+    {
+        $this->carrier = null;
+        $this->destination = null;
+    }
+
     /**
      * @throws ShippingCostException
      */
@@ -36,5 +45,27 @@ class CalculatorShippingCost
         } catch (ShippingCostException) {
             throw new ShippingCostException('El transportista "%s" no tiene ningún rango configurado para %.2f kg. Revisa el peso máximo establecido o configura un rango nuevo', $carrier, $weight);
         }
+    }
+
+    public function setFixedCarrierAnDestination(Carrier $carrier, Destination $destination): void
+    {
+        $this->carrier = $carrier;
+        $this->destination = $destination;
+    }
+
+    /**
+     * @throws ShippingCostException
+     */
+    public function calculateShippingCostByWeightWithSavedConfiguration(float $weight): float
+    {
+        if ($this->carrier === null) {
+            throw new ShippingCostException('No se puede calcular el coste del transporte, no hay ningún transportista configurado. ¿se te ha olvidado llamar al método CalculatorShippingCost::setFixedCarrierAnDestination?');
+        }
+
+        if ($this->destination === null) {
+            throw new ShippingCostException('No se puede calcular el coste del transporte, no hay ningún destino configurado. ¿se te ha olvidado llamar al método CalculatorShippingCost::setFixedCarrierAnDestination?');
+        }
+
+        return $this->getShippingCostBy($this->carrier, $this->destination, $weight);
     }
 }

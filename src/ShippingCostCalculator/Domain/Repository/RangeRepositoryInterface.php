@@ -2,7 +2,7 @@
 
 namespace App\ShippingCostCalculator\Domain\Repository;
 
-use App\Shared\Domain\Aggregate\Destination;
+use App\Shared\Domain\Destination;
 
 interface RangeRepositoryInterface
 {

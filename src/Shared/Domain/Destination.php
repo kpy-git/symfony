@@ -1,6 +1,6 @@
 <?php
 
-namespace App\Shared\Domain\Aggregate;
+namespace App\Shared\Domain;
 
 enum Destination: string
 {

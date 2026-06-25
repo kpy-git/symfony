@@ -2,8 +2,8 @@
 
 namespace App\Google\Domain;
 
-use App\Google\Aggregate\Shop;
-use App\Shared\Domain\Aggregate\Destination;
+use App\Shared\Domain\Destination;
+use App\Shared\Domain\Shop;
 
 class GoogleMerchantFeed
 {
@@ -25,24 +25,23 @@ class GoogleMerchantFeed
 
     public string $pais;
 
-    public string $nombreFichero;
+    private string $outputFilename;
 
-    protected array $skusWithCodeAlternative;
-
-    protected Shop $shop;
-
-    public function __construct(Shop $shop, $debug = false)
+    public function __construct(
+        private readonly Shop $shop,
+        protected array       $skusWithCodeAlternative
+    )
     {
-        $this->nombreFichero = 'feedkompymascotas.xml';
+        $this->outputFilename = 'feedkompymascotas.xml';
 
-        if ($debug) {
-            $this->nombreFichero = 'debug_' . $this->nombreFichero;
+        if (GoogleDebugMode::on()) {
+            $this->outputFilename = 'debug_' . $this->outputFilename;
         }
 
         $this->dominio = $shop->getDomain();
         $this->gastosEnvio = $shop->shippingPriceByDestination(Destination::PENINSULA);
         $this->limiteParaGastosEnvio = $shop->priceLimitToShippingFree();
-        $this->pais = $shop->getCountryISO();
+        $this->pais = $shop->getDefaultCountry()->getISO();
 
         $this->nombre = str_replace('https://', '', $this->dominio);
         $this->productosEnFeed = 0;
@@ -50,12 +49,6 @@ class GoogleMerchantFeed
         $this->salida = '';
 
         $this->inicializaCabecera();
-        $this->reseteaProductosManuales();
-
-        $fileSkusAlternatives = $_ENV['APP_SHARE_DIR'] . '/skus_with_code_alternative.json';
-        $this->skusWithCodeAlternative = is_readable($fileSkusAlternatives) ? json_decode(file_get_contents($fileSkusAlternatives), true) : [];
-
-        $this->shop = $shop;
     }
 
     private function inicializaCabecera(): void
@@ -66,18 +59,11 @@ class GoogleMerchantFeed
         $this->salida .= "<link href='" . $this->dominio . "' rel='alternate' type='text/html'/>\n";
         $this->salida .= "<modified>" . date("Y-m-d H:i:s") . "</modified>\n";
         $this->salida .= "<author><name>" . $this->nombre . "</name></author>\n";
-
-        $this->escribeCabeceraEnFichero($this->salida);
     }
 
-    private function escribeCabeceraEnFichero($cabecera): void
+    public function closeFeed(): void
     {
-        file_put_contents($this->nombreFichero, $cabecera);
-    }
-
-    public function reseteaProductosManuales(): void
-    {
-        DbPymMssql::getInstance()->escribe("UPDATE DATPYMPRDPRICES01 SET GSHOPINGESP=0");
+        $this->salida .= "</feed>\n";
     }
 
     public function obtieneNumeroProductosAnteriores(): void
@@ -117,8 +103,6 @@ class GoogleMerchantFeed
             $nodo = "<entry>\n";
             $nodo .= $this->generaNodo($producto);
             $nodo .= "</entry>\n";
-
-            $this->escribeNodoEnFichero($nodo);
 
             $this->salida .= $nodo;
             $this->marcaProductoComoIncluidoEnFeed($producto['sku']);
@@ -199,10 +183,6 @@ class GoogleMerchantFeed
         return $nodo;
     }
 
-    private function escribeNodoEnFichero($nodo): void
-    {
-        file_put_contents($this->nombreFichero, $nodo, FILE_APPEND);
-    }
 
     private function marcaProductoComoIncluidoEnFeed(string $sku): void
     {
@@ -218,31 +198,9 @@ class GoogleMerchantFeed
             $nodo .= "<g:multipack>{$pack['quantity']}</g:multipack>\n";
             $nodo .= "</entry>\n";
 
-            $this->escribeNodoEnFichero($nodo);
-
             $this->salida .= $nodo;
             $this->marcaProductoComoIncluidoEnFeed($pack['sku']);
         }
-    }
-
-    public function cerrarFeed(): void
-    {
-        file_put_contents($this->nombreFichero, '</feed>', FILE_APPEND);
-
-        $this->marcarEnAquaTodosLosProductosDelFeed();
-    }
-
-    public function marcarEnAquaTodosLosProductosDelFeed(): void
-    {
-        $skus = "('" . implode("','", $this->idsProductosEnFeed) . "')";
-        $sql = "UPDATE DATPYMPRDPRICES01 SET GSHOPINGESP=1 WHERE PRODUCTO IN {$skus}";
-
-        DbPymMssql::getInstance()->escribe($sql);
-    }
-
-    public function escribeFeedCompleto(): void
-    {
-        file_put_contents($this->nombreFichero, $this->salida . "</feed>");
     }
 
     public function getDominio(): string
@@ -266,11 +224,16 @@ class GoogleMerchantFeed
 
     public function getNombreFicheroFeed(): string
     {
-        return $this->nombreFichero;
+        return $this->outputFilename;
     }
 
     public function getNumeroProductosAnteriores(): int
     {
         return $this->numeroProductosAnteriores;
+    }
+
+    public function getFeed(): string
+    {
+        return $this->salida;
     }
 }

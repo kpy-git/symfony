@@ -2,9 +2,11 @@
 
 namespace App\Google\Infrastructure\Provider;
 
+use App\Shared\Domain\Shop;
 use App\Shared\Infrastructure\Database\DatabaseBus;
 use App\Shared\Infrastructure\Database\DatabaseInterface;
 use App\Shared\Infrastructure\Database\Exception\KpyNotFoundDatabaseException;
+use Symfony\Component\DependencyInjection\Attribute\Autowire;
 
 class Provider
 {
@@ -16,14 +18,22 @@ class Provider
 
     private DatabaseInterface $doctrineDatabase;
 
+    private string $varDir;
+
     /**
      * @throws KpyNotFoundDatabaseException
      */
-    public function __construct(private readonly DatabaseBus $databaseBus)
+    public function __construct(
+        private readonly DatabaseBus $databaseBus,
+        #[Autowire('%kernel.project_dir%')]
+        string $srcDir
+    )
     {
         $this->aquaDatabase = $this->databaseBus->getAquaDatabase();
         $this->kompyDatabase = $this->databaseBus->getKompyDatabase();
         $this->doctrineDatabase = $this->databaseBus->getDoctrineDatabase();
+
+        $this->varDir = $srcDir . '/var/google/';
     }
 
     public function infoAqua(): array
@@ -73,6 +83,52 @@ class Provider
         return $productos;
     }
 
+    public function getProductosDesdePS(Shop $shop): array
+    {
+        $sqlObtieneProductos = "
+        WITH taxes as (
+        select trg.id_tax_rules_group, t.rate
+        from ps_tax_rules_group trg
+        inner join ps_tax_rule tr on tr.id_tax_rules_group = trg.id_tax_rules_group and tr.id_country = 6
+        inner join ps_tax t on t.id_tax = tr.id_tax
+        where trg.active = 1)
+        SELECT p.id_product, IFNULL(pa.id_product_attribute,0) as attr, p.id_category_default as category_default,
+                p.id_manufacturer, m.name as fabricante, pl.description_short AS description, pl.name as name,
+                cl.link_rewrite as category_rewrite, pl.link_rewrite as product_rewrite, cl.name as name_category_default,
+                CONCAT_WS('-', p.id_product, IFNULL(pa.id_product_attribute,0)) as sku, ifnull(t.rate, 0) as iva,
+                (select case when id_feature_value = 1001 then 'Gato' else 'Perro' end
+                    from ps_feature_product
+                    where id_feature=14 and id_product=p.id_product
+                    limit 1) as mascota,
+                CASE WHEN tag_free_shipping.id_product IS NULL THEN 'no' ELSE 'yes' END AS free_shipping,
+                ROUND((ps.price+pas.price)*(1+(ifnull(t.rate, 0)/100)), 2) as pvp,
+                IF(EXISTS(select * FROM ps_category_product WHERE id_product=p.id_product AND id_category=2292), 'si', 'no') as OUTLET
+            FROM ps_product p
+            inner join ps_product_shop ps
+                on ps.id_product = p.id_product and ps.id_shop = {$shop->getId()} and ps.active = 1 and ps.visibility = 'both'
+            inner JOIN ps_product_lang pl
+                ON pl.id_product=ps.id_product and pl.id_lang = {$shop->getLanguageId()} and pl.id_shop = ps.id_shop
+            left join ps_product_attribute pa
+                ON pa.id_product=p.id_product
+            LEFT JOIN ps_manufacturer m
+                ON m.id_manufacturer=p.id_manufacturer
+            LEFT JOIN ps_category_lang cl
+                ON cl.id_category = ps.id_category_default AND cl.id_lang = {$shop->getLanguageId()} and cl.id_shop = ps.id_shop
+            left join ps_product_attribute_shop pas
+                ON pas.id_product_attribute = pa.id_product_attribute and pas.id_shop = ps.id_shop
+            LEFT JOIN taxes t
+                on t.id_tax_rules_group = ps.id_tax_rules_group
+            LEFT JOIN (
+                SELECT DISTINCT id_product, id_product_attribute
+                    FROM ps_kpy_product_flag tg
+                    WHERE tg.id_flag = 6 AND tg.active = 1) AS tag_free_shipping
+                    ON tag_free_shipping.id_product = ps.id_product AND tag_free_shipping.id_product_attribute = pa.id_product_attribute
+            WHERE NOT EXISTS (select * FROM ps_category_product WHERE id_product=p.id_product AND id_category IN (1509, 586))
+            ORDER BY p.id_product, pa.id_product_attribute";
+
+        return $this->kompyDatabase->execute($sqlObtieneProductos);
+    }
+
     public function productosProhibidos(int $shop): array
     {
         $columna = 'GS_ESP_BANNED';
@@ -95,9 +151,39 @@ class Provider
         return $prohibidos;
     }
 
+    public function marcasProhibidas(int $shop): array
+    {
+        $columna = '';
+        switch ($shop) {
+            case 1:
+                $columna = 'GS_BANNED_ESP';
+                break;
+            case 2:
+                $columna = 'GS_BANNED_PT';
+                break;
+            case 3:
+                $columna = 'GS_BANNED_IT';
+                break;
+            default:
+                $columna = 'GS_BANNED_ESP';
+                break;
+        }
+
+        $marcas  = array();
+        $results = $this->aquaDatabase->execute("SELECT CODIGO FROM DATPYMFABRICANTES01 WITH(NOLOCK) WHERE {$columna}=1");
+
+        if (!empty($results)) {
+            foreach ($results as $marca) {
+                $marcas[] = trim($marca['CODIGO']);
+            }
+        }
+
+        return $marcas;
+    }
+
     public function combinacionesDesactivadas(): array
     {
-        $sql = "SELECT id_product_attribute FROM ps_kpy_product_attribute WHERE disabled=1";
+        $sql = "SELECT id_product_attribute FROM ps_kpy_product_attribute WHERE active=0";
         $data = $this->kompyDatabase->execute($sql);
         $results = array();
 
@@ -201,8 +287,8 @@ class Provider
     {
         $sql = "SELECT CONCAT_WS('-', rp.id_product, rp.id_product_attribute) as sku, pl.name as regalo
                 from ps_kpy_gift_product rp
-                inner join ps_kpy_gitfs r
-                    on r.id = rp.id_regalo
+                inner join ps_kpy_gifts r
+                    on r.id_gift = rp.id_gift
                 inner join ps_product_lang pl
                     on pl.id_product = r.id_product and pl.id_lang={$lang} and pl.id_shop={$shop}
                 WHERE exists (select 1 FROM ps_kpy_gift_shop gs WHERE gs.id_gift=r.id_gift and gs.id_shop=pl.id_shop and gs.active=1)";
@@ -272,9 +358,9 @@ class Provider
         return $productos;
     }
 
-    public static function getMeasuringUnits()
+    public function getMeasuringUnits(): array
     {
-        $file = fopen($_ENV['APP_SHARE_DIR'] . '/measuring.csv', 'rb');
+        $file = fopen($this->varDir . 'measuring.csv', 'rb');
         $measuring = [];
 
         if (!$file) {
@@ -284,10 +370,10 @@ class Provider
         fgetcsv($file);
 
         while (($line = fgets($file)) !== false) {
-            [$sku, $unit_pricing_measure, $unit_pricing_base_measure] = explode(';', $line);
+            [$sku, $medida, $unit_pricing_measure, $unit_pricing_base_measure] = explode(';', $line);
             $measuring[$sku] = [
-                'unit_pricing_measure' => $unit_pricing_measure . ' ' . $line['medida'],
-                'unit_pricing_base_measure' =>  $unit_pricing_base_measure . ' ' . $line['medida'],
+                'unit_pricing_measure' => $unit_pricing_measure . ' ' . $medida,
+                'unit_pricing_base_measure' =>  $unit_pricing_base_measure . ' ' . $medida,
             ];
         }
 
@@ -296,13 +382,13 @@ class Provider
         return $measuring;
     }
 
-    public static function getTopProductosFromFile(): array
+    public function getTopProducts(): array
     {
         if (!empty(self::$topProducts)) {
             return self::$topProducts;
         }
 
-        $file = fopen($_ENV['APP_SHARE_DIR'] . '/top_products.csv', 'rb');
+        $file = fopen($this->varDir . 'top_products.csv', 'rb');
 
         if (!$file) {
             return [];
@@ -349,5 +435,15 @@ class Provider
                 FROM DATPYMFABRICANTES01 WITH(NOLOCK)
                 WHERE GS_STOCK_REAL=1")
         );
+    }
+
+    public function esBlackFriday(): bool
+    {
+        return false;
+    }
+
+    public function esAniversario(): bool
+    {
+        return false;
     }
 }

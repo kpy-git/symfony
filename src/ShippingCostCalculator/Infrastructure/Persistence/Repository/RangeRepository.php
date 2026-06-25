@@ -2,7 +2,7 @@
 
 namespace App\ShippingCostCalculator\Infrastructure\Persistence\Repository;
 
-use App\Shared\Domain\Aggregate\Destination;
+use App\Shared\Domain\Destination;
 use App\Shared\Infrastructure\Database\DatabaseInterface;
 use App\ShippingCostCalculator\Domain\Aggregate\Range;
 use App\ShippingCostCalculator\Domain\Aggregate\RangeAdditionalPerKg;

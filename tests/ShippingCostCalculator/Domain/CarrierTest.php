@@ -4,7 +4,7 @@ declare(strict_types=1);
 
 namespace App\Tests\ShippingCostCalculator\Domain;
 
-use App\Shared\Domain\Aggregate\Destination;
+use App\Shared\Domain\Destination;
 use App\ShippingCostCalculator\Domain\Aggregate\Range;
 use App\ShippingCostCalculator\Domain\Aggregate\RangeAdditionalPerKg;
 use App\ShippingCostCalculator\Domain\Carrier;
