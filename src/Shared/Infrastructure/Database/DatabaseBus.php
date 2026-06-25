@@ -16,6 +16,8 @@ class DatabaseBus implements LoggerAwareInterface
 
     private LoggerInterface $logger;
 
+    private array $pool = [];
+
     /** @var DatabaseFactoryInterface[] $factories */
     public function __construct(
         private readonly iterable $factories)
@@ -27,24 +29,40 @@ class DatabaseBus implements LoggerAwareInterface
      */
     public function getDatabaseBy(array $context): DatabaseInterface
     {
+        /** @var DatabaseFactoryInterface $factory */
         foreach ($this->factories as $factory) {
             if ($factory->isActive() && $factory->supports($context)) {
-                $database = $factory->create();
-
-                if (strtolower($_ENV['LOG_DATABASE_QUERIES']) === 'disabled') {
-                    return $database;
-                }
-
-                return new DatabaseLoggerDecorator(
-                    $database,
-                    $this->logger,
-                    $this->getDatabaseNameFrom($factory->getDSN()),
-                    $factory->getDatabaseType()
-                );
+                return $this->getDatabaseInstance($factory);
             }
+
         }
 
         throw new KpyNotFoundDatabaseException('No se ha encontrado ninguna base de datos soportada');
+    }
+
+    private function getDatabaseInstance(DatabaseFactoryInterface $factory): DatabaseInterface
+    {
+        if (isset($this->pool[$this->getDatabaseNameFrom($factory->getDSN())])) {
+            return $this->pool[$this->getDatabaseNameFrom($factory->getDSN())];
+        }
+
+        $this->pool[$this->getDatabaseNameFrom($factory->getDSN())] = $this->addLoggerDecoratorIsEnabled($factory);
+
+        return $this->pool[$this->getDatabaseNameFrom($factory->getDSN())];
+    }
+
+    private function addLoggerDecoratorIsEnabled(DatabaseFactoryInterface $factory): DatabaseInterface
+    {
+        if (strtolower($_ENV['LOG_DATABASE_QUERIES']) === 'disabled') {
+            return $factory->create();
+        }
+
+        return new DatabaseLoggerDecorator(
+            $factory->create(),
+            $this->logger,
+            $this->getDatabaseNameFrom($factory->getDSN()),
+            $factory->getDatabaseType()
+        );
     }
 
     public function getAllActiveDatabases(): array
@@ -52,7 +70,7 @@ class DatabaseBus implements LoggerAwareInterface
         $factories = [...$this->factories];
         return array_reduce($factories, function (array $databases, DatabaseFactoryInterface $factory) {
             if ($factory->isActive()) {
-                $databases[$this->getDatabaseNameFrom($factory->getDSN())] = $factory->create();
+                $databases[$this->getDatabaseNameFrom($factory->getDSN())] = $this->getDatabaseInstance($factory);
             }
             return $databases;
         }, []);
