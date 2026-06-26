@@ -23,7 +23,7 @@ readonly class GenerateMerchantFeedCommand
         $io = new SymfonyStyle($input, $output);
 
         try {
-            $this->feedHandler->generateFeed(Shop::KOMPY_ES);
+            $this->feedHandler->syncFeed(Shop::KOMPY_ES);
 
             $io->success('Feed generated.');
 

@@ -240,13 +240,8 @@ class Provider
                     GROUP BY id_product_pack
                     having count(*) = 1";
 
-        $packs = [];
-        $results = $this->kompyDatabase->execute($sql);
-        foreach ($results as $pack) {
-            $packs[] = $pack['id_product_pack'];
-        }
+        return array_map(static fn (array $row): string => $row['id_product_pack'], $this->kompyDatabase->execute($sql));
 
-        return $packs;
     }
 
     public  function getProductosAntiparasitarios(): array
@@ -393,14 +388,13 @@ class Provider
         if (!$file) {
             return [];
         }
-        // salta la cabecera
-        fgetcsv($file);
 
         while (($line = fgets($file)) !== false) {
-            self::$topProducts [] = trim($line['sku']);
+            if (trim($line) === '' || !str_contains($line, '-')) {
+                continue;
+            }
+            self::$topProducts [] = trim($line);
         }
-
-
 
         return self::$topProducts;
     }
@@ -445,5 +439,31 @@ class Provider
     public function esAniversario(): bool
     {
         return false;
+    }
+
+    public function combinacionesMayoresFormatosPienso(): array
+    {
+        return array_map(static fn (array $row): int => (int)$row['id_product_attribute'], $this->kompyDatabase->execute(
+            "WITH ranked_combinations AS (
+                    SELECT combinations.id_product,
+                           combinations.id_product_attribute,
+                           combinations.peso,
+                           row_number() over (partition by combinations.id_product order by combinations.peso desc) as posicion
+                    FROM (SELECT p.id_product, pa.id_product_attribute, (pa.weight + p.weight) as peso
+                           FROM ps_product_attribute pa
+                                    LEFT JOIN ps_product p ON p.id_product = pa.id_product
+                           WHERE NOT EXISTS (SELECT 1
+                                             FROM ps_kpy_product_attribute kpa
+                                             WHERE pa.id_product_attribute = kpa.id_product_attribute
+                                               AND active = 0)
+                             AND NOT EXISTS (SELECT 1
+                                             FROM ps_kpy_packs kpp
+                                             WHERE kpp.id_product_pack = CONCAT_WS('-', p.id_product, pa.id_product_attribute))
+                           ) AS combinations
+                )
+                SELECT id_product_attribute
+                FROM ranked_combinations
+                WHERE posicion = 1"
+        ));
     }
 }

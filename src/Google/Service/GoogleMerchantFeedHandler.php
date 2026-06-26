@@ -27,13 +27,17 @@ class GoogleMerchantFeedHandler
 
     private array $idPacks;
 
-    private array $formatosGrandes;
-
     private array $antiparasitarios;
 
     private array $productosEnRoturaSinStock;
 
     private array $productosConPrecioEspecial;
+
+    private array $productosConRegalos;
+
+    private array $imagenes;
+
+    private array $combinacionesMayoresFormatosPienso;
 
     private Shop $shop;
 
@@ -49,7 +53,7 @@ class GoogleMerchantFeedHandler
         private readonly CalculatorShippingCost $calculatorShippingCost,
         private readonly Provider               $provider,
         private readonly CarrierBuilder         $carrierBuilder,
-        #[Autowire(param: '%kernel.project_dir%')]
+        #[Autowire('%kernel.project_dir%')]
         string $srcDir
     )
     {
@@ -58,7 +62,7 @@ class GoogleMerchantFeedHandler
 
         $this->varDir = $srcDir . '/var/google/';
 
-        $this->filename = 'feedkompymascotas.xml';
+        $this->filename = 'kompymascotasfeed.xml';
     }
 
     private function getSKUsWithAlternativesCode(): array
@@ -80,13 +84,36 @@ class GoogleMerchantFeedHandler
 
         $this->saveFeed($feed);
 
+        $this->uploadFeed();
+    }
+
+    /**
+     * @throws KpyGoogleException
+     */
+    private function saveFeed(string $feed): void
+    {
+        if (GoogleDebugMode::on()) {
+            $this->filename = 'debug_' . $this->filename;
+        }
+
+        $fullPath = $this->varDir . $this->filename;
+
+        if (file_exists($fullPath) && !is_writable($fullPath)) {
+            throw new KpyGoogleException('No se puede escribir el fichero ' . $fullPath);
+        }
+
+        file_put_contents($fullPath, $feed, LOCK_EX);
+    }
+
+    private function uploadFeed(): void
+    {
         if (GoogleDebugMode::off()) {
             new SFTPFileUploader()->uploadFileBySftpWithPassword(
                 $_ENV['GOOGLE_SFTP_HOST'],
                 $_ENV['GOOGLE_SFTP_USER'],
                 $_ENV['GOOGLE_SFTP_PASSWORD'],
                 $this->filename,
-                $this->filename,
+                $this->varDir . $this->filename,
                 (int)$_ENV['GOOGLE_SFTP_PORT']
             );
         }
@@ -107,13 +134,13 @@ class GoogleMerchantFeedHandler
         // ya no se usa
         //$productosManuales   = $this->provider->productosManuales($shop);
         $combinacionesDesactivadas = $this->provider->combinacionesDesactivadas();
-        $imagenes = $this->provider->cargaImagenes();
+        $this->imagenes = $this->provider->cargaImagenes();
         $packs = $this->provider->getPacks();
         $this->idPacks = $this->provider->getArrayIdsPacks();
         $this->antiparasitarios = $this->provider->getProductosAntiparasitarios();
-        $this->formatosGrandes = []; // array donde se almacenan los formatos grandes por cada id,
         $this->productosConPrecioEspecial = $this->provider->getProductosConPrecioEspecial($shop->getId());
-
+        $this->productosConRegalos = $this->provider->getProductosConRegalo($this->shop->getId(), $this->shop->getLanguageId());
+        $this->combinacionesMayoresFormatosPienso = $this->provider->combinacionesMayoresFormatosPienso();
         $feedAlternativeNamesProduct = $this->provider->getNamesFeed($shop->getId());
         $imagenesPersonalizadas = $this->provider->getImagenesPersonalizadas($shop->getId());
         $this->productosEnRoturaSinStock = $this->provider->getProductosEnRoturaSinStock();
@@ -260,10 +287,10 @@ class GoogleMerchantFeedHandler
 
             $producto['additional_images'] = [];
 
-            if (count($imagenes[$producto['id_product']]) > 1) {
+            if (count($this->imagenes[$producto['id_product']]) > 1) {
                 $producto['additional_images'] = array_map(function (int $id_image) use ($producto, $googleFeed) {
                     return $this->getImageUrl($id_image, $producto['product_rewrite'], $googleFeed->getDominio());
-                }, array_slice($imagenes[$producto['id_product']], 1, 10));
+                }, array_slice($this->imagenes[$producto['id_product']], 1, 10));
             }
 
             $producto['custom_label_0'] = $this->getCustomLabel0($sku);
@@ -364,10 +391,7 @@ class GoogleMerchantFeedHandler
 
                 $pack['custom_label_0'] = $this->getCustomLabel0($packs[$sku]['id_pack']);
                 $pack['custom_label_1'] = $this->getCustomLabel1($producto['sku']);
-                $pack['custom_label_2'] = in_array($categoria, ['Pienso', 'Comida Humeda'])
-                    ? $this->getCustomLabel2($packs[$sku]['id_pack'])
-                    : 'resto';
-
+                $pack['custom_label_2'] = $this->getCustomLabel2($packs[$sku]['id_pack']);
                 $pack['custom_label_3'] = $producto['custom_label_3']; // para la disponibilidad se coge el producto que va dentro del pack
 
                 $precio = $pack['price'];
@@ -404,7 +428,7 @@ class GoogleMerchantFeedHandler
         $googleFeed->closeFeed();
 
         if (GoogleDebugMode::off()) {
-            $this->marcarEnAquaTodosLosProductosDelFeed();
+            $this->marcarEnAquaTodosLosProductosDelFeed($googleFeed->getArrayOfSkusIncluded());
         }
 
         return $googleFeed->getFeed();
@@ -415,30 +439,12 @@ class GoogleMerchantFeedHandler
         $this->aquaDatabase->execute("UPDATE DATPYMPRDPRICES01 SET GSHOPINGESP=0");
     }
 
-    private function marcarEnAquaTodosLosProductosDelFeed(): void
+    private function marcarEnAquaTodosLosProductosDelFeed(array $skus): void
     {
-        $skus = "('" . implode("','", $this->idsProductosEnFeed) . "')";
-        $sql = "UPDATE DATPYMPRDPRICES01 SET GSHOPINGESP=1 WHERE PRODUCTO IN {$skus}";
+        $skusSQL = "('" . implode("','", $skus) . "')";
+        $sql = "UPDATE DATPYMPRDPRICES01 SET GSHOPINGESP=1 WHERE PRODUCTO IN {$skusSQL}";
 
         $this->aquaDatabase->execute($sql);
-    }
-
-    /**
-     * @throws KpyGoogleException
-     */
-    private function saveFeed(string $feed): void
-    {
-        if (strtolower($_ENV['GOOGLE_DEBUG_MODE']) === 'true') {
-            $this->filename = 'debug_' . $this->filename;
-        }
-
-        $fullPath = $this->varDir . $this->filename;
-
-        if (!is_writable($fullPath)) {
-            throw new KpyGoogleException('No se puede escribir el fichero ' . $fullPath);
-        }
-
-        file_put_contents($fullPath, $feed, LOCK_EX);
     }
 
 
@@ -458,14 +464,10 @@ class GoogleMerchantFeedHandler
 
     public function getCustomLabel2(string $sku): string
     {
+        [$id, $attr] = explode('-', $sku);
+
         // comprueba si el sku es el mayor formato (sin ser pack) del producto
-        // cada vez que se saque el de mayor formato se guarda el id en un array para no volver a ejecutar la consulta por cada combinación
-
-        $id = explode('-', $sku);
-
-        if (!array_key_exists($id[0], $this->formatosGrandes) && $this->mayorFormato($id[0], $id[1])) {
-            // si ya existe el id de producto como key es que se ha obtenido el formato grande anteriormente
-            $formatosGrandes[$id[0]] = $id[1];
+        if (in_array((int)$attr, $this->combinacionesMayoresFormatosPienso, true)) {
             return 'formato_grande';
         }
 
@@ -500,29 +502,15 @@ class GoogleMerchantFeedHandler
         return round(($salesPriceWithoutVat - $costs) / $salesPriceWithoutVat * 100, 2);
     }
 
-    public function mayorFormato($id, $attr): bool
-    {
-        $sql = "SELECT pa.id_product_attribute, (pa.weight + p.weight) as peso
-                FROM ps_product_attribute pa
-                LEFT JOIN ps_product p ON p.id_product=pa.id_product
-                WHERE pa.disabled=0 AND pa.id_product={$id}
-                        AND CONCAT_WS('-', p.id_product, pa.id_product_attribute) NOT IN (SELECT id_product_pack FROM ps_pym_packs)
-                ORDER BY peso DESC";
-
-        $combinaciones = $this->kompyDatabase->execute($sql);
-
-        if (empty($combinaciones)) {
-            return false;
-        }
-
-        return $combinaciones[0]['id_product_attribute'] == $attr;
-    }
 
     public function getFirstImageUrl($id_product, $link_rewrite, $host): string
     {
-        $image = $this->kompyDatabase->getValue("SELECT id_image FROM ps_image WHERE id_product={$id_product} ORDER BY position");
+        if (array_key_exists($id_product, $this->imagenes)) {
+            [$firstImage,] = $this->imagenes[$id_product];
+            return $this->getImageUrl($firstImage, $link_rewrite, $host);
+        }
 
-        return Context::getContext()->link->getImageLink($link_rewrite, $image, 'large_default');
+        return '';
 
     }
 
@@ -563,11 +551,10 @@ class GoogleMerchantFeedHandler
 
     public function getEtiquetasParaNombreProducto($sku): string
     {
-        $productosConRegalos = $this->provider->getProductosConRegalo($this->shop->getId(), $this->shop->getLanguageId());
         $etiquetas = '';
 
-        if (array_key_exists($sku, $productosConRegalos)) {
-            $etiquetas .= ' con ' . $productosConRegalos[$sku];
+        if (array_key_exists($sku, $this->productosConRegalos)) {
+            $etiquetas .= ' con ' . $this->productosConRegalos[$sku];
         }
 
         if (array_key_exists($sku, $this->productosConPrecioEspecial) && !$this->provider->esAniversario()) {

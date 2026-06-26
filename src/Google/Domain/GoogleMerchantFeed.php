@@ -124,14 +124,14 @@ class GoogleMerchantFeed
 
         $nodo .= "<title>" . str_replace("&", "&amp;", $producto['name']) . "</title>\n";
         $nodo .= "<link>" . $producto['url'] . "</link>\n";
-        $nodo .= "<g:price>" . $producto['pvp'] . "</g:price>\n";
+        $nodo .= "<g:price>" . $producto['pvp'] . " EUR</g:price>\n";
         if (array_key_exists('unit_pricing_measure', $producto)) {
             $nodo .= "<g:unit_pricing_measure>" . $producto['unit_pricing_measure'] . "</g:unit_pricing_measure>\n";
         }
         if (array_key_exists('unit_pricing_base_measure', $producto)) {
             $nodo .= "<g:unit_pricing_base_measure>" . $producto['unit_pricing_base_measure'] . "</g:unit_pricing_base_measure>\n";
         }
-        $nodo .= "<g:sale_price>" . $producto['price'] . "</g:sale_price>\n";
+        $nodo .= "<g:sale_price>" . $producto['price'] . " EUR</g:sale_price>\n";
         $nodo .= "<g:description>" . str_replace('&nbsp;', ' ', $producto['description']) . "</g:description>\n";
         $nodo .= "<g:condition>new</g:condition>\n";
         $nodo .= "<g:mpn>" . $producto['referencia'] . "</g:mpn>\n";
@@ -235,5 +235,10 @@ class GoogleMerchantFeed
     public function getFeed(): string
     {
         return $this->salida;
+    }
+
+    public function getArrayOfSkusIncluded(): array
+    {
+        return $this->idsProductosEnFeed;
     }
 }
