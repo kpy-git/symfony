@@ -2,9 +2,10 @@
 
 namespace App\Google\Infrastructure\Controller;
 
-use App\Shared\Domain\Destination;
-use App\ShippingCostCalculator\Domain\Builder\CarrierBuilder;
-use App\ShippingCostCalculator\Domain\Service\CalculatorShippingCost;
+use App\Google\Domain\Exception\KpyGoogleException;
+use App\Google\Service\GoogleMerchantFeedHandler;
+use App\Shared\Domain\Service\JsonResponseGenerator;
+use App\Shared\Domain\Shop;
 use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
 use Symfony\Component\HttpFoundation\JsonResponse;
 use Symfony\Component\HttpFoundation\Request;
@@ -14,32 +15,27 @@ use Symfony\Component\Routing\Attribute\Route;
 #[Route("/google", host: 'ops.%kpy.base_domain%', name: 'ops_google_')]
 final class GoogleController extends AbstractController
 {
+    public function __construct(private readonly JsonResponseGenerator $responseGenerator)
+    {
+    }
+
     #[Route('/feed', name: 'feed', methods: ['GET'])]
-    public function index(
+    public function feed(
         Request $request,
-        CarrierBuilder $carrierBuilder,
-        CalculatorShippingCost $calculatorShippingCost
+        GoogleMerchantFeedHandler $feedHandler
     ): JsonResponse
     {
         if (!$request->query->has('token')) {
-            return new JsonResponse(['error' => 'Unauthorized'], Response::HTTP_UNAUTHORIZED);
+            return $this->responseGenerator->error('Unauthorized', Response::HTTP_UNAUTHORIZED);
         }
 
-        $carrier = $carrierBuilder->getMRW();
+        try {
+            $feedHandler->syncFeed(Shop::KOMPY_ES);
 
-        if ($request->query->get('weight')) {
-            return new JsonResponse([
-                'status' => Response::HTTP_OK,
-                'cost' => $calculatorShippingCost->getShippingCostBy($carrier, Destination::PENINSULA, (float)$request->query->get('weight')),
-            ]);
+            return $this->responseGenerator->success();
+
+        } catch (KpyGoogleException $exception) {
+            return $this->responseGenerator->fromException($exception);
         }
-
-        return $this->json([
-            'success' => true,
-            'ranges' => [
-                $carrier->getRangesByDestination(Destination::PENINSULA),
-                $carrier->getRangeAdditionalPerKgByDestination(Destination::PENINSULA),
-                ]
-        ]);
     }
 }
