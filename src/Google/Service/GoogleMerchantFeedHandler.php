@@ -45,6 +45,8 @@ class GoogleMerchantFeedHandler
 
     private string $varDir;
 
+    private int $totalCountProducts;
+
     /**
      * @throws KpyNotFoundDatabaseException
      */
@@ -63,6 +65,8 @@ class GoogleMerchantFeedHandler
         $this->varDir = $srcDir . '/var/google/';
 
         $this->filename = 'kompymascotasfeed.xml';
+
+        $this->totalCountProducts = 0;
     }
 
     private function getSKUsWithAlternativesCode(): array
@@ -165,6 +169,8 @@ class GoogleMerchantFeedHandler
             $shop,
             $this->getSKUsWithAlternativesCode(),
         );
+
+        $this->totalCountProducts = 0;
 
         if (GoogleDebugMode::off()) {
             $this->resetProductsInFeed();
@@ -431,6 +437,8 @@ class GoogleMerchantFeedHandler
             $this->marcarEnAquaTodosLosProductosDelFeed($googleFeed->getArrayOfSkusIncluded());
         }
 
+        $this->totalCountProducts = $googleFeed->getTotalProductos();
+
         return $googleFeed->getFeed();
     }
 
@@ -570,5 +578,15 @@ class GoogleMerchantFeedHandler
         }
 
         return $etiquetas;
+    }
+
+    public function totalPreviousProducts(): int
+    {
+        return (int)$this->aquaDatabase->getValue("SELECT COUNT(*) FROM DATPYMPRDPRICES01 WITH(NOLOCK) WHERE GSHOPINGESP=1");
+    }
+
+    public function totalCountProducts(): int
+    {
+        return $this->totalCountProducts;
     }
 }

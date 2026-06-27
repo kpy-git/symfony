@@ -32,7 +32,10 @@ final class GoogleController extends AbstractController
         try {
             $feedHandler->syncFeed(Shop::KOMPY_ES);
 
-            return $this->responseGenerator->success();
+            return $this->responseGenerator->success([
+                'previous_products' => $feedHandler->totalPreviousProducts(),
+                'current_products' => $feedHandler->totalCountProducts()
+            ]);
 
         } catch (KpyGoogleException $exception) {
             return $this->responseGenerator->fromException($exception);

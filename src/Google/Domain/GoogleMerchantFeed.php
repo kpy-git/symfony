@@ -66,12 +66,6 @@ class GoogleMerchantFeed
         $this->salida .= "</feed>\n";
     }
 
-    public function obtieneNumeroProductosAnteriores(): void
-    {
-        $this->numeroProductosAnteriores = (int)DbPymMssql::getInstance()->valor(
-            "SELECT COUNT(*) FROM DATPYMPRDPRICES01 WITH(NOLOCK) WHERE GSHOPINGESP=1");
-    }
-
     public function obtieneEtiquetaDeMargen(float $margin, float $salesPrice): string
     {
         if ($salesPrice < $this->shop->getLimitToCalculateShippingCost()) {
@@ -225,11 +219,6 @@ class GoogleMerchantFeed
     public function getNombreFicheroFeed(): string
     {
         return $this->outputFilename;
-    }
-
-    public function getNumeroProductosAnteriores(): int
-    {
-        return $this->numeroProductosAnteriores;
     }
 
     public function getFeed(): string
