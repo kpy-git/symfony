@@ -19,7 +19,7 @@ security:
             security: false
 
         ops:
-            host: ^ops\.kompymascotas\.com
+            host: ^ops\.kompymascotas\.com$
             stateless: true
             provider: cron_provider
             access_token:
@@ -36,7 +36,7 @@ security:
 
     # Note: Only the *first* matching rule is applied
     access_control:
-        - { path: ^ops\.kompymascotas\.com$, roles: ROLE_CRONJOB }
+        - { host: ^ops\.kompymascotas\.com$, roles: ROLE_CRONJOB }
         # - { path: ^/admin, roles: ROLE_ADMIN }
         # - { path: ^/profile, roles: ROLE_USER }
 
