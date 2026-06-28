@@ -2,33 +2,26 @@
 
 namespace App\Google\Infrastructure\Controller;
 
-use App\Google\Domain\Exception\KpyGoogleException;
 use App\Google\Service\GoogleMerchantFeedHandler;
+use App\Shared\Domain\Exception\KpyException;
 use App\Shared\Domain\Service\JsonResponseGenerator;
 use App\Shared\Domain\Shop;
 use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
 use Symfony\Component\HttpFoundation\JsonResponse;
-use Symfony\Component\HttpFoundation\Request;
-use Symfony\Component\HttpFoundation\Response;
 use Symfony\Component\Routing\Attribute\Route;
 
-#[Route("/google", host: 'ops.%kpy.base_domain%', name: 'ops_google_')]
+#[Route("/google", name: 'google_')]
 final class GoogleController extends AbstractController
 {
     public function __construct(private readonly JsonResponseGenerator $responseGenerator)
     {
     }
 
-    #[Route('/feed', name: 'feed', methods: ['GET'])]
+    #[Route('/feed', host: 'ops.%kpy.base_domain%', name: 'feed', methods: ['GET'])]
     public function feed(
-        Request $request,
         GoogleMerchantFeedHandler $feedHandler
     ): JsonResponse
     {
-        if (!$request->query->has('token')) {
-            return $this->responseGenerator->error('Unauthorized', Response::HTTP_UNAUTHORIZED);
-        }
-
         try {
             $feedHandler->syncFeed(Shop::KOMPY_ES);
 
@@ -37,7 +30,7 @@ final class GoogleController extends AbstractController
                 'current_products' => $feedHandler->totalCountProducts()
             ]);
 
-        } catch (KpyGoogleException $exception) {
+        } catch (KpyException $exception) {
             return $this->responseGenerator->fromException($exception);
         }
     }

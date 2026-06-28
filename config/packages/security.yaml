@@ -7,15 +7,27 @@ security:
     providers:
         users_in_memory: { memory: null }
 
+        cron_provider:
+            memory:
+                users:
+                    cronjob: { roles: [ROLE_CRONJOB] }
+
     firewalls:
         dev:
             # Ensure dev tools and static assets are always allowed
             pattern: ^/(_profiler|_wdt|assets|build)/
             security: false
+
+        ops:
+            host: ^ops\.kompymascotas\.com
+            stateless: true
+            provider: cron_provider
+            access_token:
+                token_handler: App\Shared\Security\AccessTokenHandler
+
         main:
             lazy: true
             provider: users_in_memory
-
             # Activate different ways to authenticate:
             # https://symfony.com/doc/current/security.html#the-firewall
 
@@ -24,6 +36,7 @@ security:
 
     # Note: Only the *first* matching rule is applied
     access_control:
+        - { path: ^ops\.kompymascotas\.com$, roles: ROLE_CRONJOB }
         # - { path: ^/admin, roles: ROLE_ADMIN }
         # - { path: ^/profile, roles: ROLE_USER }
 
