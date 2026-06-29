@@ -26,6 +26,12 @@ doctrine:
                 dir: '%kernel.project_dir%/src/ShippingCostCalculator/Infrastructure/Persistence/Doctrine/Entity'
                 prefix: 'App\ShippingCostCalculator\Infrastructure\Persistence\Doctrine\Entity'
                 alias: ShippingCostCalculator
+            Connectif:
+                type: attribute
+                is_bundle: false
+                dir: '%kernel.project_dir%/src/Connectif/Infrastructure/Persistence/Doctrine/Model'
+                prefix: 'App\Connectif\Infrastructure\Persistence\Doctrine\Model'
+                alias: Connectif
 
 when@test:
     doctrine:

@@ -2,12 +2,14 @@
 
 namespace App\Shared\Bus\Query;
 
+use Symfony\Component\DependencyInjection\Attribute\AutowireIterator;
+
 class KpyQueryBus
 {
     protected array $queries;
 
     /** @var KpyQueryInterface[] $queries */
-    public function __construct(iterable $queries)
+    public function __construct(#[AutowireIterator('kpy.shared.query')] iterable $queries)
     {
         foreach ($queries as $query) {
             $this->queries[$query->getName()] = $query;

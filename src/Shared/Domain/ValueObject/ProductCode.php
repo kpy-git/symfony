@@ -51,4 +51,9 @@ class ProductCode
     {
         return $this->productAttributeId;
     }
+
+    public function isCombinationProduct(): bool
+    {
+        return $this->productAttributeId !== 0;
+    }
 }
