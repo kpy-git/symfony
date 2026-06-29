@@ -306,7 +306,7 @@ class Provider
 
     public function getMeasuringUnits(): array
     {
-        $file = fopen($this->googleDir . 'measuring.csv', 'rb');
+        $file = fopen($this->googleDir . '/measuring.csv', 'rb');
         $measuring = [];
 
         if (!$file) {
@@ -334,7 +334,7 @@ class Provider
             return self::$topProducts;
         }
 
-        $file = fopen($this->googleDir . 'top_products.csv', 'rb');
+        $file = fopen($this->googleDir . '/top_products.csv', 'rb');
 
         if (!$file) {
             return [];
