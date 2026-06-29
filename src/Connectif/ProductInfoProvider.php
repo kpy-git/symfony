@@ -5,7 +5,7 @@ namespace App\Connectif;
 use App\Connectif\Query\QueryBus;
 use App\Shared\Bus\Query\KpyQueryNotFoundException;
 
-readonly class ProductProvider
+readonly class ProductInfoProvider
 {
     public function __construct(
         private QueryBus $queryBus,
