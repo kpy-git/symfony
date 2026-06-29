@@ -4,7 +4,7 @@ namespace App\Shared\Domain\ValueObject;
 
 use App\Shared\Domain\Exception\KpyInvalidProductCode;
 
-class Product
+class ProductCode
 {
     private string $sku;
 
