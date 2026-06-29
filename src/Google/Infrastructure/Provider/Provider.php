@@ -2,6 +2,8 @@
 
 namespace App\Google\Infrastructure\Provider;
 
+use App\Google\Domain\Query\QueryBus;
+use App\Shared\Bus\Query\KpyQueryNotFoundException;
 use App\Shared\Domain\Shop;
 use App\Shared\Infrastructure\Database\DatabaseBus;
 use App\Shared\Infrastructure\Database\DatabaseInterface;
@@ -18,42 +20,29 @@ class Provider
 
     private DatabaseInterface $doctrineDatabase;
 
-    private string $varDir;
+
 
     /**
      * @throws KpyNotFoundDatabaseException
      */
     public function __construct(
         private readonly DatabaseBus $databaseBus,
-        #[Autowire('%kernel.project_dir%')]
-        string $srcDir
+        private readonly QueryBus $queryBus,
+        #[Autowire('%kpy.google_dir%')]
+        private readonly string $googleDir
     )
     {
         $this->aquaDatabase = $this->databaseBus->getAquaDatabase();
         $this->kompyDatabase = $this->databaseBus->getKompyDatabase();
         $this->doctrineDatabase = $this->databaseBus->getDoctrineDatabase();
-
-        $this->varDir = $srcDir . '/var/google/';
     }
 
+    /**
+     * @throws KpyQueryNotFoundException
+     */
     public function infoAqua(): array
     {
-        $sql = "SELECT PR.PRODUCTO,  S.STOCK_DISPONIBLE, P.PESO, P.GRUPOLOGISTICO, P.STOCK_SYNC, R.CODIGO AS REFERENCIA,
-                        F.NOMBRE AS FABRICANTE, ISNULL(DESCRIPTEC, '') AS DESCRIPTEC,
-                        (SELECT TOP 1 E.EAN FROM DATWMREAN01 E WITH(NOLOCK) WHERE E.PRODUCTO=P.CODIGO ORDER BY E.ALTA DESC) AS EAN,
-                        ISNULL(PR.PYM, 0) AS PYM, ISNULL(PR.WEC, 0) AS WEC, ISNULL(PR.ITA, 0) AS ITA,
-                        CASE WHEN PR.VALOR_MEDIO = 0 THEN PR.COMPRA_CON_DTOS ELSE PR.VALOR_MEDIO END AS COSTE,
-                        PR.COSTE_CAJA, PR.COSTE_ENVIO_ES, PR.COSTE_ENVIO_PT, PR.COSTE_ENVIO_IT, PR.LIQUIDACION,
-                        CASE WHEN P.TIPOIVA = 3 THEN 1.1 WHEN P.TIPOIVA = 2 THEN 1.21 ELSE 0 END AS IVA_DE_COMPRAS
-                FROM DATPYMPRDPRICES01 PR WITH(NOLOCK)
-                LEFT JOIN DATIN01 P WITH(NOLOCK) ON PR.PRODUCTO=P.CODIGO
-                    -- si ponemos los filtros en el where no saldran los packs
-                    AND P.CONTROLADO=1 AND P.DESCATALOGADO=0 AND P.FABRICANTE NOT IN ('108')
-                LEFT JOIN PRODUCTSTOCK S ON S.CODIGO = P.CODIGO
-                LEFT JOIN DATCAPR01 R WITH(NOLOCK) ON R.CODART=P.CODIGO
-                LEFT JOIN DATPYMFABRICANTES01 F WITH(NOLOCK) ON F.CODIGO=P.FABRICANTE";
-
-        $data = $this->aquaDatabase->execute($sql);
+        $data = $this->queryBus->fetch('kpy.query.google.info.aqua');
 
         $productos = array();
 
@@ -85,48 +74,10 @@ class Provider
 
     public function getProductosDesdePS(Shop $shop): array
     {
-        $sqlObtieneProductos = "
-        WITH taxes as (
-        select trg.id_tax_rules_group, t.rate
-        from ps_tax_rules_group trg
-        inner join ps_tax_rule tr on tr.id_tax_rules_group = trg.id_tax_rules_group and tr.id_country = 6
-        inner join ps_tax t on t.id_tax = tr.id_tax
-        where trg.active = 1)
-        SELECT p.id_product, IFNULL(pa.id_product_attribute,0) as attr, p.id_category_default as category_default,
-                p.id_manufacturer, m.name as fabricante, pl.description_short AS description, pl.name as name,
-                cl.link_rewrite as category_rewrite, pl.link_rewrite as product_rewrite, cl.name as name_category_default,
-                CONCAT_WS('-', p.id_product, IFNULL(pa.id_product_attribute,0)) as sku, ifnull(t.rate, 0) as iva,
-                (select case when id_feature_value = 1001 then 'Gato' else 'Perro' end
-                    from ps_feature_product
-                    where id_feature=14 and id_product=p.id_product
-                    limit 1) as mascota,
-                CASE WHEN tag_free_shipping.id_product IS NULL THEN 'no' ELSE 'yes' END AS free_shipping,
-                ROUND((ps.price+pas.price)*(1+(ifnull(t.rate, 0)/100)), 2) as pvp,
-                IF(EXISTS(select * FROM ps_category_product WHERE id_product=p.id_product AND id_category=2292), 'si', 'no') as OUTLET
-            FROM ps_product p
-            inner join ps_product_shop ps
-                on ps.id_product = p.id_product and ps.id_shop = {$shop->getId()} and ps.active = 1 and ps.visibility = 'both'
-            inner JOIN ps_product_lang pl
-                ON pl.id_product=ps.id_product and pl.id_lang = {$shop->getLanguageId()} and pl.id_shop = ps.id_shop
-            left join ps_product_attribute pa
-                ON pa.id_product=p.id_product
-            LEFT JOIN ps_manufacturer m
-                ON m.id_manufacturer=p.id_manufacturer
-            LEFT JOIN ps_category_lang cl
-                ON cl.id_category = ps.id_category_default AND cl.id_lang = {$shop->getLanguageId()} and cl.id_shop = ps.id_shop
-            left join ps_product_attribute_shop pas
-                ON pas.id_product_attribute = pa.id_product_attribute and pas.id_shop = ps.id_shop
-            LEFT JOIN taxes t
-                on t.id_tax_rules_group = ps.id_tax_rules_group
-            LEFT JOIN (
-                SELECT DISTINCT id_product, id_product_attribute
-                    FROM ps_kpy_product_flag tg
-                    WHERE tg.id_flag = 6 AND tg.active = 1) AS tag_free_shipping
-                    ON tag_free_shipping.id_product = ps.id_product AND tag_free_shipping.id_product_attribute = pa.id_product_attribute
-            WHERE NOT EXISTS (select * FROM ps_category_product WHERE id_product=p.id_product AND id_category IN (1509, 586))
-            ORDER BY p.id_product, pa.id_product_attribute";
-
-        return $this->kompyDatabase->execute($sqlObtieneProductos);
+        return $this->queryBus->fetch('kpy.query.google.kompy_products', [
+            'shop' => $shop->getId(),
+            'language' => $shop->getLanguageId(),
+        ]);
     }
 
     public function productosProhibidos(int $shop): array
@@ -355,7 +306,7 @@ class Provider
 
     public function getMeasuringUnits(): array
     {
-        $file = fopen($this->varDir . 'measuring.csv', 'rb');
+        $file = fopen($this->googleDir . 'measuring.csv', 'rb');
         $measuring = [];
 
         if (!$file) {
@@ -383,7 +334,7 @@ class Provider
             return self::$topProducts;
         }
 
-        $file = fopen($this->varDir . 'top_products.csv', 'rb');
+        $file = fopen($this->googleDir . 'top_products.csv', 'rb');
 
         if (!$file) {
             return [];
@@ -465,5 +416,10 @@ class Provider
                 FROM ranked_combinations
                 WHERE posicion = 1"
         ));
+    }
+
+    public function ProductsWithAlternativeSku(): array
+    {
+        return $this->queryBus->fetch('kpy.query.google.products_with_alternative_skus');
     }
 }

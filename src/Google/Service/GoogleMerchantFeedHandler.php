@@ -2,15 +2,15 @@
 
 namespace App\Google\Service;
 
+use App\Google\Domain\Command\CommandBus;
 use App\Google\Domain\Exception\KpyGoogleException;
 use App\Google\Domain\GoogleDebugMode;
 use App\Google\Domain\GoogleMerchantFeed;
 use App\Google\Infrastructure\Provider\Provider;
+use App\Shared\Bus\Command\KpyCommandNotFoundException;
 use App\Shared\Domain\Destination;
 use App\Shared\Domain\Service\SFTPFileUploader;
 use App\Shared\Domain\Shop;
-use App\Shared\Infrastructure\Database\DatabaseBus;
-use App\Shared\Infrastructure\Database\DatabaseInterface;
 use App\Shared\Infrastructure\Database\Exception\KpyNotFoundDatabaseException;
 use App\ShippingCostCalculator\Domain\Builder\CarrierBuilder;
 use App\ShippingCostCalculator\Domain\Service\CalculatorShippingCost;
@@ -18,9 +18,6 @@ use Symfony\Component\DependencyInjection\Attribute\Autowire;
 
 class GoogleMerchantFeedHandler
 {
-    private DatabaseInterface $aquaDatabase;
-    private DatabaseInterface $kompyDatabase;
-
     private array $infoAqua;
 
     private array $priceShapeInfo;
@@ -51,30 +48,19 @@ class GoogleMerchantFeedHandler
      * @throws KpyNotFoundDatabaseException
      */
     public function __construct(
-        private DatabaseBus                     $databaseBus,
         private readonly CalculatorShippingCost $calculatorShippingCost,
         private readonly Provider               $provider,
         private readonly CarrierBuilder         $carrierBuilder,
+        private readonly CommandBus             $commandBus,
         #[Autowire('%kernel.project_dir%')]
-        string $srcDir
+        string                                  $srcDir
     )
     {
-        $this->aquaDatabase = $this->databaseBus->getAquaDatabase();
-        $this->kompyDatabase = $this->databaseBus->getKompyDatabase();
-
         $this->varDir = $srcDir . '/var/google/';
 
         $this->filename = 'kompymascotasfeed.xml';
 
         $this->totalCountProducts = 0;
-    }
-
-    private function getSKUsWithAlternativesCode(): array
-    {
-        $filename = $this->varDir . 'skus_with_code_alternative.json';
-        return is_readable($filename)
-            ? json_decode(file_get_contents($filename), true)
-            : [];
     }
 
     /**
@@ -167,7 +153,7 @@ class GoogleMerchantFeedHandler
 
         $googleFeed = new GoogleMerchantFeed(
             $shop,
-            $this->getSKUsWithAlternativesCode(),
+            $this->provider->ProductsWithAlternativeSku(),
         );
 
         $this->totalCountProducts = 0;
@@ -444,15 +430,12 @@ class GoogleMerchantFeedHandler
 
     private function resetProductsInFeed(): void
     {
-        $this->aquaDatabase->execute("UPDATE DATPYMPRDPRICES01 SET GSHOPINGESP=0");
+        $this->commandBus->execute('kpy.command.google.reset_products_count');
     }
 
     private function marcarEnAquaTodosLosProductosDelFeed(array $skus): void
     {
-        $skusSQL = "('" . implode("','", $skus) . "')";
-        $sql = "UPDATE DATPYMPRDPRICES01 SET GSHOPINGESP=1 WHERE PRODUCTO IN {$skusSQL}";
-
-        $this->aquaDatabase->execute($sql);
+        $this->commandBus->execute('kpy.command.google.set_products_as_included', ['skus' => $skus]);
     }
 
 
@@ -580,9 +563,12 @@ class GoogleMerchantFeedHandler
         return $etiquetas;
     }
 
+    /**
+     * @throws KpyCommandNotFoundException
+     */
     public function totalPreviousProducts(): int
     {
-        return (int)$this->aquaDatabase->getValue("SELECT COUNT(*) FROM DATPYMPRDPRICES01 WITH(NOLOCK) WHERE GSHOPINGESP=1");
+        return $this->commandBus->execute('kpy.command.google.count_previous_products');
     }
 
     public function totalCountProducts(): int

@@ -9,8 +9,9 @@
 parameters:
     kpy.base_domain: '%env(BASE_DOMAIN)%'
 
+    kpy.google_dir: '%kernel.project_dir%/var/google'
+
     kpy.feeds_dir: '%kernel.project_dir%/public/feeds'
-    kpy.google_merchant_feed_dir: '%kpy.feeds_dir%/google/'
 
 services:
     # default configuration for services in *this* file
@@ -45,16 +46,46 @@ services:
             tags: ['kpy.database_factory']
 
     # si queremos inyectar una instancia de Database para Aqua, Symfony usara el factory para crear la instancia
-    aquaDatabase:
+    aquaDatabaseRoot:
         class: App\Shared\Infrastructure\Database\Database
         factory: [ '@App\Shared\Infrastructure\Database\Factory\DatabaseAquaFactory', 'create' ]
 
-    aquaDatabaseLogger:
+    aquaDatabase:
         class: App\Shared\Infrastructure\Database\Decorator\DatabaseLoggerDecorator
         arguments:
-            $database: '@aquaDatabase'
-            $databaseName: ''
+            $database: '@aquaDatabaseRoot'
+            $databaseName: '%env(AQUA_DATABASE)%'
             $type: !php/const App\Shared\Infrastructure\Database\DatabaseType::SQLServer
+
+
+    kompyDatabaseRoot:
+        class: App\Shared\Infrastructure\Database\Database
+        factory: ['@App\Shared\Infrastructure\Database\Factory\DatabaseKompyFactory', 'create']
+
+    kompyDatabaseLogger:
+        class: App\Shared\Infrastructure\Database\Decorator\DatabaseLoggerDecorator
+        arguments:
+            $database: '@kompyDatabaseRoot'
+            $databaseName: '%env(KOMPY_DB_NAME)%'
+            $type: !php/const App\Shared\Infrastructure\Database\DatabaseType::MySQL
+
+    kompyDatabase:
+        class: App\Shared\Infrastructure\Database\Decorator\DatabasePrefixerDecorator
+        arguments:
+            $database: '@kompyDatabaseLogger'
+            $dbPrefix: '%env(KOMPY_DB_PREFIX)%'
+
+
+    doctrineDatabaseRoot:
+        class: App\Shared\Infrastructure\Database\Database
+        factory: ['@App\Shared\Infrastructure\Database\Factory\DatabaseDoctrine', 'create']
+
+    doctrineDatabase:
+        class: App\Shared\Infrastructure\Database\Decorator\DatabaseLoggerDecorator
+        arguments:
+            $database: '@doctrineDatabaseRoot'
+            $databaseName: '%env(DOCTRINE_DB)%'
+            $type: !php/const App\Shared\Infrastructure\Database\DatabaseType::MySQL
 
 
     App\Shared\Infrastructure\Database\DatabaseBus:
@@ -63,4 +94,4 @@ services:
 
     App\ShippingCostCalculator\Infrastructure\Persistence\Repository\RangeRepository:
         arguments:
-            $aquaDatabase: '@aquaDatabaseLogger'
+            $aquaDatabase: '@aquaDatabase'
