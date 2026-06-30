@@ -2,6 +2,7 @@
 
 namespace App\Connectif\Infrastructure\Api;
 
+use App\Connectif\Product;
 use Symfony\Component\DependencyInjection\Attribute\Autowire;
 
 class ConnectifAPI
@@ -23,9 +24,9 @@ class ConnectifAPI
     private string $statusCode;
 
     public function __construct(
-        #[Autowire('%env(CONNECTIF_API_KEY)')] private readonly string      $apiKey,
-        #[Autowire('%env(CONNECTIF_PRODUCTS_URL)')] private readonly string $productsUrl,
-        #[Autowire('%env(CONNECTIF_CONTACTS_URL)')] private readonly string $contactsUrl,
+        #[Autowire('%env(CONNECTIF_API_KEY)%')] private readonly string      $apiKey,
+        #[Autowire('%env(CONNECTIF_PRODUCTS_URL)%')] private readonly string $productsUrl,
+        #[Autowire('%env(CONNECTIF_CONTACTS_URL)%')] private readonly string $contactsUrl,
     )
     {
     }
@@ -45,10 +46,11 @@ class ConnectifAPI
         return $this->executeRequest("DELETE");
     }
 
-    public function updateProduct(string $sku, array $body): bool
+    public function updateProduct(Product $product): bool
     {
-        $this->url = $this->productsUrl . $sku;
-        $this->encondeBodyForRequest($body);
+        $this->url = $this->productsUrl . $product->getSku();
+
+        $this->requestBody = json_encode($product, JSON_THROW_ON_ERROR);
 
         return $this->executeRequest();
     }
@@ -92,8 +94,10 @@ class ConnectifAPI
             $this->responseHeader[$key] = trim($value);
         }
 
-        $this->rateLimitRemaining = (int)$this->responseHeader['RateLimit-Remaining'];
-        $this->rateLimitReset = (int)$this->responseHeader['RateLimit-Reset'];
+        if (isset($this->responseHeader['RateLimit-Remaining'])) {
+            $this->rateLimitRemaining = (int)$this->responseHeader['RateLimit-Remaining'];
+            $this->rateLimitReset = (int)$this->responseHeader['RateLimit-Reset'];
+        }
     }
 
     private function setCurlOptions(string $method): void
@@ -103,7 +107,7 @@ class ConnectifAPI
         curl_setopt($this->curl, CURLOPT_CUSTOMREQUEST, $method);
         curl_setopt($this->curl, CURLOPT_RETURNTRANSFER, true);
 
-        $header = ['Authorization: apiKey ' . $this->apiKey,];
+        $header = ['Authorization: apiKey ' . $this->apiKey];
 
         if ($method !== "DELETE") {
             curl_setopt($this->curl, CURLOPT_POSTFIELDS, $this->requestBody);
@@ -114,7 +118,7 @@ class ConnectifAPI
         curl_setopt($this->curl, CURLOPT_HEADER, true);
     }
 
-    public function getResponseErrorArray(): array
+    public function getRequestsDetails(): array
     {
         return [
             'url' => $this->url,

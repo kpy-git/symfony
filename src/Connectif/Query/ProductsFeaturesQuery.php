@@ -13,7 +13,7 @@ class ProductsFeaturesQuery implements ConnectifQueryInterface
 
     public function getName(): string
     {
-        return 'kpy.connectif.query.products_features';
+        return 'kpy.query.connectif.products_features';
     }
 
     public function fetch(array $params = []): array
