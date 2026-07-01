@@ -76,14 +76,21 @@ class Product implements \JsonSerializable
             ->setFeatures($productFeatures)
             ->setRelatedProducts($relatedProducts)
             ->setTags($tags)
-            ->setUrl(sprintf('https://%s/%s/%s-%s.html', $shop->getDomain(), $row['link_categoria'], $productCode->getSku(), $row['link_producto']));
+            ->setUrl(sprintf('https://%s/%s/%s-%s.html',
+                $shop->getDomain(),
+                $row['link_categoria'],
+                $productCode->isCombinationProduct() ? $productCode->getSku() : $productCode->getProductId(),
+                $row['link_producto'])
+            );
 
         if ($productRating['count'] ?? 0) {
             $product->setRatings($productRating['count'], $productRating['rating']);
         }
-        // si la combinacion esta desactivada
-        // si el producto no esta activo (active en ps_product)
-        // si no esta visible (es un producto oculto como los regalos)
+
+        // Se marca como blackListed cuando:
+        // si la combinación está desactivada
+        // si el producto no está activo (active en ps_product)
+        // si no está visible (es un producto oculto como los regalos)
         // si tiene el stock a 0
         // si es un pack (que no sea de boske)
         if ((int)$row['combination_active'] === 0
