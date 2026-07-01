@@ -34,7 +34,6 @@ class DatabaseBus implements LoggerAwareInterface
             if ($factory->isActive() && $factory->supports($context)) {
                 return $this->getDatabaseInstance($factory);
             }
-
         }
 
         throw new KpyNotFoundDatabaseException('No se ha encontrado ninguna base de datos soportada');
@@ -103,5 +102,13 @@ class DatabaseBus implements LoggerAwareInterface
     public function getDoctrineDatabase(): DatabaseInterface
     {
         return $this->getDatabaseBy(['name' => 'doctrine']);
+    }
+
+    /**
+     * @throws KpyNotFoundDatabaseException
+     */
+    public function getPymLegacyDatabase(): DatabaseInterface
+    {
+        return $this->getDatabaseBy(['name' => 'pym']);
     }
 }

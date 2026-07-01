@@ -85,9 +85,7 @@ readonly class ProductsQuery implements ConnectifQueryInterface
                 ON sa.id_product = p.id_product and sa.id_product_attribute = IFNULL(pa.id_product_attribute, 0)
             LEFT JOIN taxes t
                     on t.id_tax_rules_group = ps.id_tax_rules_group
-            WHERE ps.id_shop = {$shop}
-                and ps.visibility = 'both'
-                {$filterProduct}
+            WHERE ps.id_shop = {$shop} {$filterProduct}
             GROUP BY ps.id_product, pa.id_product_attribute
             ORDER BY ps.id_product, IFNULL(pa.id_product_attribute, 0)
             "

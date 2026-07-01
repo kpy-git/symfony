@@ -2,15 +2,15 @@
 
 namespace App\Connectif;
 
-use App\Connectif\Query\QueryBus;
+use App\Connectif\Query\ConnectifQueryBus;
 use App\Shared\Bus\Query\KpyQueryBus;
 use App\Shared\Bus\Query\KpyQueryNotFoundException;
 
 readonly class ProductInfoProvider
 {
     public function __construct(
-        private QueryBus $queryBus,
-        private KpyQueryBus $sharedQueryBus,
+        private ConnectifQueryBus $queryBus,
+        private KpyQueryBus       $sharedQueryBus,
     )
     {
     }
@@ -26,7 +26,7 @@ readonly class ProductInfoProvider
     /**
      * @throws KpyQueryNotFoundException
      */
-    public function productFeatures(): array
+    public function featuresByProductId(): array
     {
         return array_reduce(
             $this->queryBus->fetch('kpy.query.connectif.products_features'),
@@ -112,6 +112,14 @@ readonly class ProductInfoProvider
                 $carry[$row['SKU']] = (float)$row['SALES_PRICE'];
                 return $carry;
             }, []
+        );
+    }
+
+    public function getAllProductsSynchronized(): array
+    {
+        return array_map(
+            static fn (array $row) => $row['sku'],
+            $this->queryBus->fetch('kpy.connectif.query.products_synchronized')
         );
     }
 }

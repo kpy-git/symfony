@@ -58,4 +58,13 @@ class TestDatabaseCommandTest extends KernelTestCase
 
         $this->assertCommandIsSuccessful($result);
     }
+
+    public function testExecutePymLegacyDatabase(): void
+    {
+        $result = static::runCommand('kpy:test:database', [
+            'database-name' => 'pym',
+        ]);
+
+        $this->assertCommandIsSuccessful($result);
+    }
 }

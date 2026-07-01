@@ -5,7 +5,7 @@ namespace App\Connectif\Query;
 use App\Shared\Bus\Query\KpyQueryBus;
 use Symfony\Component\DependencyInjection\Attribute\AutowireIterator;
 
-class QueryBus extends KpyQueryBus
+class ConnectifQueryBus extends KpyQueryBus
 {
     public function __construct(#[AutowireIterator('kpy.connectif.query')] iterable $queries)
     {

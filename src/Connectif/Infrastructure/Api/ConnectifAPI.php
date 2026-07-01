@@ -3,6 +3,7 @@
 namespace App\Connectif\Infrastructure\Api;
 
 use App\Connectif\Product;
+use App\Connectif\Purchase;
 use Symfony\Component\DependencyInjection\Attribute\Autowire;
 
 class ConnectifAPI
@@ -24,9 +25,10 @@ class ConnectifAPI
     private string $statusCode;
 
     public function __construct(
-        #[Autowire('%env(CONNECTIF_API_KEY)%')] private readonly string      $apiKey,
-        #[Autowire('%env(CONNECTIF_PRODUCTS_URL)%')] private readonly string $productsUrl,
-        #[Autowire('%env(CONNECTIF_CONTACTS_URL)%')] private readonly string $contactsUrl,
+        #[Autowire('%env(CONNECTIF_API_KEY)%')] private readonly string       $apiKey,
+        #[Autowire('%env(CONNECTIF_PRODUCTS_URL)%')] private readonly string  $productsUrl,
+        #[Autowire('%env(CONNECTIF_CONTACTS_URL)%')] private readonly string  $contactsUrl,
+        #[Autowire('%env(CONNECTIF_PURCHASES_URL)%')] private readonly string $purchasesUrl,
     )
     {
     }
@@ -53,6 +55,15 @@ class ConnectifAPI
         $this->requestBody = json_encode($product, JSON_THROW_ON_ERROR);
 
         return $this->executeRequest();
+    }
+
+    public function createPurchase(Purchase $purchase): bool
+    {
+        $this->url = $this->purchasesUrl;
+
+        $this->requestBody = json_encode($purchase, JSON_THROW_ON_ERROR);
+
+        return $this->executeRequest("POST");
     }
 
     private function encondeBodyForRequest(array $body): void

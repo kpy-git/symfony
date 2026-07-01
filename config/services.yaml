@@ -13,6 +13,8 @@ parameters:
 
     kpy.feeds_dir: '%kernel.project_dir%/public/feeds'
 
+    connectif.log_dir: '%kernel.logs_dir%/connectif'
+
 services:
     # default configuration for services in *this* file
     _defaults:
@@ -32,6 +34,11 @@ services:
             $doctrineDSN: '%env(DOCTRINE_DSN)%'
             $doctrineUser: '%env(DOCTRINE_USER)%'
             $doctrinePassword: '%env(DOCTRINE_PASSWORD)%'
+
+            $pymLegacyDSN: '%env(PYM_LEGACY_DB_DSN)%'
+            $pymLegacyUser: '%env(PYM_LEGACY_DB_USER)%'
+            $pymLegacyDbPrefix: '%env(PYM_LEGACY_DB_PREFIX)%'
+            $pymLegacyPassword: '%env(PYM_LEGACY_DB_PASSWORD)%'
 
     # makes classes in src/ available to be used as services
     # this creates a service per class whose id is the fully-qualified class name
@@ -86,6 +93,24 @@ services:
             $database: '@doctrineDatabaseRoot'
             $databaseName: '%env(DOCTRINE_DB)%'
             $type: !php/const App\Shared\Infrastructure\Database\DatabaseType::MySQL
+
+
+    pymLegacyDatabaseRoot:
+        class: App\Shared\Infrastructure\Database\Database
+        factory: [ '@App\Shared\Infrastructure\Database\Factory\DatabasePymLegacyFactory', 'create' ]
+
+    pymLegacyDatabaseLogger:
+        class: App\Shared\Infrastructure\Database\Decorator\DatabaseLoggerDecorator
+        arguments:
+            $database: '@pymLegacyDatabaseRoot'
+            $databaseName: '%env(PYM_LEGACY_DB_NAME)%'
+            $type: !php/const App\Shared\Infrastructure\Database\DatabaseType::MySQL
+
+    pymLegacyDatabase:
+        class: App\Shared\Infrastructure\Database\Decorator\DatabasePrefixerDecorator
+        arguments:
+            $database: '@pymLegacyDatabaseLogger'
+            $dbPrefix: '%env(PYM_LEGACY_DB_PREFIX)%'
 
 
     App\Shared\Infrastructure\Database\DatabaseBus:
