@@ -121,7 +121,8 @@ class PurchaseSynchronizer implements LoggerAwareInterface
 
         return [
             'success' => $countOk,
-            'error' => $countError
+            'error' => $countError,
+            'last_order' => $this->filesystem->readFile($this->logDir . '/lastOrderVisited'),
         ];
     }
 
