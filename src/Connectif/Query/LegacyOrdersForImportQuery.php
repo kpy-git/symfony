@@ -48,7 +48,7 @@ class LegacyOrdersForImportQuery implements ConnectifQueryInterface
                     and o.id_customer NOT IN (SELECT id_customer FROM ps_pym_marketplaces)
                     and o.id_shop = $shop
                     and o.id_order >= {$params['first_order']}
-                ORDER BY o.id_order limit 1000";
+                ORDER BY o.id_order";
 
         return $this->pymDatabase->prepareForSelect($sql);
     }
