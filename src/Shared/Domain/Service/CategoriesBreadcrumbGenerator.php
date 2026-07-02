@@ -52,6 +52,10 @@ class CategoriesBreadcrumbGenerator
                     return $carry . $separator . $row['category'];
                 }, '');
 
+            if (empty($breadcrumb)) {
+                continue;
+            }
+            
             $this->breadcrumbs[$idCategory] = $breadcrumb;
 
             $categoriesBreadcrumb[] = $breadcrumb;
