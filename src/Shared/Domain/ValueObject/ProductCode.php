@@ -56,4 +56,9 @@ class ProductCode
     {
         return $this->productAttributeId !== 0;
     }
+
+    public function getCodeForUrl(): string
+    {
+        return $this->isCombinationProduct() ? $this->sku : (string)$this->productId;
+    }
 }
