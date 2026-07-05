@@ -10,7 +10,9 @@ use App\Google\Infrastructure\Provider\Provider;
 use App\Shared\Bus\Command\KpyCommandNotFoundException;
 use App\Shared\Domain\Destination;
 use App\Shared\Domain\Service\SFTPFileUploader;
+use App\Shared\Domain\Service\UrlGenerator;
 use App\Shared\Domain\Shop;
+use App\Shared\Domain\ValueObject\ProductCode;
 use App\Shared\Infrastructure\Database\Exception\KpyNotFoundDatabaseException;
 use App\ShippingCostCalculator\Domain\Builder\CarrierBuilder;
 use App\ShippingCostCalculator\Domain\Service\CalculatorShippingCost;
@@ -52,6 +54,7 @@ class GoogleMerchantFeedHandler
         private readonly Provider               $provider,
         private readonly CarrierBuilder         $carrierBuilder,
         private readonly CommandBus             $commandBus,
+        private readonly UrlGenerator           $urlGenerator,
         #[Autowire('%kernel.project_dir%')]
         string                                  $srcDir
     )
@@ -222,8 +225,12 @@ class GoogleMerchantFeedHandler
             // la disponibilidad va ahora en la custom_label3
             $producto['availabity'] = 'in stock';
 
-            $producto['url'] = $googleFeed->getDominio() . "/" . $producto['category_rewrite'] . "/" . $sku . "-" .
-                $producto['product_rewrite'] . ".html";
+            $producto['url'] = $this->urlGenerator->getProductLink(
+                ProductCode::fromSKU($sku),
+                $shop,
+                $producto['category_rewrite'],
+                $producto['product_rewrite']
+            );
             //$producto['url'] = Context::getContext()->link->getProductLink($producto['id_product'], null, null, null, $lang, $shop, $producto['attr']);
             if (in_array($sku, $cuponesQueSoloAparecenDesdeGS)) {
                 $producto['url'] .= '?' . md5('utm_gs') . '=1';
@@ -274,14 +281,17 @@ class GoogleMerchantFeedHandler
             if (array_key_exists($sku, $imagenesPersonalizadas)) {
                 $producto['image'] = $imagenesPersonalizadas[$sku];
             } else {
-                $producto['image'] = $this->getFirstImageUrl($producto['id_product'], $producto['product_rewrite'], $googleFeed->getDominio());
+                $producto['image'] = $this->getFirstImageUrl(
+                    (int) $producto['id_product'],
+                    $producto['product_rewrite'],
+                    $shop);
             }
 
             $producto['additional_images'] = [];
 
             if (count($this->imagenes[$producto['id_product']]) > 1) {
-                $producto['additional_images'] = array_map(function (int $id_image) use ($producto, $googleFeed) {
-                    return $this->getImageUrl($id_image, $producto['product_rewrite'], $googleFeed->getDominio());
+                $producto['additional_images'] = array_map(function (int $imageId) use ($producto, $shop) {
+                    return $this->urlGenerator->getImageLink($imageId, $shop, $producto['product_rewrite']);
                 }, array_slice($this->imagenes[$producto['id_product']], 1, 10));
             }
 
@@ -366,8 +376,12 @@ class GoogleMerchantFeedHandler
 
                 $pack['gastosEnvio'] = $googleFeed->getGastosEnvio($pack['price']);
 
-                $pack['url'] = $googleFeed->getDominio() . "/" . $producto['category_rewrite'] . "/" . $packs[$sku]['id_pack'] .
-                    "-" . $producto['product_rewrite'] . ".html";
+                $pack['url'] = $this->urlGenerator->getProductLink(
+                    ProductCode::fromSKU($pack['sku']),
+                    $shop,
+                    $producto['category_rewrite'],
+                    $producto['product_rewrite']
+                );
                 //$pack['url'] = Context::getContext()->link->getProductLink($tokens[0], null, null, null, $lang, $shop, $tokens[1]);
                 if (in_array($packs[$sku]['id_pack'], $cuponesQueSoloAparecenDesdeGS)) {
                     $pack['url'] .= '?' . md5('utm_gs') . '=1';
@@ -494,21 +508,16 @@ class GoogleMerchantFeedHandler
     }
 
 
-    public function getFirstImageUrl($id_product, $link_rewrite, $host): string
+    public function getFirstImageUrl(int $productId, string $link_rewrite, Shop $shop): string
     {
-        if (array_key_exists($id_product, $this->imagenes)) {
-            [$firstImage,] = $this->imagenes[$id_product];
-            return $this->getImageUrl($firstImage, $link_rewrite, $host);
+        if (array_key_exists($productId, $this->imagenes)) {
+            [$firstImage,] = $this->imagenes[$productId];
+            return $this->urlGenerator->getImageLink($firstImage, $shop, $link_rewrite);
         }
 
         return '';
-
     }
 
-    public function getImageUrl($id_image, $link_rewrite, $host): string
-    {
-        return "{$host}/{$id_image}-large_default/{$link_rewrite}.jpg";
-    }
 
     public function getCategoria($sku, $mascota): string
     {
