@@ -17,7 +17,7 @@ class Range implements RangeInterface
 
     public function __construct(float $minWeight, float $maxWeight, float $cost)
     {
-        $this->priceConverter = new PriceConverter();
+        $this->priceConverter = new PriceConverter(3);
 
         $this->minWeight = $this->priceConverter->toInteger($minWeight);
         $this->maxWeight = $this->priceConverter->toInteger($maxWeight);

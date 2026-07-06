@@ -43,7 +43,7 @@ class CalculatorShippingCost
                 ($carrier->getCostAdditionalPerKg($destination) * ceil($weight - $carrier->getInitWeightAdditionalPerKg($destination)));
 
         } catch (ShippingCostException) {
-            throw new ShippingCostException('El transportista "%s" no tiene ningún rango configurado para %.2f kg. Revisa el peso máximo establecido o configura un rango nuevo', $carrier, $weight);
+            throw new ShippingCostException('El transportista "%s" no tiene ningún rango configurado para %f kg. Revisa el peso máximo establecido o configura un rango nuevo', $carrier, $weight);
         }
     }
 

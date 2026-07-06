@@ -120,3 +120,7 @@ services:
     App\ShippingCostCalculator\Infrastructure\Persistence\Repository\RangeRepository:
         arguments:
             $aquaDatabase: '@aquaDatabase'
+
+    mrw:
+        class: App\ShippingCostCalculator\Domain\Carrier
+        factory: ['@App\ShippingCostCalculator\Domain\Builder\CarrierBuilder', 'getMRW']

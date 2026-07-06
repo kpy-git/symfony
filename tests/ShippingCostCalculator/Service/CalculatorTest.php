@@ -67,6 +67,7 @@ class CalculatorTest extends TestCase
     {
         yield[Destination::PENINSULA, -1, 0];
         yield[Destination::PENINSULA, 0, 0];
+        yield[Destination::PENINSULA, 0.001, 4];
         yield[Destination::PENINSULA, 1, 4];
         yield[Destination::PENINSULA, 3, 4];
         yield[Destination::PENINSULA, 6, 4.56];
