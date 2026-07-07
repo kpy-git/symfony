@@ -11,9 +11,11 @@ parameters:
 
     kpy.google_dir: '%kernel.project_dir%/var/google'
 
-    kpy.feeds_dir: '%kernel.project_dir%/public/feeds'
+    kpy.feeds_dir: '%kernel.project_dir%/var/feeds'
 
     connectif.log_dir: '%kernel.logs_dir%/connectif'
+
+    kpy.priceshape.var_dir: '%kpy.feeds_dir%/priceshape'
 
 services:
     # default configuration for services in *this* file
@@ -124,3 +126,7 @@ services:
     mrw:
         class: App\ShippingCostCalculator\Domain\Carrier
         factory: ['@App\ShippingCostCalculator\Domain\Builder\CarrierBuilder', 'getMRW']
+
+    # siempre que un servicio requiere la interfaz GooglePublicApiInterface se inyectará la clase GooglePublicApi
+    App\Google\Infrastructure\API\GooglePublicApi: ~
+    App\Google\Infrastructure\API\GooglePublicApiInterface: '@App\Google\Infrastructure\API\GooglePublicApi'

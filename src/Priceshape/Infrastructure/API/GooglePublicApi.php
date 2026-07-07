@@ -5,7 +5,7 @@ namespace App\Priceshape\Infrastructure\API;
 use App\Google\Infrastructure\API\GooglePublicApiInterface;
 use App\Shared\Domain\ValueObject\ProductCode;
 
-readonly class GoogleGooglePublicApi implements GooglePublicApiInterface
+readonly class GooglePublicApi implements GooglePublicApiInterface
 {
     public function __construct(private GooglePublicApiInterface $googlePublicApi)
     {

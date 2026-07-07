@@ -22,6 +22,11 @@ readonly class PrestaShopProductsQuery implements QueryInterface
     {
         $shop = $params['shop'] ?? 1;
 
+        $brandsBanned = '';
+        if (isset($params['brands_banned']) && is_array($params['brands_banned'])) {
+            $brandsBanned = ' AND p.id_manufacturer NOT IN (' . implode(',', $params['brands_banned']) . ') ';
+        }
+
         $sql = "
         WITH taxes as (
             SELECT trg.id_tax_rules_group, t.rate
@@ -66,6 +71,7 @@ readonly class PrestaShopProductsQuery implements QueryInterface
             EXISTS (SELECT 1 FROM ps_neftys_stock ns where ns.id_product=p.id_product and ns.id_product_attribute=ifnull(pa.id_product_attribute, 0))
             AND NOT EXISTS (select 1 FROM ps_category_product cp WHERE cp.id_product = p.id_product AND cp.id_category IN (2292, 586))
             AND IF (kpa.id_product_attribute IS NOT NULL, kpa.active = 1, 1=1)
+            {$brandsBanned}
         GROUP BY p.id_product, pa.id_product_attribute
         ORDER BY p.id_product, pa.id_product_attribute";
 

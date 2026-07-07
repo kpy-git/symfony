@@ -5,7 +5,7 @@ namespace App\Priceshape\Query;
 use App\Shared\Infrastructure\Database\DatabaseInterface;
 use Symfony\Component\DependencyInjection\Attribute\Autowire;
 
-readonly class ProductFeaturesGroupByProductKpyQuery implements KpyQueryInterface
+readonly class ProductFeaturesGroupByProductQuery implements QueryInterface
 {
     public function __construct(
         #[Autowire(service: 'kompyDatabase')] private DatabaseInterface $kompyDatabase

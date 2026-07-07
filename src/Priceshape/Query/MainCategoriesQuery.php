@@ -5,7 +5,7 @@ namespace App\Priceshape\Query;
 use App\Shared\Infrastructure\Database\DatabaseInterface;
 use Symfony\Component\DependencyInjection\Attribute\Autowire;
 
-readonly class MainCategoriesKpyQuery implements QueryInterface
+readonly class MainCategoriesQuery implements QueryInterface
 {
     public function __construct(
         #[Autowire(service: 'kompyDatabase')] private DatabaseInterface $kompyDatabase
@@ -20,7 +20,7 @@ readonly class MainCategoriesKpyQuery implements QueryInterface
 
     public function fetch(array $params = []): array
     {
-        return $this->kompyDatabase->fetch(
+        return $this->kompyDatabase->execute(
             "SELECT cp.id_product, c.name
                 from ps_category_product cp
                 inner join (SELECT c2.id_category, cl.name
