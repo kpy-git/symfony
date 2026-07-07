@@ -134,3 +134,6 @@ services:
     # siempre que un servicio requiere la interfaz GooglePublicApiInterface se inyectará la clase GooglePublicApi
     App\Google\Infrastructure\API\GooglePublicApi: ~
     App\Google\Infrastructure\API\GooglePublicApiInterface: '@App\Google\Infrastructure\API\GooglePublicApi'
+
+    App\Priceshape\Infrastructure\API\PriceshapePublicApi: ~
+    App\Priceshape\Infrastructure\API\PriceshapePublicApiInterface: '@App\Priceshape\Infrastructure\API\PriceshapePublicApi'
