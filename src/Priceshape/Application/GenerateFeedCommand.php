@@ -14,7 +14,7 @@ use Symfony\Component\Console\Style\SymfonyStyle;
 use Symfony\Component\DependencyInjection\Attribute\Autowire;
 use Symfony\Component\Filesystem\Filesystem;
 
-class GenerateFeedCommand
+readonly class GenerateFeedCommand
 {
     public function __construct(
         private ProductProvider $productProvider
@@ -28,6 +28,7 @@ class GenerateFeedCommand
         OutputInterface $output,
         Filesystem $filesystem,
         #[Autowire('%kpy.priceshape.var_dir%')] string $varDir,
+        #[Autowire('%kernel.environment%')] string $environment,
         #[Argument] Shop $shop = Shop::KOMPY_ES,
     ): int
     {
@@ -43,6 +44,10 @@ class GenerateFeedCommand
 
             $io->success('Feed generado correctamente, ' . count($products) . ' productos');
             $filesystem->dumpFile($varDir . '/' . $shop->value . '.json', json_encode($products, JSON_PRETTY_PRINT));
+
+            if ($environment === 'dev') {
+                $io->warning(['Productos excluidos:', "\n", implode('|', $this->productProvider->getProductsExcluded())]);
+            }
 
             return Command::SUCCESS;
 

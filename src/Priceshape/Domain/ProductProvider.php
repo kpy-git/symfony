@@ -25,6 +25,7 @@ class ProductProvider
     private array $suggestedRetailPrices;
     private array $featuresGroupByProduct;
     private array $mainCategories;
+    private array $productsExcluded = [];
 
     /**
      * @throws KpyQueryNotFoundException
@@ -130,6 +131,7 @@ class ProductProvider
             $sku = $productCode->getSku();
 
             if (!isset($this->aquaProducts[$sku])) {
+                $this->productsExcluded[] = $sku;
                 continue;
             }
 
@@ -224,5 +226,13 @@ class ProductProvider
         }
 
         return 'Accesorios';
+    }
+
+    /**
+     * @return array
+     */
+    public function getProductsExcluded(): array
+    {
+        return $this->productsExcluded;
     }
 }
