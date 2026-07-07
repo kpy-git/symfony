@@ -134,17 +134,20 @@ class ProductProvider
             }
 
             $product = new Product();
+            $shipping_price = $this->calculatorShippingCost->calculateShippingCostByWeightWithSavedConfiguration((float)$this->aquaProducts[$sku]['PESO']);
+            $costPrice = round(($this->productsPrices[$sku]['cost_price'] * 1.06) + $shipping_price, 6);
+
             $product
                 ->setSku($sku)
                 ->setTitle($prestashopProduct['name'])
                 ->setBrand(str_replace('´', "'", $prestashopProduct['fabricante']))
                 ->setVAT((int)$prestashopProduct['iva'])
                 ->setSalePrice($this->productsPrices[$sku]['sales_price'])
-                ->setCostPrice(round($this->productsPrices[$sku]['cost_price'] * 1.06, 2))
+                ->setCostPrice(round($costPrice, 2))
                 ->setGtin($this->aquaProducts[$sku]['EAN'] ?? '')
                 ->setStockGroup($this->aquaProducts[$sku]['GRUPO'])
                 ->setAvailability((int)$this->aquaProducts[$sku]['STOCK'] <= 0 ? 'out_of_stock' : 'in_stock')
-                ->setShippingPrice($this->calculatorShippingCost->calculateShippingCostByWeightWithSavedConfiguration((float)$this->aquaProducts[$sku]['PESO']))
+                ->setShippingPrice($shipping_price)
                 ->setWeight((float)$this->aquaProducts[$sku]['PESO'])
                 ->setMpn($this->aquaProducts[$sku]['REFERENCIA'] ?? '')
                 ->setProductLink($this->urlGenerator->getProductLink($productCode, $shop, $prestashopProduct['category_rewrite'], $prestashopProduct['product_rewrite']))
