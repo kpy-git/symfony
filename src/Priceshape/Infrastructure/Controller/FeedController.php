@@ -22,7 +22,7 @@ class FeedController extends AbstractController
         Shop $shop = Shop::KOMPY_ES,
     ): BinaryFileResponse
     {
-        $filePath = $feedDir . '/' . $shop->value;
+        $filePath = $feedDir . '/' . $shop->value . '.json';
 
         if (!file_exists($filePath)) {
             throw $this->createNotFoundException('No hay ningún feed para ' . $shop->value);

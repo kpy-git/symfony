@@ -42,7 +42,7 @@ class GenerateFeedCommand
             }
 
             $io->success('Feed generado correctamente, ' . count($products) . ' productos');
-            $filesystem->dumpFile($varDir . '/' . $shop->value, json_encode($products, JSON_PRETTY_PRINT));
+            $filesystem->dumpFile($varDir . '/' . $shop->value . '.json', json_encode($products, JSON_PRETTY_PRINT));
 
             return Command::SUCCESS;
 
