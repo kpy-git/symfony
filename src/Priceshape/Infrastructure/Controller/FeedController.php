@@ -8,7 +8,7 @@ use Symfony\Component\DependencyInjection\Attribute\Autowire;
 use Symfony\Component\HttpFoundation\BinaryFileResponse;
 use Symfony\Component\Routing\Attribute\Route;
 
-#[Route('/priceshape', host: 'ops.%kpy.base_domain%', name: 'priceshape_')]
+#[Route(host: 'ops.%kpy.base_domain%', name: 'priceshape_')]
 class FeedController extends AbstractController
 {
     public function __construct(
@@ -16,7 +16,7 @@ class FeedController extends AbstractController
     {
     }
 
-    #[Route('/feed/{shop}', name: 'feed', methods: ['GET'])]
+    #[Route('/feed/priceshape/{shop}', name: 'feed', methods: ['GET'])]
     public function generateFeed(
         #[Autowire('%kpy.priceshape.var_dir%')] string $feedDir,
         Shop $shop = Shop::KOMPY_ES,
