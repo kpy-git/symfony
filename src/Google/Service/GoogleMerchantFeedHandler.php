@@ -6,6 +6,7 @@ use App\Google\Domain\Command\CommandBus;
 use App\Google\Domain\Exception\KpyGoogleException;
 use App\Google\Domain\GoogleDebugMode;
 use App\Google\Domain\GoogleMerchantFeed;
+use App\Google\Infrastructure\API\PriceshapePublicApi;
 use App\Google\Infrastructure\Provider\Provider;
 use App\Shared\Bus\Command\KpyCommandNotFoundException;
 use App\Shared\Domain\Destination;
@@ -56,7 +57,8 @@ class GoogleMerchantFeedHandler
         private readonly CommandBus             $commandBus,
         private readonly UrlGenerator           $urlGenerator,
         #[Autowire('%kernel.project_dir%')]
-        string                                  $srcDir
+        string                                  $srcDir,
+        private readonly PriceshapePublicApi    $priceshapePublicApi,
     )
     {
         $this->varDir = $srcDir . '/var/google/';
@@ -148,7 +150,7 @@ class GoogleMerchantFeedHandler
         $cuponesAplicadosDirectamenteEnGS = [];
 
         $measuringUnits = $this->provider->getMeasuringUnits();
-        $this->priceShapeInfo = $this->provider->getPriceShapeInfo($shop->getDefaultCountry()->getISO());
+        $this->priceShapeInfo = $this->priceshapePublicApi->getProductsInfoByCountry($shop->getDefaultCountry()->getISO());
         $brandsWithStockSync = $this->provider->getBrandsWithStockSync();
 
         // TODO - debe devolver un array de instancias de la clase Producto (Google)
@@ -282,7 +284,7 @@ class GoogleMerchantFeedHandler
                 $producto['image'] = $imagenesPersonalizadas[$sku];
             } else {
                 $producto['image'] = $this->getFirstImageUrl(
-                    (int) $producto['id_product'],
+                    (int)$producto['id_product'],
                     $producto['product_rewrite'],
                     $shop);
             }

@@ -18,10 +18,6 @@ class Provider
 
     private DatabaseInterface $kompyDatabase;
 
-    private DatabaseInterface $doctrineDatabase;
-
-
-
     /**
      * @throws KpyNotFoundDatabaseException
      */
@@ -34,7 +30,6 @@ class Provider
     {
         $this->aquaDatabase = $this->databaseBus->getAquaDatabase();
         $this->kompyDatabase = $this->databaseBus->getKompyDatabase();
-        $this->doctrineDatabase = $this->databaseBus->getDoctrineDatabase();
     }
 
     /**
@@ -348,28 +343,6 @@ class Provider
         }
 
         return self::$topProducts;
-    }
-
-    public function getPriceShapeInfo(string $country): array
-    {
-        $results = $this->doctrineDatabase->execute("SELECT CONCAT_WS('-', ppi.id_product, ppi.id_product_attribute) sku,
-                ppi.matches, ppi.range_position,
-                if(exists(select *
-                    from priceshape_product_tags ppt
-                    where ppt.id_product=ppi.id_product
-                        and ppt.id_product_attribute=ppi.id_product_attribute
-                        and ppt.country=ppi.country and ppt.tag='Caros'), 'yes', 'no') as caro
-            FROM priceshape_product_info ppi
-            WHERE ppi.country='{$country}'");
-
-        return array_reduce($results, static function (array $carry, array $row) {
-            $carry[$row['sku']] = [
-                'matches' => $row['matches'],
-                'position' => $row['range_position'],
-                'caro' => $row['caro'],
-            ];
-            return $carry;
-        }, []);
     }
 
     public function getBrandsWithStockSync(): array
