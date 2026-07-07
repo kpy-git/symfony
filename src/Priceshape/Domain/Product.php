@@ -2,6 +2,7 @@
 
 namespace App\Priceshape\Domain;
 
+#[\AllowDynamicProperties]
 class Product implements \JsonSerializable
 {
     private string $sku = '';
