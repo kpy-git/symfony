@@ -3,13 +3,10 @@
 namespace App\Priceshape\Query;
 
 use App\Shared\Infrastructure\Database\DatabaseInterface;
-use Symfony\Component\DependencyInjection\Attribute\Autowire;
 
 readonly class BrandsBannedQuery implements QueryInterface
 {
-    public function __construct(
-        #[Autowire(service: 'doctrineDatabase')] private DatabaseInterface $doctrineDatabase
-    )
+    public function __construct(private DatabaseInterface $doctrineDatabase)
     {
     }
 

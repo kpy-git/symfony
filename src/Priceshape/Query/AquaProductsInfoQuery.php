@@ -3,11 +3,10 @@
 namespace App\Priceshape\Query;
 
 use App\Shared\Infrastructure\Database\DatabaseInterface;
-use Symfony\Component\DependencyInjection\Attribute\Autowire;
 
 readonly class AquaProductsInfoQuery implements QueryInterface
 {
-    public function __construct(#[Autowire(service: 'aquaDatabase')] private DatabaseInterface $aquaDatabase)
+    public function __construct(private DatabaseInterface $aquaDatabase)
     {
     }
 
