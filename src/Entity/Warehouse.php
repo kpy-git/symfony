@@ -1,10 +1,8 @@
 <?php
 
-namespace App\Shared\Infrastructure\Persistence\Doctrine\Entity;
+namespace App\Entity;
 
-use App\Shared\Infrastructure\Persistence\Doctrine\Repository\WarehouseRepository;
-use Doctrine\Common\Collections\ArrayCollection;
-use Doctrine\Common\Collections\Collection;
+use App\Repository\WarehouseRepository;
 use Doctrine\DBAL\Types\Types;
 use Doctrine\ORM\Mapping as ORM;
 
@@ -32,7 +30,7 @@ class Warehouse
     #[ORM\Column(type: Types::DECIMAL, precision: 4, scale: 2)]
     private ?string $fixedCostForSmallItem = null;
 
-    #[ORM\OneToOne(targetEntity: self::class, cascade: ['persist', 'remove'])]
+    #[ORM\OneToOne(cascade: ['persist', 'remove'])]
     private ?BoskeFulfillmentCost $boskeFulfillmentCost = null;
 
     public function getId(): ?int
@@ -99,7 +97,6 @@ class Warehouse
 
         return $this;
     }
-
 
     public function getBoskeFulfillmentCost(): ?BoskeFulfillmentCost
     {

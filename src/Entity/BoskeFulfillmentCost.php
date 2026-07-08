@@ -1,8 +1,8 @@
 <?php
 
-namespace App\Shared\Infrastructure\Persistence\Doctrine\Entity;
+namespace App\Entity;
 
-use App\Shared\Infrastructure\Persistence\Doctrine\Repository\BoskeFulfillmentCostRepository;
+use App\Repository\BoskeFulfillmentCostRepository;
 use Doctrine\DBAL\Types\Types;
 use Doctrine\ORM\Mapping as ORM;
 

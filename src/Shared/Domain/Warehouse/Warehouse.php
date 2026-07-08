@@ -4,8 +4,8 @@ namespace App\Shared\Domain\Warehouse;
 
 use App\Shared\Domain\Destination;
 use App\Shared\Domain\Warehouse\CostStrategy\CostStrategyInterface;
+use App\Shared\Domain\Warehouse\ValueObject\BoskeFulfillmentCost;
 use App\Shared\Domain\Warehouse\ValueObject\Product;
-use App\Shared\Infrastructure\Persistence\Doctrine\Entity\BoskeFulfillmentCost;
 use App\ShippingCostCalculator\Domain\Carrier;
 
 class Warehouse
