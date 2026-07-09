@@ -38,6 +38,12 @@ doctrine:
                 dir: '%kernel.project_dir%/src/Priceshape/Infrastructure/Persistence/Doctrine/Model'
                 prefix: 'App\Priceshape\Infrastructure\Persistence\Doctrine\Model'
                 alias: Priceshape
+            Warehouse:
+                type: attribute
+                is_bundle: false
+                dir: '%kernel.project_dir%/src/Warehouse/Infrastructure/Persistence/Doctrine/Model'
+                prefix: 'App\Warehouse\Infrastructure\Persistence\Doctrine\Model'
+                alias: Warehouse
 
 when@test:
     doctrine:

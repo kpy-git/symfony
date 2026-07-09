@@ -1,13 +1,13 @@
 <?php
 
-namespace App\Entity;
+namespace App\Warehouse\Infrastructure\Persistence\Doctrine\Model;
 
-use App\Repository\WarehouseRepository;
+use App\Shared\Infrastructure\Persistence\Doctrine\Repository\WarehouseRepository;
+use App\Warehouse\Domain\CostStrategyType;
 use Doctrine\DBAL\Types\Types;
 use Doctrine\ORM\Mapping as ORM;
 
 #[ORM\Entity(repositoryClass: WarehouseRepository::class)]
-#[Orm\Table(name: 'kpy_warehouse')]
 class Warehouse
 {
     #[ORM\Id]
@@ -21,8 +21,8 @@ class Warehouse
     #[ORM\Column(length: 255)]
     private ?string $carrierService = null;
 
-    #[ORM\Column(type: Types::DECIMAL, precision: 4, scale: 2)]
-    private ?string $commission = null;
+    #[ORM\Column(enumType: CostStrategyType::class)]
+    private CostStrategyType $costStrategyType;
 
     #[ORM\Column]
     private ?bool $packagingIncluded = null;
@@ -30,7 +30,7 @@ class Warehouse
     #[ORM\Column(type: Types::DECIMAL, precision: 4, scale: 2)]
     private ?string $fixedCostForSmallItem = null;
 
-    #[ORM\OneToOne(cascade: ['persist', 'remove'])]
+    #[ORM\OneToOne(targetEntity: self::class, cascade: ['persist', 'remove'])]
     private ?BoskeFulfillmentCost $boskeFulfillmentCost = null;
 
     public function getId(): ?int
@@ -58,18 +58,6 @@ class Warehouse
     public function setCarrierService(string $carrierService): static
     {
         $this->carrierService = $carrierService;
-
-        return $this;
-    }
-
-    public function getCommission(): ?string
-    {
-        return $this->commission;
-    }
-
-    public function setCommission(string $commission): static
-    {
-        $this->commission = $commission;
 
         return $this;
     }
@@ -109,4 +97,16 @@ class Warehouse
 
         return $this;
     }
+
+    public function getCostStrategyType(): CostStrategyType
+    {
+        return $this->costStrategyType;
+    }
+
+    public function setCostStrategyType(CostStrategyType $costStrategyType): static
+    {
+        $this->costStrategyType = $costStrategyType;
+        return $this;
+    }
+
 }

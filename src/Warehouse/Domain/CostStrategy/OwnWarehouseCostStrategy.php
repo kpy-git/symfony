@@ -1,9 +1,8 @@
 <?php
 
-namespace App\Shared\Domain\Warehouse\CostStrategy;
+namespace App\Warehouse\Domain\CostStrategy;
 
-use App\Shared\Domain\Warehouse\CostStrategy\CostStrategyInterface;
-use App\Shared\Domain\Warehouse\ValueObject\Product;
+use App\Warehouse\ValueObject\Product;
 
 class OwnWarehouseCostStrategy implements CostStrategyInterface
 {

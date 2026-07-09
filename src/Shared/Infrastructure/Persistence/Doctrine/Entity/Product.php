@@ -18,11 +18,11 @@ class Product
     private ?int $productAttributeId = null;
 
     #[ORM\Column]
-    private ?bool $isJirafa = null;
+    private bool $isJirafa = false;
 
-    #[ORM\ManyToOne]
-    #[ORM\JoinColumn(nullable: false)]
-    private ?Warehouse $warehouse = null;
+    #[ORM\Column]
+    private bool $isPack = false;
+
 
     public function getProductId(): ?int
     {
@@ -60,15 +60,15 @@ class Product
         return $this;
     }
 
-    public function getWarehouse(): ?Warehouse
+    public function isPack(): bool
     {
-        return $this->warehouse;
+        return $this->isPack;
     }
 
-    public function setWarehouse(?Warehouse $warehouse): static
+    public function setIsPack(bool $isPack): static
     {
-        $this->warehouse = $warehouse;
-
+        $this->isPack = $isPack;
         return $this;
     }
+
 }

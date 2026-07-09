@@ -2,7 +2,7 @@
 
 namespace App\Shared\Infrastructure\Persistence\Doctrine\Repository;
 
-use App\Shared\Infrastructure\Persistence\Doctrine\Entity\BoskeFulfillmentCost;
+use App\Warehouse\Infrastructure\Persistence\Doctrine\Model\BoskeFulfillmentCost;
 use Doctrine\Bundle\DoctrineBundle\Repository\ServiceEntityRepository;
 use Doctrine\Persistence\ManagerRegistry;
 

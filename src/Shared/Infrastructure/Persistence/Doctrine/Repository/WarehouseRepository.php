@@ -2,7 +2,7 @@
 
 namespace App\Shared\Infrastructure\Persistence\Doctrine\Repository;
 
-use App\Shared\Infrastructure\Persistence\Doctrine\Entity\Warehouse;
+use App\Warehouse\Infrastructure\Persistence\Doctrine\Model\Warehouse;
 use Doctrine\Bundle\DoctrineBundle\Repository\ServiceEntityRepository;
 use Doctrine\Persistence\ManagerRegistry;
 

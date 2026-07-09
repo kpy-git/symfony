@@ -1,12 +1,12 @@
 <?php
 
-namespace App\Shared\Domain\Warehouse;
+namespace App\Warehouse\Domain;
 
 use App\Shared\Domain\Destination;
-use App\Shared\Domain\Warehouse\CostStrategy\CostStrategyInterface;
-use App\Shared\Domain\Warehouse\ValueObject\BoskeFulfillmentCost;
-use App\Shared\Domain\Warehouse\ValueObject\Product;
 use App\ShippingCostCalculator\Domain\Carrier;
+use App\Warehouse\Domain\CostStrategy\CostStrategyInterface;
+use App\Warehouse\Infrastructure\Persistence\Doctrine\Model\BoskeFulfillmentCost;
+use App\Warehouse\ValueObject\Product;
 
 class Warehouse
 {
@@ -14,7 +14,8 @@ class Warehouse
 
     public function __construct(
         private readonly CostStrategyInterface $costStrategy,
-        private readonly BoskeFulfillmentCost $boskeFulfillmentCost
+        private readonly BoskeFulfillmentCost $boskeFulfillmentCost,
+        private readonly bool $packagingCostIncluded = false
     )
     {
     }
@@ -51,6 +52,11 @@ class Warehouse
         };
 
         return round($singleItemCost + (($quantity - 1) * $additionalUnitsCost), 6);
+    }
+
+    public function isPackagingCostIncluded(): bool
+    {
+        return $this->packagingCostIncluded;
     }
 
 }
