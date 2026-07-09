@@ -137,19 +137,22 @@ class ProductProvider
 
             $product = new Product();
 
-            $shipping_price = 0;
-            if ($this->productsPrices[$sku]['sales_price'] < $shop->getLimitToCalculateShippingCost()) {
-                $shipping_price = $this->calculatorShippingCost->calculateShippingCostByWeightWithSavedConfiguration((float)$this->aquaProducts[$sku]['PESO']);
-            }
+            $salesPrice = $this->productsPrices[$sku]['sales_price'];
 
-            $costPrice = round(($this->productsPrices[$sku]['cost_price'] * 1.06) + $shipping_price, 6);
+            $shipping_price = $salesPrice > $shop->priceLimitToShippingFree() ? 0 : $shop->shippingPriceByDestination(Destination::PENINSULA);
+
+            $shippingCost = $salesPrice > $shop->getLimitToCalculateShippingCost()
+                ? $this->calculatorShippingCost->calculateShippingCostByWeightWithSavedConfiguration((float)$this->aquaProducts[$sku]['PESO'])
+                : 0;
+
+            $costPrice = round(($this->productsPrices[$sku]['cost_price'] * 1.06) + $shippingCost, 6);
 
             $product
                 ->setSku($sku)
                 ->setTitle($prestashopProduct['name'])
                 ->setBrand(str_replace('´', "'", $prestashopProduct['fabricante']))
                 ->setVAT((int)$prestashopProduct['iva'])
-                ->setSalePrice($this->productsPrices[$sku]['sales_price'])
+                ->setSalePrice($salesPrice)
                 ->setCostPrice(round($costPrice, 2))
                 ->setGtin($this->aquaProducts[$sku]['EAN'] ?? '')
                 ->setStockGroup($this->aquaProducts[$sku]['GRUPO'])
