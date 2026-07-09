@@ -136,7 +136,12 @@ class ProductProvider
             }
 
             $product = new Product();
-            $shipping_price = $this->calculatorShippingCost->calculateShippingCostByWeightWithSavedConfiguration((float)$this->aquaProducts[$sku]['PESO']);
+
+            $shipping_price = 0;
+            if ($this->productsPrices[$sku]['sales_price'] < $shop->getLimitToCalculateShippingCost()) {
+                $shipping_price = $this->calculatorShippingCost->calculateShippingCostByWeightWithSavedConfiguration((float)$this->aquaProducts[$sku]['PESO']);
+            }
+
             $costPrice = round(($this->productsPrices[$sku]['cost_price'] * 1.06) + $shipping_price, 6);
 
             $product
