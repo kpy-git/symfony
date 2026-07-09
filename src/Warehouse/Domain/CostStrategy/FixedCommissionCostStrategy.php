@@ -2,6 +2,7 @@
 
 namespace App\Warehouse\Domain\CostStrategy;
 
+use App\Warehouse\Domain\CostStrategyType;
 use App\Warehouse\ValueObject\Product;
 
 class FixedCommissionCostStrategy implements CostStrategyInterface
@@ -16,5 +17,10 @@ class FixedCommissionCostStrategy implements CostStrategyInterface
     public function computeFinalCostPrice(Product $product, int $quantity = 1): float
     {
         return round($product->getCostPrice() * $this->commission * $quantity, 6);
+    }
+
+    public function getType(): CostStrategyType
+    {
+        return CostStrategyType::FIXED_PERCENT;
     }
 }

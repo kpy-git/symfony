@@ -4,22 +4,27 @@ namespace App\Warehouse\Domain;
 
 use App\Warehouse\Domain\CostStrategy\CostStrategyInterface;
 use App\Warehouse\Domain\CostStrategy\FixedCommissionCostStrategy;
-use App\Warehouse\Domain\CostStrategy\OwnWarehouseCostStrategy;
+use App\Warehouse\Domain\CostStrategy\OwnershipCostStrategy;
+use App\Warehouse\Domain\Exception\WarehouseException;
 use App\Warehouse\Domain\Exception\WarehouseNotFoundException;
 use App\Warehouse\Infrastructure\Persistence\Doctrine\Model\BoskeFulfillmentCost;
 use Doctrine\ORM\EntityManagerInterface;
+use Symfony\Component\DependencyInjection\Attribute\AutowireIterator;
 
 class WarehouseFactory
 {
     private array $instances = [];
 
     public function __construct(
-        private readonly EntityManagerInterface $entityManager
+        private readonly EntityManagerInterface $entityManager,
+        #[AutowireIterator('kpy.warehouse.cost_strategy')]
+        private readonly iterable $costStrategies
     )
     {
     }
 
     /**
+     * @throws WarehouseException
      * @throws WarehouseNotFoundException
      */
     public function createFrom(int $warehouseId): Warehouse
@@ -33,7 +38,7 @@ class WarehouseFactory
             }
 
             $warehouse = new Warehouse(
-                $this->getCostStrategyByWarehouse($warehouseModel),
+                $this->getCostStrategyByType($warehouseModel->getCostStrategyType()),
                 $warehouseModel->getBoskeFulfillmentCost() ?? new BoskeFulfillmentCost(),
                 $warehouseModel->isPackagingIncluded()
             );
@@ -44,12 +49,18 @@ class WarehouseFactory
         return $this->instances[$warehouseId];
     }
 
-    private function getCostStrategyByWarehouse(\App\Warehouse\Infrastructure\Persistence\Doctrine\Model\Warehouse $warehouse): CostStrategyInterface
+    /**
+     * @throws WarehouseException
+     */
+    private function getCostStrategyByType(CostStrategyType $type): CostStrategyInterface
     {
-        if ($warehouse->getCommission() > 0) {
-            return new FixedCommissionCostStrategy($warehouse->getCommission());
+        /** @var CostStrategyInterface $costStrategy */
+        foreach ($this->costStrategies as $costStrategy) {
+            if ($type === $costStrategy->getType()) {
+                return $costStrategy;
+            }
         }
 
-        return new OwnWarehouseCostStrategy();
+        throw new WarehouseException('No cost strategy available for ' . $type->value);
     }
 }

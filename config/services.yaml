@@ -17,6 +17,8 @@ parameters:
 
     kpy.priceshape.var_dir: '%kpy.feeds_dir%/priceshape'
 
+    kpy.warehouse.ownership_manipulation_cost: '%env(float:OWNERSHIP_WAREHOUSE_MANIPULATION_COST)%'
+
 services:
     # default configuration for services in *this* file
     _defaults:
