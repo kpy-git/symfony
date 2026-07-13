@@ -3,8 +3,9 @@
 namespace App\Warehouse\Infrastructure\Persistence\Doctrine\Model;
 
 use App\Shared\Infrastructure\Persistence\Doctrine\Repository\WarehouseRepository;
-use App\Warehouse\Domain\CostStrategyType;
-use Doctrine\DBAL\Types\Types;
+use App\Warehouse\Domain\CostStrategy\CostStrategyType;
+use Doctrine\Common\Collections\ArrayCollection;
+use Doctrine\Common\Collections\Collection;
 use Doctrine\ORM\Mapping as ORM;
 
 #[ORM\Entity(repositoryClass: WarehouseRepository::class)]
@@ -15,7 +16,7 @@ class Warehouse
     #[ORM\Column]
     private ?int $id = null;
 
-    #[ORM\Column(length: 255)]
+    #[ORM\Column(length: 255, unique: true)]
     private ?string $name = null;
 
     #[ORM\Column(length: 255)]
@@ -24,14 +25,16 @@ class Warehouse
     #[ORM\Column(enumType: CostStrategyType::class)]
     private CostStrategyType $costStrategyType;
 
-    #[ORM\Column]
-    private ?bool $packagingIncluded = null;
+    /**
+     * @var Collection<int, PackageModel>
+     */
+    #[ORM\OneToMany(targetEntity: PackageModel::class, mappedBy: 'warehouse', orphanRemoval: true)]
+    private Collection $packages;
 
-    #[ORM\Column(type: Types::DECIMAL, precision: 4, scale: 2)]
-    private ?string $fixedCostForSmallItem = null;
-
-    #[ORM\OneToOne(targetEntity: self::class, cascade: ['persist', 'remove'])]
-    private ?BoskeFulfillmentCost $boskeFulfillmentCost = null;
+    public function __construct()
+    {
+        $this->packages = new ArrayCollection();
+    }
 
     public function getId(): ?int
     {
@@ -45,7 +48,7 @@ class Warehouse
 
     public function setName(string $name): static
     {
-        $this->name = $name;
+        $this->name = mb_strtoupper($name);
 
         return $this;
     }
@@ -62,42 +65,6 @@ class Warehouse
         return $this;
     }
 
-    public function isPackagingIncluded(): ?bool
-    {
-        return $this->packagingIncluded;
-    }
-
-    public function setPackagingIncluded(bool $packagingIncluded): static
-    {
-        $this->packagingIncluded = $packagingIncluded;
-
-        return $this;
-    }
-
-    public function getFixedCostForSmallItem(): ?string
-    {
-        return $this->fixedCostForSmallItem;
-    }
-
-    public function setFixedCostForSmallItem(string $fixedCostForSmallItem): static
-    {
-        $this->fixedCostForSmallItem = $fixedCostForSmallItem;
-
-        return $this;
-    }
-
-    public function getBoskeFulfillmentCost(): ?BoskeFulfillmentCost
-    {
-        return $this->boskeFulfillmentCost;
-    }
-
-    public function setBoskeFulfillmentCost(?BoskeFulfillmentCost $boskeFulfillmentCost): static
-    {
-        $this->boskeFulfillmentCost = $boskeFulfillmentCost;
-
-        return $this;
-    }
-
     public function getCostStrategyType(): CostStrategyType
     {
         return $this->costStrategyType;
@@ -106,6 +73,36 @@ class Warehouse
     public function setCostStrategyType(CostStrategyType $costStrategyType): static
     {
         $this->costStrategyType = $costStrategyType;
+        return $this;
+    }
+
+    /**
+     * @return Collection<int, PackageModel>
+     */
+    public function getPackages(): Collection
+    {
+        return $this->packages;
+    }
+
+    public function addPackage(PackageModel $package): static
+    {
+        if (!$this->packages->contains($package)) {
+            $this->packages->add($package);
+            $package->setWarehouse($this);
+        }
+
+        return $this;
+    }
+
+    public function removePackage(PackageModel $package): static
+    {
+        if ($this->packages->removeElement($package)) {
+            // set the owning side to null (unless already changed)
+            if ($package->getWarehouse() === $this) {
+                $package->setWarehouse(null);
+            }
+        }
+
         return $this;
     }
 

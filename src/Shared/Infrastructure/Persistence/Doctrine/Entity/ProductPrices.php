@@ -21,13 +21,6 @@ class ProductPrices
     #[ORM\Column(name: 'sales_price_es', type: Types::DECIMAL, precision: 6, scale: 2)]
     private ?string $salesPriceES = null;
 
-    #[ORM\Column(type: Types::DECIMAL, precision: 10, scale: 6)]
-    private ?string $finalCostPrice = null;
-
-    #[ORM\Column(type: Types::DECIMAL, precision: 10, scale: 6)]
-    private ?string $pcmp = null;
-
-
     public function getProductId(): ?int
     {
         return $this->productId;
@@ -60,30 +53,6 @@ class ProductPrices
     public function setSalesPriceES(string $salesPriceES): static
     {
         $this->salesPriceES = $salesPriceES;
-
-        return $this;
-    }
-
-    public function getFinalCostPrice(): ?string
-    {
-        return $this->finalCostPrice;
-    }
-
-    public function setFinalCostPrice(string $finalCostPrice): static
-    {
-        $this->finalCostPrice = $finalCostPrice;
-
-        return $this;
-    }
-
-    public function getPcmp(): ?string
-    {
-        return $this->pcmp;
-    }
-
-    public function setPcmp(string $pcmp): static
-    {
-        $this->pcmp = $pcmp;
 
         return $this;
     }

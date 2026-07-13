@@ -3,6 +3,7 @@
 namespace App\Warehouse\Infrastructure\Persistence\Doctrine\Model;
 
 use App\Warehouse\Infrastructure\Persistence\Doctrine\Repository\WarehouseProductRepository;
+use Doctrine\DBAL\Types\Types;
 use Doctrine\ORM\Mapping as ORM;
 
 #[ORM\Entity(repositoryClass: WarehouseProductRepository::class)]
@@ -20,12 +21,15 @@ class WarehouseProduct
     #[ORM\Column(name: "id_product_attribute", options: ["unsigned" => true])]
     private ?int $productAttributeId = null;
 
-    #[ORM\ManyToOne]
-    #[ORM\JoinColumn(nullable: false)]
-    private ?Warehouse $warehouse = null;
+    #[ORM\Column(type: Types::DECIMAL, precision: 10, scale: 6)]
+    private ?string $finalCostPrice = null;
 
     #[ORM\Column]
     private bool $isDefault = true;
+
+    #[ORM\ManyToOne]
+    #[ORM\JoinColumn(nullable: false)]
+    private ?Warehouse $warehouse = null;
 
     public function getId(): ?int
     {
@@ -76,6 +80,19 @@ class WarehouseProduct
     public function setDefault(bool $isDefault): static
     {
         $this->isDefault = $isDefault;
+
+        return $this;
+    }
+
+
+    public function getFinalCostPrice(): ?string
+    {
+        return $this->finalCostPrice;
+    }
+
+    public function setFinalCostPrice(string $finalCostPrice): static
+    {
+        $this->finalCostPrice = $finalCostPrice;
 
         return $this;
     }

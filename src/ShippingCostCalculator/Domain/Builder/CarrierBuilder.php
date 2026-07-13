@@ -16,14 +16,19 @@ readonly class CarrierBuilder
     {
     }
 
-    public function getMRW(): Carrier
+    public function getByService(string $service): Carrier
     {
-        $carrier = $this->carrierRepository->findByService('6');
+        $carrier = $this->carrierRepository->findByService($service);
 
         $carrier->setRangesByDestination(
             Destination::PENINSULA,
             $this->rangeRepository->findAllByServiceAndDestination($carrier->getServiceId(), Destination::PENINSULA));
 
         return $carrier;
+    }
+
+    public function getMRW(): Carrier
+    {
+        return $this->getByService('6');
     }
 }

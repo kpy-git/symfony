@@ -2,13 +2,11 @@
 
 namespace App\Warehouse\Domain\CostStrategy;
 
-use App\Warehouse\Domain\CostStrategyType;
-use App\Warehouse\Domain\PackagingHandler;
-use App\Warehouse\ValueObject\Product;
+use App\Warehouse\Domain\ValueObject\Product;
 use Symfony\Component\DependencyInjection\Attribute\AutoconfigureTag;
 
 #[AutoconfigureTag('kpy.warehouse.cost_strategy')]
-interface CostStrategyInterface
+interface WarehouseCostStrategyInterface
 {
     public function computeFinalCostPrice(Product $product, int $quantity = 1): float;
 

@@ -1,6 +1,6 @@
 <?php
 
-namespace App\Warehouse\ValueObject;
+namespace App\Warehouse\Domain\ValueObject;
 
 use App\Shared\Domain\ValueObject\ProductCode;
 

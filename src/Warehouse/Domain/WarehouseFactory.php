@@ -2,12 +2,13 @@
 
 namespace App\Warehouse\Domain;
 
-use App\Warehouse\Domain\CostStrategy\CostStrategyInterface;
-use App\Warehouse\Domain\CostStrategy\FixedCommissionCostStrategy;
-use App\Warehouse\Domain\CostStrategy\OwnershipCostStrategy;
+use App\ShippingCostCalculator\Domain\Builder\CarrierBuilder;
+use App\Warehouse\Domain\CostStrategy\CostStrategyType;
+use App\Warehouse\Domain\CostStrategy\WarehouseCostStrategyInterface;
 use App\Warehouse\Domain\Exception\WarehouseException;
 use App\Warehouse\Domain\Exception\WarehouseNotFoundException;
-use App\Warehouse\Infrastructure\Persistence\Doctrine\Model\BoskeFulfillmentCost;
+use App\Warehouse\Domain\ValueObject\Package;
+use App\Warehouse\Infrastructure\Persistence\Doctrine\Model\PackageModel;
 use Doctrine\ORM\EntityManagerInterface;
 use Symfony\Component\DependencyInjection\Attribute\AutowireIterator;
 
@@ -18,7 +19,8 @@ class WarehouseFactory
     public function __construct(
         private readonly EntityManagerInterface $entityManager,
         #[AutowireIterator('kpy.warehouse.cost_strategy')]
-        private readonly iterable $costStrategies
+        private readonly iterable               $costStrategies,
+        private readonly CarrierBuilder         $carrierBuilder,
     )
     {
     }
@@ -27,20 +29,26 @@ class WarehouseFactory
      * @throws WarehouseException
      * @throws WarehouseNotFoundException
      */
-    public function createFrom(int $warehouseId): Warehouse
+    public
+    function createFrom(string $warehouseName): Warehouse
     {
-        if (!isset($this->instances[$warehouseId])) {
-            /** @var \App\Warehouse\Infrastructure\Persistence\Doctrine\Model\Warehouse $warehouseModel */
-            $warehouseModel = $this->entityManager->getRepository(\App\Warehouse\Infrastructure\Persistence\Doctrine\Model\Warehouse::class)->find($warehouseId);
+        /** @var \App\Warehouse\Infrastructure\Persistence\Doctrine\Model\Warehouse $warehouseModel */
+        $warehouseModel = $this->entityManager->getRepository(\App\Warehouse\Infrastructure\Persistence\Doctrine\Model\Warehouse::class)->findOneBy(['name' => $warehouseName]);
+        if (!$warehouseModel) {
+            throw new WarehouseNotFoundException("Warehouse '{$warehouseName}' does not exist");
+        }
 
-            if (!$warehouseModel) {
-                throw new WarehouseNotFoundException("Warehouse with id {$warehouseId} does not exist");
-            }
+        $warehouseId = $warehouseModel->getId();
+
+        if (!isset($this->instances[$warehouseId])) {
+            $packages = $warehouseModel->getPackages()->map(static function (PackageModel $package) {
+                return new Package($package->getName(), $package->getCost(), $package->getMaxWeightAllowed());
+            })->toArray();
 
             $warehouse = new Warehouse(
                 $this->getCostStrategyByType($warehouseModel->getCostStrategyType()),
-                $warehouseModel->getBoskeFulfillmentCost() ?? new BoskeFulfillmentCost(),
-                $warehouseModel->isPackagingIncluded()
+                $this->carrierBuilder->getByService($warehouseModel->getCarrierService()),
+                new PackagingHandler($packages),
             );
 
             $this->instances[$warehouseId] = $warehouse;
@@ -52,9 +60,10 @@ class WarehouseFactory
     /**
      * @throws WarehouseException
      */
-    private function getCostStrategyByType(CostStrategyType $type): CostStrategyInterface
+    private
+    function getCostStrategyByType(CostStrategyType $type): WarehouseCostStrategyInterface
     {
-        /** @var CostStrategyInterface $costStrategy */
+        /** @var WarehouseCostStrategyInterface $costStrategy */
         foreach ($this->costStrategies as $costStrategy) {
             if ($type === $costStrategy->getType()) {
                 return $costStrategy;

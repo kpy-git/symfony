@@ -4,29 +4,22 @@ namespace App\Warehouse\Domain;
 
 use App\Shared\Domain\Destination;
 use App\ShippingCostCalculator\Domain\Carrier;
-use App\Warehouse\Domain\CostStrategy\CostStrategyInterface;
-use App\Warehouse\Infrastructure\Persistence\Doctrine\Model\BoskeFulfillmentCost;
-use App\Warehouse\ValueObject\Product;
+use App\Warehouse\Domain\CostStrategy\WarehouseCostStrategyInterface;
+use App\Warehouse\Domain\ValueObject\Product;
 
 class Warehouse
 {
-    protected ?Carrier $carrier = null;
-
     public function __construct(
-        private readonly CostStrategyInterface $costStrategy,
-        private readonly BoskeFulfillmentCost $boskeFulfillmentCost,
-        private readonly bool $packagingCostIncluded = false
+        private readonly WarehouseCostStrategyInterface $costStrategy,
+        private readonly Carrier                        $carrier,
+        private readonly PackagingHandler               $packagingHandler,
     )
     {
     }
 
-    public function getFinalCostPrice(Product $product, int $quantity = 1): float
+    public function getProductCostPrice(Product $product, int $quantity = 1): float
     {
-        if ($product->isBoske()) {
-            return $this->computeBoskeCost($quantity, $product->getWeight());
-        }
-
-        return $this->costStrategy->computeFinalCostPrice($product, $quantity);
+        return round($this->costStrategy->computeFinalCostPrice($product, $quantity), 6);
     }
 
     public function getCarrier(): ?Carrier
@@ -39,24 +32,8 @@ class Warehouse
         return Destination::PENINSULA;
     }
 
-    public function computeBoskeCost(int $quantity, float $weight): float
+    public function getPackagingHandler(): PackagingHandler
     {
-        $singleItemCost = match(true) {
-            $weight < 5 => $this->boskeFulfillmentCost->getSingleItemUpTo5Kg(),
-            default => $this->boskeFulfillmentCost->getSingleItemStartingAt5Kg()
-        };
-
-        $additionalUnitsCost = match(true) {
-            $weight < 5 => $this->boskeFulfillmentCost->getAdditionalItemsUpTo5Kg(),
-            default => $this->boskeFulfillmentCost->getAdditionalItemsStartingAt5Kg()
-        };
-
-        return round($singleItemCost + (($quantity - 1) * $additionalUnitsCost), 6);
+        return $this->packagingHandler;
     }
-
-    public function isPackagingCostIncluded(): bool
-    {
-        return $this->packagingCostIncluded;
-    }
-
 }

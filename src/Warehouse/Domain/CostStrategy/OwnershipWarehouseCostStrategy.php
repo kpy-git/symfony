@@ -2,29 +2,22 @@
 
 namespace App\Warehouse\Domain\CostStrategy;
 
-use App\Warehouse\Domain\CostStrategyType;
-use App\Warehouse\Domain\PackagingHandler;
-use App\Warehouse\ValueObject\Product;
+use App\Warehouse\Domain\ValueObject\Product;
 use Symfony\Component\DependencyInjection\Attribute\Autowire;
 
-readonly class OwnershipCostStrategy implements CostStrategyInterface
+readonly class OwnershipWarehouseCostStrategy implements WarehouseCostStrategyInterface
 {
 
     public function __construct(
         #[Autowire('%kpy.warehouse.ownership_manipulation_cost%')]
         private float            $manipulationCost,
-        private PackagingHandler $packagingHandler,
     )
     {
     }
 
     public function computeFinalCostPrice(Product $product, int $quantity = 1): float
     {
-        return round(
-            ($product->getCostPrice() * $quantity)
-            + $this->manipulationCost
-            + $this->packagingHandler->getCostFor($product->getWeight() * $quantity)
-            , 6);
+        return ($product->getCostPrice() * $quantity) + $this->manipulationCost;
     }
 
     public function getType(): CostStrategyType

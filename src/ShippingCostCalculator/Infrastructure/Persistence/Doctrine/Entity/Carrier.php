@@ -19,7 +19,7 @@ class Carrier
     private ?string $name = null;
 
     #[ORM\Column]
-    private ?int $idServiceAqua = null;
+    private ?string $idServiceAqua = null;
 
     #[ORM\Column(type: Types::DECIMAL, precision: 5, scale: 2)]
     private ?string $maxShippingWeight = null;
@@ -52,12 +52,12 @@ class Carrier
         return $this;
     }
 
-    public function getIdServiceAqua(): ?int
+    public function getIdServiceAqua(): ?string
     {
         return $this->idServiceAqua;
     }
 
-    public function setIdServiceAqua(?int $idServiceAqua): static
+    public function setIdServiceAqua(?string $idServiceAqua): static
     {
         $this->idServiceAqua = $idServiceAqua;
         return $this;
