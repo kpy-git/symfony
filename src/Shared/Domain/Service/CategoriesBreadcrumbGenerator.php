@@ -16,7 +16,6 @@ class CategoriesBreadcrumbGenerator
     {
         $this->breadcrumbs = [];
 
-        $this->loadCategoriesByProduct();
     }
 
     private function loadCategoriesByProduct(): void
@@ -31,6 +30,10 @@ class CategoriesBreadcrumbGenerator
 
     public function getAllCategoriesBreadcrumbByProduct(int $idProduct, string $separator = '/'): array
     {
+        if (empty($this->categoriesByProductId)) {
+            $this->loadCategoriesByProduct();
+        }
+
         if (!array_key_exists($idProduct, $this->categoriesByProductId)) {
             return [];
         }
@@ -55,7 +58,7 @@ class CategoriesBreadcrumbGenerator
             if (empty($breadcrumb)) {
                 continue;
             }
-            
+
             $this->breadcrumbs[$idCategory] = $breadcrumb;
 
             $categoriesBreadcrumb[] = $breadcrumb;
