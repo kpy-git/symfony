@@ -52,10 +52,10 @@ class ProductProvider
         );
 
         $this->productsPrices = array_reduce(
-            $this->kpyQueryBus->fetch('kpy.priceshape.query.products_prices'),
+            $this->kpyQueryBus->fetch('kpy.shared.query.products_prices'),
             static function (array $carry, array $row): array {
                 $carry[ProductCode::from($row['id_product'], $row['id_product_attribute'])->getSku()] = [
-                    'cost_price' => $row['final_cost_price'],
+                    'cost_price' => $row['final_cost_price'] ?? 0,
                     'sales_price' => $row['sales_price_es'],
                 ];
                 return $carry;
