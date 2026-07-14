@@ -46,7 +46,7 @@ readonly class OrderFactory
                 ProductCode::from($line['id_product'], $line['id_product_attribute']),
                 $line['name'],
                 $line['quantity'],
-                $line['ean'],
+                $line['ean'] ?? '',
             ));
         }
 
