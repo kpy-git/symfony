@@ -1,0 +1,36 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>{% block title %}Preparación de pedidos{% endblock %}</title>
+    {% block stylesheets %}
+    {% endblock %}
+
+    {% block javascripts %}
+        {% block importmap %}{{ importmap(['app', 'warehouse-fulfillment']) }}{% endblock %}
+    {% endblock %}
+
+</head>
+<body>
+
+<header>Pedidos pendientes de preparar</header>
+
+<div class="contenedor-principal">
+
+    <!-- Columna Izquierda: Listado -->
+    <div class="columna-izquierda" id="listaPedidos">
+        {% for order in pendingOrders %}
+            {{ include('warehouse/fulfillment/_order-preview.html.twig', {orderId: order.id_order, orderDate: order.date_add|date("d/m/Y H:i")}) }}
+        {% endfor %}
+    </div>
+
+    <!-- Columna Derecha: Detalle -->
+    <div class="columna-derecha" id="panelDetalle">
+        <div class="vista-vacia">
+            Selecciona un pedido de la lista para ver sus detalles.
+        </div>
+    </div>
+</div>
+</body>
+</html>

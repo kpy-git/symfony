@@ -1,0 +1,37 @@
+<div class="detalle-bloque" data-id="{{ orderId }}">
+    <div class="detalle-header">
+        <div>
+            <h2>Pedido {{ orderId }}</h2>
+            <p style="color: #7f8c8d; margin-top: 5px;">Recibido: {{ orderDate }}</p>
+        </div>
+    </div>
+
+    <div class="detalle-cliente">
+        <strong>Dirección de envío</strong><br>
+        {{ address|raw }}
+    </div>
+
+    <h3>Productos a preparar</h3>
+    <table class="tabla-productos">
+        <thead>
+        <tr>
+            <th>Cant.</th>
+            <th>Producto</th>
+            <th>EAN</th>
+        </tr>
+        </thead>
+        <tbody>
+            {% for product in products %}
+            <tr>
+            <td class="td-cantidad"><span class="badge-cantidad">x{{ product.quantity }}</span></td>
+                <td>{{ product.name }}</td>
+                <td>{{ product.ean }}</td>
+            </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+
+    <button class="btn-preparar">
+        Obtener etiqueta
+    </button>
+</div>

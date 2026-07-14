@@ -61,4 +61,9 @@ class ProductCode
     {
         return $this->isCombinationProduct() ? $this->sku : (string)$this->productId;
     }
+
+    public function equals(self $productCode): bool
+    {
+        return $this->sku === $productCode->getSku();
+    }
 }
