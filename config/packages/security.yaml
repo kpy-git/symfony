@@ -12,6 +12,11 @@ security:
                 users:
                     priceshape: { password: '$2y$13$HCS5IVaUBa9XbUSW7aMBuuQRLWgVaZzXIYPV1Uznk/m3GL9aFz2fu', roles: [ROLE_FEED_CONSUMER]}
 
+        warehouse_provider:
+            memory:
+                users:
+                    kompy: { password: '$2y$13$6zwxFD9ehYHGis1LxTZ96evuTLsjjAr5eZb.BE9oWxyRHz/Y3gEk6', roles: [ ROLE_WAREHOUSE ] }
+
         cron_provider:
             memory:
                 users:
@@ -27,6 +32,12 @@ security:
             host: ^ops\.kompymascotas\.com$
             pattern: ^/feed/
             provider: feed_provider
+            http_basic:
+                realm: "Acceso protegido"
+
+        warehouse:
+            host: ^warehouse\.kompymascotas\.com$
+            provider: warehouse_provider
             http_basic:
                 realm: "Acceso protegido"
 
@@ -50,6 +61,7 @@ security:
     access_control:
         - { host: ^ops\.kompymascotas\.com$, path: ^/feed/, roles: ROLE_FEED_CONSUMER }
         - { host: ^ops\.kompymascotas\.com$, roles: ROLE_CRONJOB }
+        - { host: ^warehouse\.kompymascotas\.com$, roles: ROLE_WAREHOUSE}
         # - { path: ^/admin, roles: ROLE_ADMIN }
         # - { path: ^/profile, roles: ROLE_USER }
 
