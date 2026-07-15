@@ -7,6 +7,10 @@ class Order
     /** @var OrderProduct[] $products */
     private array $products;
 
+    private float $weight;
+
+    private float $crm;
+
     public function __construct(
         private readonly int                $orderId,
         private readonly \DateTimeImmutable $orderDate,
@@ -14,10 +18,14 @@ class Order
     )
     {
         $this->products = [];
+        $this->weight = 0;
+        $this->crm = 0;
     }
 
     public function addProduct(OrderProduct $newProduct): void
     {
+        $this->weight += $newProduct->getQuantity() * $newProduct->getWeight();
+
         if (empty($this->products)) {
             $this->products[] = $newProduct;
             return;
@@ -56,6 +64,32 @@ class Order
     public function getProducts(): array
     {
         return $this->products;
+    }
+
+    public function isCRM(): bool
+    {
+        return $this->crm > 0;
+    }
+
+    public function getWeight(): float
+    {
+        return $this->weight;
+    }
+
+    public function getCrm(): float
+    {
+        return $this->crm;
+    }
+
+    public function setCrm(float $crm): static
+    {
+        $this->crm = $crm;
+        return $this;
+    }
+
+    public function getNotes(): string
+    {
+        return 'Observaciones del cliente';
     }
 
 }

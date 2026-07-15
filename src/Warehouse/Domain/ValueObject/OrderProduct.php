@@ -10,7 +10,8 @@ readonly class OrderProduct
         private ProductCode $productCode,
         private string $name,
         private int $quantity,
-        private string $ean
+        private string $ean,
+        private float $weight,
     )
     {
     }
@@ -33,6 +34,11 @@ readonly class OrderProduct
     public function getEan(): string
     {
         return $this->ean;
+    }
+
+    public function getWeight(): float
+    {
+        return $this->weight;
     }
 
     public function equals(self $orderProduct): bool

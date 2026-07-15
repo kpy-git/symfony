@@ -2,8 +2,10 @@
 
 namespace App\Warehouse\Presentation;
 
+use App\Shared\Domain\Exception\KpyException;
 use App\Shared\Domain\Service\JsonResponseGenerator;
 use App\Shared\Infrastructure\Database\DatabaseInterface;
+use App\Warehouse\Application\ShipmentGenerator;
 use App\Warehouse\Domain\OrderFactory;
 use App\Warehouse\Query\QueryBus;
 use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
@@ -52,9 +54,25 @@ final class OrderFulfillmentController extends AbstractController
     }
 
     #[Route('/ajaxCreateShipment', name: '_ajax_create_shipment', methods: ['POST'])]
-    public function createShipment(Request $request, OrderFactory $orderFactory): JsonResponse
+    public function createShipment(
+        Request $request,
+        OrderFactory $orderFactory,
+        ShipmentGenerator $shipmentGenerator
+    ): JsonResponse
     {
-        return $this->jsonResponseGenerator->success();
+        try {
+            $order = $orderFactory->from((int)$request->request->get('order'));
+
+            // TODO - los bultos tienen que venir en la petición
+            $shipment = $shipmentGenerator->generateShipment($order, 1);
+
+            return $this->jsonResponseGenerator->success([
+                'shipment' => json_encode([$shipment])
+            ]);
+
+        } catch (KpyException $kpyException) {
+            return $this->jsonResponseGenerator->error($kpyException->getMessage());
+        }
     }
 
     #[Route('/ajaxGetLabel', name: '_ajax_get_label', methods: ['GET'])]

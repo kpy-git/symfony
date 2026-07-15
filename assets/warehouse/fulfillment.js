@@ -40,6 +40,24 @@ document.getElementById('panelDetalle').addEventListener('click', async (e) => {
 
     const id = document.querySelector('.detalle-bloque').dataset.id;
 
+    const shipmentResponse = await fetch(`/ajaxCreateShipment`, {
+        method: 'POST',
+        body: new URLSearchParams({order: 7})
+    });
+
+    const shipmentData = await shipmentResponse.json();
+
+    if (shipmentData.status !== 200) {
+        document.getElementById('panelDetalle').innerHTML = `
+            <div class="vista-vacia" style="flex-direction: column; gap: 10px;">
+                <span style="font-size: 3rem;">📦</span>
+                <h3 style="color: red;">¡Ups! Ha ocurrido un error al obtener la etiqueta</h3>
+                <p style="color: #555;">${shipmentData.message}</p>
+            </div>`;
+        return;
+    }
+
+
     setTimeout(() => {
         const itemLista = document.getElementById(`li-${id}`);
         if (itemLista) {

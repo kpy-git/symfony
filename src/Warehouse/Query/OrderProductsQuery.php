@@ -40,7 +40,8 @@ readonly class OrderProductsQuery implements QueryInterface
                    orderlines.id_product_attribute,
                    orderlines.quantity,
                    if(pa.id_product_attribute = 0, p.ean13, pa.ean13) as `ean`,
-                   CONCAT_WS(' - ', pl.name, (GROUP_CONCAT(DISTINCT CONCAT_WS(': ', agl.name, al.name) ORDER BY ag.position SEPARATOR ' '))) as `name`
+                   CONCAT_WS(' - ', pl.name, (GROUP_CONCAT(DISTINCT CONCAT_WS(': ', agl.name, al.name) ORDER BY ag.position SEPARATOR ' '))) as `name`,
+                   sum(p.weight + ifnull(pa.weight, 0)) as `weight`
             from ps_product p
             inner join orderlines
                 on orderlines.id_product = p.id_product

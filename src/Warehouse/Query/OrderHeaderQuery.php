@@ -26,7 +26,8 @@ readonly class OrderHeaderQuery implements QueryInterface
                    a.postcode,
                    a .city,
                    a.phone,
-                   cl.name as `country`, s.name as `state`
+                   cl.name as `country`, s.name as `state`,
+                   if(o.module = 'kpycashondelivery', o.total_paid, 0) as `crm`
             from ps_orders o
             inner join ps_customer c
                 on c.id_customer = o.id_customer
