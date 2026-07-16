@@ -24,6 +24,9 @@ class WarehouseProduct
     #[ORM\Column(type: Types::DECIMAL, precision: 10, scale: 6)]
     private ?string $finalCostPrice = null;
 
+    #[ORM\Column(type: Types::DECIMAL, precision: 10, scale: 6)]
+    private ?string $fulfillmentPrice = null;
+
     #[ORM\Column]
     private bool $isDefault = true;
 
@@ -84,7 +87,6 @@ class WarehouseProduct
         return $this;
     }
 
-
     public function getFinalCostPrice(): ?string
     {
         return $this->finalCostPrice;
@@ -94,6 +96,17 @@ class WarehouseProduct
     {
         $this->finalCostPrice = $finalCostPrice;
 
+        return $this;
+    }
+
+    public function getFulfillmentPrice(): ?string
+    {
+        return $this->fulfillmentPrice;
+    }
+
+    public function setFulfillmentPrice(string $fulfillmentPrice): static
+    {
+        $this->fulfillmentPrice = $fulfillmentPrice;
         return $this;
     }
 }
