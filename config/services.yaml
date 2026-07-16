@@ -20,6 +20,8 @@ parameters:
     kpy.warehouse.var_dir: '%kernel.project_dir%/var/warehouse'
     kpy.warehouse.ownership_manipulation_cost: '%env(float:OWNERSHIP_WAREHOUSE_MANIPULATION_COST)%'
     kpy.warehouse.neftys_commission: '%env(float:NEFTYS_COMMISSION)%'
+    kpy.warehouse.evolution_pets_fulfillment_cost: '%env(float:EVOLUTION_PETS_FULFILLMENT_COST)%'
+    kpy.warehouse.distrivet_fulfillment_cost: '%env(float:DISTRIVET_FULFILLMENT_COST)%'
 
 services:
     # default configuration for services in *this* file

@@ -5,11 +5,11 @@ namespace App\Warehouse\Domain\CostStrategy;
 use App\Warehouse\Domain\ValueObject\Product;
 use Symfony\Component\DependencyInjection\Attribute\Autowire;
 
-readonly class OwnershipWarehouseCostStrategy implements WarehouseCostStrategyInterface
+readonly class EvolutionPetsWarehouseCostStrategy implements WarehouseCostStrategyInterface
 {
 
     public function __construct(
-        #[Autowire('%kpy.warehouse.ownership_manipulation_cost%')]
+        #[Autowire('%kpy.warehouse.evolution_pets_fulfillment_cost%')]
         private float $manipulationCost,
     )
     {
@@ -22,6 +22,6 @@ readonly class OwnershipWarehouseCostStrategy implements WarehouseCostStrategyIn
 
     public function getType(): CostStrategyType
     {
-        return CostStrategyType::OWNERSHIP;
+        return CostStrategyType::EVOLUTION_PETS;
     }
 }

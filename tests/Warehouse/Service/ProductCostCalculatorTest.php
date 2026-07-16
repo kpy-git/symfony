@@ -117,4 +117,36 @@ class ProductCostCalculatorTest extends KernelTestCase
 
         $this->assertEqualsWithDelta(56.08, $productCostCalculator->computeCost($this->externalProduct, $warehouse), .000001);
     }
+
+    public function testComputeProductCostDistrivetWarehouse(): void
+    {
+        self::bootKernel();
+
+        $container = static::getContainer();
+
+        $warehouseFactory = $container->get(WarehouseFactory::class);
+        $warehouse = $warehouseFactory->createFrom('DISTRIVET');
+
+        $shippingCostCalculator = $container->get(CalculatorShippingCost::class);
+
+        $productCostCalculator = new ProductCostCalculator($shippingCostCalculator);
+
+        $this->assertEqualsWithDelta(56.14, $productCostCalculator->computeCost($this->product, $warehouse), .000001);
+    }
+
+    public function testComputeProductCostEvolutionPetsWarehouse(): void
+    {
+        self::bootKernel();
+
+        $container = static::getContainer();
+
+        $warehouseFactory = $container->get(WarehouseFactory::class);
+        $warehouse = $warehouseFactory->createFrom('EVOLUTION_PETS');
+
+        $shippingCostCalculator = $container->get(CalculatorShippingCost::class);
+
+        $productCostCalculator = new ProductCostCalculator($shippingCostCalculator);
+
+        $this->assertEqualsWithDelta(56.48, $productCostCalculator->computeCost($this->product, $warehouse), .000001);
+    }
 }
