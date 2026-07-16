@@ -7,6 +7,7 @@ use App\Shared\Domain\Service\JsonResponseGenerator;
 use App\Shared\Infrastructure\Database\DatabaseInterface;
 use App\Warehouse\Application\ShipmentGenerator;
 use App\Warehouse\Domain\OrderFactory;
+use App\Warehouse\Infrastructure\Persistence\PrinterConfigRepository;
 use App\Warehouse\Query\QueryBus;
 use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
 use Symfony\Component\DependencyInjection\Attribute\Autowire;
@@ -27,14 +28,16 @@ final class OrderFulfillmentController extends AbstractController
     }
 
     #[Route('/', name: 'fulfillment')]
-    public function index(): Response
+    public function index(PrinterConfigRepository $printerConfigRepository): Response
     {
+        // todo - el estado y la configuracion de la impresora hay que sacarlos en función del role del usuario
         $pendingOrders = $this->queryBus->fetch('kpy.warehouse.query.pending_orders_kompychinales', [
-            'state' => $_ENV['OWNERSHIP_WAREHOUSE_OS']
+            'state' => $_ENV['OWNERSHIP_WAREHOUSE_OS'],
         ]);
 
         return $this->render('warehouse/fulfillment/index.html.twig', [
             'pendingOrders' => $pendingOrders,
+            'printer_config' => $printerConfigRepository->getConfig('kompy')
         ]);
     }
 

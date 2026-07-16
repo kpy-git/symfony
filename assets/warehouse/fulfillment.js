@@ -9,6 +9,10 @@ document.getElementById('listaPedidos').addEventListener('click', (e) => {
     }
 });
 
+const printerConfig = JSON.parse(document.getElementById('printer-config').textContent);
+
+console.log(printerConfig)
+
 async function verDetalle(id) {
     // Marcar visualmente el elemento seleccionado en la lista izquierda
     document.querySelectorAll('.item-pedido').forEach(el => el.classList.remove('seleccionado'));
@@ -121,10 +125,7 @@ document.getElementById('panelDetalle').addEventListener('click', async (e) => {
             await qz.websocket.connect();
         }
 
-        const conf = qz.configs.create({
-            host: '192.168.1.56',
-            port: 9100,
-        });
+        const conf = qz.configs.create(printerConfig);
 
         const labelResponse = await fetch(`/ajaxGetLabel?order=865904`);
 
