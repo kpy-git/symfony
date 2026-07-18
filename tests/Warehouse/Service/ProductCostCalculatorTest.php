@@ -6,7 +6,7 @@ use App\Shared\Domain\ValueObject\ProductCode;
 use App\ShippingCostCalculator\Domain\Service\CalculatorShippingCost;
 use App\Warehouse\Domain\ValueObject\Product;
 use App\Warehouse\Domain\WarehouseFactory;
-use App\Warehouse\Service\ProductCostCalculator;
+use App\Warehouse\Service\FulfillmentProductCostCalculator;
 use Symfony\Bundle\FrameworkBundle\Test\KernelTestCase;
 
 class ProductCostCalculatorTest extends KernelTestCase
@@ -49,9 +49,9 @@ class ProductCostCalculatorTest extends KernelTestCase
 
         $shippingCostCalculator = $container->get(CalculatorShippingCost::class);
 
-        $productCostCalculator = new ProductCostCalculator($shippingCostCalculator);
+        $productCostCalculator = new FulfillmentProductCostCalculator($shippingCostCalculator);
 
-        $this->assertEqualsWithDelta(57.6, $productCostCalculator->computeCost($this->product, $warehouse), .000001);
+        $this->assertEqualsWithDelta(57.6, $productCostCalculator->computeFulfillmentCostByProduct($this->product, $warehouse)->getTotalCost(), .000001);
     }
 
     public function testComputeExternalProductCostNeftysWarehouse(): void
@@ -65,9 +65,9 @@ class ProductCostCalculatorTest extends KernelTestCase
 
         $shippingCostCalculator = $container->get(CalculatorShippingCost::class);
 
-        $productCostCalculator = new ProductCostCalculator($shippingCostCalculator);
+        $productCostCalculator = new FulfillmentProductCostCalculator($shippingCostCalculator);
 
-        $this->assertEqualsWithDelta(9.1, $productCostCalculator->computeCost($this->externalProduct, $warehouse), .000001);
+        $this->assertEqualsWithDelta(59.1, $productCostCalculator->computeFulfillmentCostByProduct($this->externalProduct, $warehouse)->getTotalCost(), .000001);
     }
 
     public function testComputeTwoExternalProductCostNeftysWarehouse(): void
@@ -81,9 +81,9 @@ class ProductCostCalculatorTest extends KernelTestCase
 
         $shippingCostCalculator = $container->get(CalculatorShippingCost::class);
 
-        $productCostCalculator = new ProductCostCalculator($shippingCostCalculator);
+        $productCostCalculator = new FulfillmentProductCostCalculator($shippingCostCalculator);
 
-        $this->assertEqualsWithDelta(11.49, $productCostCalculator->computeCost($this->externalProduct, $warehouse, 2), .000001);
+        $this->assertEqualsWithDelta(61.49, $productCostCalculator->computeFulfillmentCostByProduct($this->externalProduct, $warehouse, 2)->getTotalCost(), .000001);
     }
 
     public function testComputeProductCostKompyWarehouse(): void
@@ -97,9 +97,9 @@ class ProductCostCalculatorTest extends KernelTestCase
 
         $shippingCostCalculator = $container->get(CalculatorShippingCost::class);
 
-        $productCostCalculator = new ProductCostCalculator($shippingCostCalculator);
+        $productCostCalculator = new FulfillmentProductCostCalculator($shippingCostCalculator);
 
-        $this->assertEqualsWithDelta(56.08, $productCostCalculator->computeCost($this->product, $warehouse), .000001);
+        $this->assertEqualsWithDelta(56.08, $productCostCalculator->computeFulfillmentCostByProduct($this->product, $warehouse)->getTotalCost(), .000001);
     }
 
     public function testComputeExternalProductCostKompyWarehouse(): void
@@ -113,9 +113,9 @@ class ProductCostCalculatorTest extends KernelTestCase
 
         $shippingCostCalculator = $container->get(CalculatorShippingCost::class);
 
-        $productCostCalculator = new ProductCostCalculator($shippingCostCalculator);
+        $productCostCalculator = new FulfillmentProductCostCalculator($shippingCostCalculator);
 
-        $this->assertEqualsWithDelta(56.08, $productCostCalculator->computeCost($this->externalProduct, $warehouse), .000001);
+        $this->assertEqualsWithDelta(56.08, $productCostCalculator->computeFulfillmentCostByProduct($this->externalProduct, $warehouse)->getTotalCost(), .000001);
     }
 
     public function testComputeProductCostDistrivetWarehouse(): void
@@ -129,9 +129,9 @@ class ProductCostCalculatorTest extends KernelTestCase
 
         $shippingCostCalculator = $container->get(CalculatorShippingCost::class);
 
-        $productCostCalculator = new ProductCostCalculator($shippingCostCalculator);
+        $productCostCalculator = new FulfillmentProductCostCalculator($shippingCostCalculator);
 
-        $this->assertEqualsWithDelta(56.14, $productCostCalculator->computeCost($this->product, $warehouse), .000001);
+        $this->assertEqualsWithDelta(56.14, $productCostCalculator->computeFulfillmentCostByProduct($this->product, $warehouse)->getTotalCost(), .000001);
     }
 
     public function testComputeProductCostEvolutionPetsWarehouse(): void
@@ -145,8 +145,8 @@ class ProductCostCalculatorTest extends KernelTestCase
 
         $shippingCostCalculator = $container->get(CalculatorShippingCost::class);
 
-        $productCostCalculator = new ProductCostCalculator($shippingCostCalculator);
+        $productCostCalculator = new FulfillmentProductCostCalculator($shippingCostCalculator);
 
-        $this->assertEqualsWithDelta(56.48, $productCostCalculator->computeCost($this->product, $warehouse), .000001);
+        $this->assertEqualsWithDelta(56.48, $productCostCalculator->computeFulfillmentCostByProduct($this->product, $warehouse)->getTotalCost(), .000001);
     }
 }

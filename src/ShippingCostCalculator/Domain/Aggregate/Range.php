@@ -32,6 +32,9 @@ class Range implements RangeInterface
     public function isWeightAllowed(float $weight): bool
     {
         $weightInt = $this->priceConverter->toInteger($weight);
-        return $weightInt > $this->minWeight && $weightInt <= $this->maxWeight;
+
+        // los productos sin peso entran en el primer rango
+        return ($weightInt === 0 && $this->minWeight === 0)
+            || ($weightInt > $this->minWeight && $weightInt <= $this->maxWeight);
     }
 }

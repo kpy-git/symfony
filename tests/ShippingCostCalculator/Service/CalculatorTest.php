@@ -66,7 +66,7 @@ class CalculatorTest extends TestCase
     public static function peninsulaDataProvider(): iterable
     {
         yield[Destination::PENINSULA, -1, 0];
-        yield[Destination::PENINSULA, 0, 0];
+        yield[Destination::PENINSULA, 0, 4];
         yield[Destination::PENINSULA, 0.001, 4];
         yield[Destination::PENINSULA, 1, 4];
         yield[Destination::PENINSULA, 3, 4];

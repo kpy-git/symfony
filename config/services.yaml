@@ -143,3 +143,6 @@ services:
 
     App\Priceshape\Infrastructure\API\PriceshapePublicApi: ~
     App\Priceshape\Infrastructure\API\PriceshapePublicApiInterface: '@App\Priceshape\Infrastructure\API\PriceshapePublicApi'
+
+    App\Shared\Infrastructure\API\KpyPublicApi: ~
+    App\Shared\Infrastructure\API\KpyPublicApiInterface: '@App\Shared\Infrastructure\API\KpyPublicApi'

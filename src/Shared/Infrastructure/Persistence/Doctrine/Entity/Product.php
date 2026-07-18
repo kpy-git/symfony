@@ -17,11 +17,17 @@ class Product
     #[ORM\Column(name: "id_product_attribute", options: ["unsigned" => true])]
     private ?int $productAttributeId = null;
 
-    #[ORM\Column]
+    #[ORM\Column(options: ["default" => 0])]
     private bool $isJirafa = false;
 
-    #[ORM\Column]
+    #[ORM\Column(options: ["default" => 0])]
     private bool $isPack = false;
+
+    #[ORM\Column(options: ["default" => 0])]
+    private float $weight = 0;
+
+    #[ORM\Column(type: "smallint", options: ['unsigned' => true])]
+    private ?int $brandId = null;
 
 
     public function getProductId(): ?int
@@ -71,4 +77,25 @@ class Product
         return $this;
     }
 
+    public function getWeight(): float
+    {
+        return $this->weight;
+    }
+
+    public function setWeight(float $weight): static
+    {
+        $this->weight = $weight;
+        return $this;
+    }
+
+    public function getBrandId(): int
+    {
+        return $this->brandId;
+    }
+
+    public function setBrandId(?int $brandId): static
+    {
+        $this->brandId = $brandId;
+        return $this;
+    }
 }

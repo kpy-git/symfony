@@ -15,9 +15,9 @@ readonly class DistrivetWarehouseCostStrategy implements WarehouseCostStrategyIn
     {
     }
 
-    public function computeFinalCostPrice(Product $product, int $quantity = 1): float
+    public function computeManipulationCost(Product $product, int $quantity = 1): float
     {
-        return ($product->getCostPrice() * $quantity) + $this->manipulationCost;
+        return $this->manipulationCost;
     }
 
     public function getType(): CostStrategyType

@@ -3,6 +3,7 @@
 namespace App\ShippingCostCalculator\Domain\Service;
 
 use App\Shared\Domain\Destination;
+use App\ShippingCostCalculator\Domain\Aggregate\Range;
 use App\ShippingCostCalculator\Domain\Carrier;
 use App\ShippingCostCalculator\Domain\Exception\ShippingCostException;
 
@@ -22,7 +23,7 @@ class CalculatorShippingCost
      */
     public function getShippingCostBy(Carrier $carrier, Destination $destination, float $weight): float
     {
-        if ($weight <= 0) {
+        if ($weight < 0) {
             return .0;
         }
 
@@ -32,6 +33,7 @@ class CalculatorShippingCost
 
         $ranges = $carrier->getRangesByDestination($destination);
 
+        /** @var Range $range */
         foreach ($ranges as $range) {
             if ($range->isWeightAllowed($weight)) {
                 return $range->getCost();
@@ -43,7 +45,7 @@ class CalculatorShippingCost
                 ($carrier->getCostAdditionalPerKg($destination) * ceil($weight - $carrier->getInitWeightAdditionalPerKg($destination)));
 
         } catch (ShippingCostException) {
-            throw new ShippingCostException('El transportista "%s" no tiene ningún rango configurado para %f kg. Revisa el peso máximo establecido o configura un rango nuevo', $carrier, $weight);
+            throw new ShippingCostException(sprintf('El transportista "%s" no tiene ningún rango configurado para %f kg. Revisa el peso máximo establecido o configura un rango nuevo', $carrier, $weight));
         }
     }
 

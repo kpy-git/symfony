@@ -2,7 +2,9 @@
 
 namespace App\Shared\Infrastructure\Database\Exception;
 
-class KpySqlException extends \Exception
+use App\Shared\Domain\Exception\KpyException;
+
+class KpySqlException extends KpyException
 {
     public function __construct(string $message,
                                 private readonly string $method,

@@ -66,4 +66,9 @@ class ProductCode
     {
         return $this->sku === $productCode->getSku();
     }
+
+    public function __toString(): string
+    {
+        return $this->getSku();
+    }
 }

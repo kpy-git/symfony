@@ -2,6 +2,8 @@
 
 namespace App\Shared\Infrastructure\Persistence\Doctrine\Repository;
 
+use App\Shared\Domain\Exception\KpyProductNotFoundException;
+use App\Shared\Domain\ValueObject\ProductCode;
 use App\Shared\Infrastructure\Persistence\Doctrine\Entity\Product;
 use Doctrine\Bundle\DoctrineBundle\Repository\ServiceEntityRepository;
 use Doctrine\Persistence\ManagerRegistry;
@@ -14,6 +16,23 @@ class ProductRepository extends ServiceEntityRepository
     public function __construct(ManagerRegistry $registry)
     {
         parent::__construct($registry, Product::class);
+    }
+
+    /**
+     * @throws KpyProductNotFoundException
+     */
+    public function findOrFail(ProductCode $productCode): Product
+    {
+        $product = $this->findOneBy([
+            'productId' => $productCode->getProductId(),
+            'productAttributeId' => $productCode->getProductAttributeId(),
+        ]);
+
+        if (!$product) {
+            throw new KpyProductNotFoundException('No existe ningún producto con el sku ' . $productCode->getSku());
+        }
+
+        return $product;
     }
 
     //    /**

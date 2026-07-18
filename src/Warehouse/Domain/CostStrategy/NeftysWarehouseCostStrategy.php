@@ -10,23 +10,19 @@ use Symfony\Component\Filesystem\Filesystem;
 
 class NeftysWarehouseCostStrategy implements WarehouseCostStrategyInterface
 {
-    private float $commission;
-
     private ExternalProductFulfillmentCost $externalProductsFulfillmentCost;
 
     /**
      * @throws WarehouseException
      */
     public function __construct(
-        Filesystem $filesystem,
+        Filesystem             $filesystem,
         #[Autowire('%kpy.warehouse.neftys_commission%')]
-        float      $commissionPercentage,
+        private readonly float $commissionPercentage,
         #[Autowire('%kpy.warehouse.var_dir%')]
-        string     $varDir,
+        string                 $varDir,
     )
     {
-        $this->commission = 1 + ($commissionPercentage / 100);
-
         $filePath = $varDir . '/NeftysExternalProductsCost.json';
 
         if (!$filesystem->exists($filePath)) {
@@ -43,13 +39,13 @@ class NeftysWarehouseCostStrategy implements WarehouseCostStrategyInterface
         );
     }
 
-    public function computeFinalCostPrice(Product $product, int $quantity = 1): float
+    public function computeManipulationCost(Product $product, int $quantity = 1): float
     {
         if ($this->isExternal($product)) {
             return $this->computeExternalProductFulfillmentCost($quantity, $product->getWeight());
         }
 
-        return $product->getCostPrice() * $this->commission * $quantity;
+        return $product->getCostPrice() * ($this->commissionPercentage / 100) * $quantity;
     }
 
     public function isExternal(Product $product): bool
@@ -64,15 +60,13 @@ class NeftysWarehouseCostStrategy implements WarehouseCostStrategyInterface
 
     public function computeExternalProductFulfillmentCost(int $quantity, float $weight): float
     {
-        $singleItemCost = match (true) {
-            $weight < 5 => $this->externalProductsFulfillmentCost->getSingleItemUpTo5Kg(),
-            default => $this->externalProductsFulfillmentCost->getSingleItemStartingAt5Kg()
-        };
+        $singleItemCost = $weight < 5
+            ? $this->externalProductsFulfillmentCost->getSingleItemUpTo5Kg()
+            : $this->externalProductsFulfillmentCost->getSingleItemStartingAt5Kg();
 
-        $additionalUnitsCost = match (true) {
-            $weight < 5 => $this->externalProductsFulfillmentCost->getAdditionalItemsUpTo5Kg(),
-            default => $this->externalProductsFulfillmentCost->getAdditionalItemsStartingAt5Kg()
-        };
+        $additionalUnitsCost = $weight < 5
+            ? $this->externalProductsFulfillmentCost->getAdditionalItemsUpTo5Kg()
+            : $this->externalProductsFulfillmentCost->getAdditionalItemsStartingAt5Kg();
 
         return round($singleItemCost + (($quantity - 1) * $additionalUnitsCost), 6);
     }
