@@ -2,22 +2,22 @@
 
 namespace App\Priceshape\Infrastructure\Persistence\Doctrine\Repository;
 
-use App\Priceshape\Infrastructure\Persistence\Doctrine\Model\BrandFixedPrice;
+use App\Priceshape\Infrastructure\Persistence\Doctrine\Model\BrandIncluded;
 use Doctrine\Bundle\DoctrineBundle\Repository\ServiceEntityRepository;
 use Doctrine\Persistence\ManagerRegistry;
 
 /**
- * @extends ServiceEntityRepository<BrandFixedPrice>
+ * @extends ServiceEntityRepository<BrandIncluded>
  */
-class BrandFixedPriceRepository extends ServiceEntityRepository
+class BrandIncludedRepository extends ServiceEntityRepository
 {
     public function __construct(ManagerRegistry $registry)
     {
-        parent::__construct($registry, BrandFixedPrice::class);
+        parent::__construct($registry, BrandIncluded::class);
     }
 
     //    /**
-    //     * @return BrandFixedPrice[] Returns an array of BrandFixedPrice objects
+    //     * @return BrandBanned[] Returns an array of BrandBanned objects
     //     */
     //    public function findByExampleField($value): array
     //    {
@@ -31,7 +31,7 @@ class BrandFixedPriceRepository extends ServiceEntityRepository
     //        ;
     //    }
 
-    //    public function findOneBySomeField($value): ?BrandFixedPrice
+    //    public function findOneBySomeField($value): ?BrandBanned
     //    {
     //        return $this->createQueryBuilder('b')
     //            ->andWhere('b.exampleField = :val')

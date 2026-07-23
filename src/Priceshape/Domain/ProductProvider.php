@@ -3,16 +3,16 @@
 namespace App\Priceshape\Domain;
 
 use App\Google\Infrastructure\API\GooglePublicApiInterface;
+use App\Priceshape\Domain\ValueObject\Brand;
 use App\Priceshape\Query\QueryBus;
-use App\Shared\Bus\Query\KpyQueryBus;
 use App\Shared\Bus\Query\KpyQueryNotFoundException;
 use App\Shared\Domain\Destination;
 use App\Shared\Domain\Service\UrlGenerator;
 use App\Shared\Domain\Shop;
 use App\Shared\Domain\ValueObject\ProductCode;
-use App\ShippingCostCalculator\Domain\Carrier;
-use App\ShippingCostCalculator\Domain\Service\CalculatorShippingCost;
-use Symfony\Component\DependencyInjection\Attribute\Autowire;
+use App\Shared\Infrastructure\API\KpyPublicApi;
+use App\Warehouse\Domain\ValueObject\WarehouseProductFulfillmentCost;
+use App\Warehouse\Infrastructure\API\WarehousePublicApiInterface;
 
 class ProductProvider
 {
@@ -20,97 +20,22 @@ class ProductProvider
     private array $productsPrices;
     private array $productsWithFixedPrice;
     private array $brandsWithFixedPrice;
-    private array $brandsBanned;
     private array $productsImage;
     private array $suggestedRetailPrices;
     private array $featuresGroupByProduct;
     private array $mainCategories;
-    private array $productsExcluded = [];
+    private array $productsExcluded;
+    private array $prestashopProducts;
+    private array $googleInfoBySku;
 
-    /**
-     * @throws KpyQueryNotFoundException
-     */
     public function __construct(
-        private readonly KpyQueryBus              $kpyQueryBus,
-        private readonly QueryBus                 $queryBus,
-        private readonly CalculatorShippingCost   $calculatorShippingCost,
-        private readonly UrlGenerator             $urlGenerator,
-        #[Autowire(service: 'mrw')] Carrier       $mrw,
-        private readonly GooglePublicApiInterface $googleApi,
+        private readonly KpyPublicApi                $sharedApi,
+        private readonly QueryBus                    $queryBus,
+        private readonly UrlGenerator                $urlGenerator,
+        private readonly GooglePublicApiInterface    $googleApi,
+        private readonly WarehousePublicApiInterface $warehouseApi,
     )
     {
-        $this->calculatorShippingCost->setFixedCarrierAnDestination(
-            $mrw, Destination::PENINSULA
-        );
-
-        $this->aquaProducts = array_reduce(
-            $this->queryBus->fetch('kpy.priceshape.query.aqua_products_info'),
-            static function (array $carry, array $row): array {
-                $carry[$row['SKU']] = $row;
-                return $carry;
-            }, []
-        );
-
-        $this->productsPrices = array_reduce(
-            $this->kpyQueryBus->fetch('kpy.shared.query.products_prices'),
-            static function (array $carry, array $row): array {
-                $carry[ProductCode::from($row['id_product'], $row['id_product_attribute'])->getSku()] = [
-                    'cost_price' => $row['final_cost_price'] ?? 0,
-                    'sales_price' => $row['sales_price_es'],
-                ];
-                return $carry;
-            }, []
-        );
-
-        $this->productsWithFixedPrice = array_map(
-            static fn(array $row) => ProductCode::from($row['id_product'], $row['id_product_attribute'])->getSku(),
-            $this->queryBus->fetch('kpy.priceshape.query.products_with_fixed_price')
-        );
-
-        $this->brandsWithFixedPrice = array_map(
-            static fn(array $row) => (int)$row['id_manufacturer'],
-            $this->queryBus->fetch('kpy.priceshape.query.brands_with_fixed_price')
-        );
-
-        $this->productsImage = array_reduce(
-            $this->kpyQueryBus->fetch('kpy.query.shared.product_images', ['only_first_image' => true]),
-            static function (array $carry, array $row): array {
-                $carry[$row['id_product']] = $row['id_image'];
-                return $carry;
-            }, []
-        );
-
-        $this->brandsBanned = array_map(
-            static fn(array $row): int => (int)$row['id_manufacturer'],
-            $this->queryBus->fetch('kpy.priceshape.query.brands_banned')
-        );
-
-        $this->suggestedRetailPrices = array_reduce(
-            $this->queryBus->fetch('kpy.priceshape.query.suggested_retail_prices'),
-            static function (array $carry, array $row): array {
-                $carry[ProductCode::from($row['id_product'], $row['id_product_attribute'])->getSku()] = $row['pvpr'];
-                return $carry;
-            }, []
-        );
-
-        $this->featuresGroupByProduct = array_reduce(
-            $this->queryBus->fetch('kpy.priceshape.query.product_features_group_by_product'),
-            static function (array $carry, array $row): array {
-                $carry[$row['id_product']][$row['feature']] = $row['value'];
-                return $carry;
-            }, []
-        );
-
-        $this->mainCategories = array_reduce(
-            $this->queryBus->fetch('kpy.priceshape.query.main_categories'),
-            static function (array $carry, array $row): array {
-                if (!array_key_exists($row['id_product'], $carry)) {
-                    $carry[$row['id_product']] = $row['name'];
-                }
-                return $carry;
-            }, []
-        );
-
     }
 
     /**
@@ -118,19 +43,15 @@ class ProductProvider
      */
     public function getProductsByShop(Shop $shop = Shop::KOMPY_ES): array
     {
-        $prestashopProducts = $this->queryBus->fetch('kpy.priceshape.query.prestashop_products', [
-            'brands_banned' => $this->brandsBanned,
-        ]);
-
-        $googleInfoBySku = $this->googleApi->getAllProductSuggestedInfo($shop->getDefaultCountry()->getISO());
+        $this->loadRequiredData($shop);
 
         $products = [];
 
-        foreach ($prestashopProducts as $prestashopProduct) {
+        foreach ($this->prestashopProducts as $prestashopProduct) {
             $productCode = ProductCode::from($prestashopProduct['id_product'], $prestashopProduct['id_product_attribute']);
             $sku = $productCode->getSku();
 
-            if (!isset($this->aquaProducts[$sku])) {
+            if (!isset($this->aquaProducts[$sku], $this->productsPrices[$sku]['sales_price'], $this->productsPrices[$sku]['fulfillment_price'])) {
                 $this->productsExcluded[] = $sku;
                 continue;
             }
@@ -141,22 +62,16 @@ class ProductProvider
 
             $shipping_price = $salesPrice > $shop->priceLimitToShippingFree() ? 0 : $shop->shippingPriceByDestination(Destination::PENINSULA);
 
-            $shippingCost = $salesPrice > $shop->getLimitToCalculateShippingCost()
-                ? $this->calculatorShippingCost->calculateShippingCostByWeightWithSavedConfiguration((float)$this->aquaProducts[$sku]['PESO'])
-                : 0;
-
-            $costPrice = round(($this->productsPrices[$sku]['cost_price'] * 1.06) + $shippingCost, 6);
-
             $product
                 ->setSku($sku)
                 ->setTitle($prestashopProduct['name'])
                 ->setBrand(str_replace('´', "'", $prestashopProduct['fabricante']))
                 ->setVAT((int)$prestashopProduct['iva'])
                 ->setSalePrice($salesPrice)
-                ->setCostPrice(round($costPrice, 2))
+                ->setCostPrice(round($this->productsPrices[$sku]['fulfillment_price'], 2))
                 ->setGtin($this->aquaProducts[$sku]['EAN'] ?? '')
                 ->setStockGroup($this->aquaProducts[$sku]['GRUPO'])
-                ->setAvailability((int)$this->aquaProducts[$sku]['STOCK'] <= 0 ? 'out_of_stock' : 'in_stock')
+                ->setAvailability($prestashopProduct['stock'] <= 0 ? 'out_of_stock' : 'in_stock')
                 ->setShippingPrice($shipping_price)
                 ->setWeight((float)$this->aquaProducts[$sku]['PESO'])
                 ->setMpn($this->aquaProducts[$sku]['REFERENCIA'] ?? '')
@@ -167,7 +82,7 @@ class ProductProvider
                 ->setCategory($this->mainCategories[$prestashopProduct['id_product']] ?? '')
                 ->setSalesLast30Days((int)$this->aquaProducts[$sku]['VENTAS_30'])
                 ->setBrandRanking((int)$this->aquaProducts[$sku]['BRAND_RANKING'])
-                ->setFixedPrice(in_array($sku, $this->productsWithFixedPrice) || in_array($prestashopProduct['id_manufacturer'], $this->brandsWithFixedPrice))
+                ->setFixedPrice(in_array($sku, $this->productsWithFixedPrice) || in_array($prestashopProduct['id_manufacturer'], $this->brandsWithFixedPrice, true))
                 ->setBuyers($customersBySku[$sku] ?? 0);
 
             if (isset($this->suggestedRetailPrices[$sku])) {
@@ -196,8 +111,8 @@ class ProductProvider
                 $product->setPromoValue($prestashopProduct['regalo']);
             }*/
 
-            if (isset($googleInfoBySku[$sku])) {
-                foreach ($googleInfoBySku[$sku] as $key => $value) {
+            if (isset($this->googleInfoBySku[$sku])) {
+                foreach ($this->googleInfoBySku[$sku] as $key => $value) {
                     $product->$key = $value;
                 }
             }
@@ -206,6 +121,84 @@ class ProductProvider
         }
 
         return $products;
+    }
+
+    /**
+     * @throws KpyQueryNotFoundException
+     */
+    private function loadRequiredData(Shop $shop): void
+    {
+        /** @var Brand[] $brands */
+        $brands = $this->queryBus->fetch('kpy.priceshape.query.brands_included');
+
+        $this->brandsWithFixedPrice = array_map(
+            static fn (Brand $brand): int => $brand->getManufacturerId(),
+            array_filter($brands, static fn (Brand $brand): bool => $brand->isWithFixedPrice())
+        );
+
+        $this->prestashopProducts = $this->queryBus->fetch('kpy.priceshape.query.prestashop_products', [
+            'brands' => array_map(static fn (Brand $brand): int => $brand->getManufacturerId(), $brands),
+        ]);
+
+        $this->googleInfoBySku = $this->googleApi->getAllProductSuggestedInfo($shop->getDefaultCountry()->getISO());
+
+        $this->aquaProducts = array_reduce(
+            $this->queryBus->fetch('kpy.priceshape.query.aqua_products_info'),
+            static function (array $carry, array $row): array {
+                $carry[$row['SKU']] = $row;
+                return $carry;
+            }, []
+        );
+
+
+        $productsFulfillmentPrices = $this->warehouseApi->getDefaultFulfillmentCostsIndexByProduct();
+
+        /** @var WarehouseProductFulfillmentCost $productFulfillmentPrice */
+        foreach ($productsFulfillmentPrices as $productFulfillmentPrice) {
+            $this->productsPrices[$productFulfillmentPrice->getProductCode()->getSku()]['fulfillment_price'] = $productFulfillmentPrice->getFulfillmentCost();
+        }
+
+        $productSalesPrices = $this->sharedApi->getProductSalesPricesByShop($shop);
+
+        foreach ($productSalesPrices as $sku => $productSalesPrice) {
+            if (isset($this->productsPrices[$sku])) {
+                $this->productsPrices[$sku]['sales_price'] = $productSalesPrice;
+            }
+        }
+
+        $this->productsWithFixedPrice = array_map(
+            static fn(array $row) => ProductCode::from($row['id_product'], $row['id_product_attribute'])->getSku(),
+            $this->queryBus->fetch('kpy.priceshape.query.products_with_fixed_price')
+        );
+
+        $this->productsImage = $this->sharedApi->getAllFirstImagesIndexByProduct();
+
+
+        $this->suggestedRetailPrices = array_reduce(
+            $this->queryBus->fetch('kpy.priceshape.query.suggested_retail_prices'),
+            static function (array $carry, array $row): array {
+                $carry[ProductCode::from($row['id_product'], $row['id_product_attribute'])->getSku()] = $row['pvpr'];
+                return $carry;
+            }, []
+        );
+
+        $this->featuresGroupByProduct = array_reduce(
+            $this->queryBus->fetch('kpy.priceshape.query.product_features_group_by_product'),
+            static function (array $carry, array $row): array {
+                $carry[$row['id_product']][$row['feature']] = $row['value'];
+                return $carry;
+            }, []
+        );
+
+        $this->mainCategories = array_reduce(
+            $this->queryBus->fetch('kpy.priceshape.query.main_categories'),
+            static function (array $carry, array $row): array {
+                if (!array_key_exists($row['id_product'], $carry)) {
+                    $carry[$row['id_product']] = $row['name'];
+                }
+                return $carry;
+            }, []
+        );
     }
 
     private function computeProductType(string $logisticGroup, string $antiparasitario, string $pet): string

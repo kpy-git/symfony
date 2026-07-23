@@ -15,7 +15,7 @@ readonly class KpyProductImagesQuery implements KpyQueryInterface
 
     public function getName(): string
     {
-        return 'kpy.query.shared.product_images';
+        return 'kpy.shared.query.product_images';
     }
 
     public function fetch(array $params = []): array

@@ -19,9 +19,9 @@ readonly class PrestaShopProductsQuery implements QueryInterface
     {
         $shop = $params['shop'] ?? 1;
 
-        $brandsBanned = '';
-        if (isset($params['brands_banned']) && is_array($params['brands_banned'])) {
-            $brandsBanned = ' AND p.id_manufacturer NOT IN (' . implode(',', $params['brands_banned']) . ') ';
+        $brands = '';
+        if (is_array($params['brands']) && !empty($params['brands'])) {
+            $brands = ' or p.id_manufacturer IN (' . implode(',', $params['brands']) . ') ';
         }
 
         $sql = "
@@ -43,7 +43,8 @@ readonly class PrestaShopProductsQuery implements QueryInterface
             IF(tag_free_shipping.id_product IS NULL, 'no', 'yes') AS free_shipping,
             IF(EXISTS (SELECT 1 FROM ps_category_product WHERE id_category IN (1069, 1228) and id_product=p.id_product), 'si', 'no') AS antiparasitario,
             IFNULL(sp.special_discount, 0) as special_discount,
-            ps.price + ifnull(pa.price, 0) as pvr
+            ps.price + ifnull(pa.price, 0) as pvr,
+            sa.quantity as stock
         FROM ps_product p
         inner join ps_product_shop ps on ps.id_product = p.id_product and ps.id_shop = {$shop} and ps.active = 1 and ps.visibility = 'both'
         inner JOIN ps_product_lang pl ON pl.id_product=ps.id_product and pl.id_lang = 1 and pl.id_shop = {$shop}
@@ -64,11 +65,13 @@ readonly class PrestaShopProductsQuery implements QueryInterface
                 ON tag_free_shipping.id_product = ps.id_product AND tag_free_shipping.id_product_attribute = pa.id_product_attribute
         LEFT JOIN ps_kpy_special_price sp
             ON sp.id_product = p.id_product and sp.id_product_attribute = pa.id_product_attribute and sp.id_shop={$shop}
+        left join ps_stock_available sa
+            ON sa.id_product = p.id_product AND sa.id_product_attribute = IFNULL(pa.id_product_attribute,0)
         WHERE
-            EXISTS (SELECT 1 FROM ps_neftys_stock ns where ns.id_product=p.id_product and ns.id_product_attribute=ifnull(pa.id_product_attribute, 0))
+            (EXISTS (SELECT 1 FROM ps_neftys_stock ns where ns.id_product=p.id_product and ns.id_product_attribute=ifnull(pa.id_product_attribute, 0)) {$brands})
             AND NOT EXISTS (select 1 FROM ps_category_product cp WHERE cp.id_product = p.id_product AND cp.id_category IN (2292, 586))
             AND IF (kpa.id_product_attribute IS NOT NULL, kpa.active = 1, 1=1)
-            {$brandsBanned}
+
         GROUP BY p.id_product, pa.id_product_attribute
         ORDER BY p.id_product, pa.id_product_attribute";
 

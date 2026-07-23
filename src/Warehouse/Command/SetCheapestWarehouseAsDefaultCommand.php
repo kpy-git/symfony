@@ -20,7 +20,7 @@ readonly class SetCheapestWarehouseAsDefaultCommand implements CommandInterface
 
     public function execute(array $params = []): bool
     {
-        return $this->doctrineDatabase->execute(
+        $this->doctrineDatabase->execute(
             "with products_ranked as (select id_product,
                    id_product_attribute,
                    warehouse_id,
@@ -34,5 +34,7 @@ readonly class SetCheapestWarehouseAsDefaultCommand implements CommandInterface
             set wp.is_default = 1
             where pr.position = 1",
         );
+
+        return true;
     }
 }

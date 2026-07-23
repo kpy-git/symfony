@@ -2,7 +2,7 @@
 
 namespace App\Priceshape\Application;
 
-use App\Priceshape\Infrastructure\Persistence\Doctrine\Model\BrandBanned;
+use App\Priceshape\Infrastructure\Persistence\Doctrine\Model\BrandIncluded;
 use Doctrine\ORM\EntityManagerInterface;
 use Symfony\Component\Console\Attribute\Argument;
 use Symfony\Component\Console\Attribute\AsCommand;
@@ -17,24 +17,47 @@ readonly class BrandHandlerCommand
     {
     }
 
-    #[AsCommand('kpy:priceshape:brand:banned')]
-    public function addBanned(
-        #[Argument] int $brandId,
-        InputInterface $input,
+    #[AsCommand('kpy:priceshape:brand:add')]
+    public function addBrand(
+        #[Argument] int $id_manufacturer,
+        InputInterface  $input,
         OutputInterface $output
     ): int
     {
         $io = new SymfonyStyle($input, $output);
 
-        if ($this->em->getRepository(BrandBanned::class)->find($brandId)) {
-            $io->warning('La marca ya se encuentra excluída');
+        if ($this->em->getRepository(BrandIncluded::class)->find($id_manufacturer)) {
+            $io->warning('La marca ya se estaba incluída');
             return Command::SUCCESS;
         }
 
-        $this->em->persist(new BrandBanned($brandId));
+        $this->em->persist(new BrandIncluded($id_manufacturer));
         $this->em->flush();
 
-        $io->success('La marca se ha excluído correctamente de Priceshape');
+        $io->success('La marca se ha incluído correctamente en el feed de Priceshape');
+        return Command::SUCCESS;
+    }
+
+    #[AsCommand('kpy:priceshape:brand:remove')]
+    public function removeBrand(
+        #[Argument] int $id_manufacturer,
+        InputInterface  $input,
+        OutputInterface $output
+    ): int
+    {
+        $io = new SymfonyStyle($input, $output);
+
+        $brand = $this->em->getRepository(BrandIncluded::class)->find($id_manufacturer);
+
+        if (!$brand) {
+            $io->warning('La marca no está incluída en el feed de Priceshape');
+            return Command::SUCCESS;
+        }
+
+        $this->em->remove($brand);
+        $this->em->flush();
+
+        $io->success('La marca se ha eliminado correctamente del feed de Priceshape');
         return Command::SUCCESS;
     }
 

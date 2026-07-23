@@ -4,10 +4,10 @@ namespace App\Warehouse\Application;
 
 use App\Shared\Domain\Exception\KpyException;
 use App\Shared\Domain\ValueObject\ProductCode;
+use App\Shared\Infrastructure\API\KpyPublicApiInterface;
 use App\Warehouse\Domain\ValueObject\Product;
 use App\Warehouse\Domain\Warehouse;
 use App\Warehouse\Domain\WarehouseFactory;
-use App\Warehouse\Infrastructure\API\KpyPublicApi;
 use App\Warehouse\Infrastructure\Persistence\Repository\WarehouseProductRepository;
 use App\Warehouse\Service\FulfillmentProductCostCalculator;
 use Doctrine\ORM\EntityManagerInterface;
@@ -26,7 +26,7 @@ readonly class ComputeProductFulfillmentCostConsoleCommand
         private WarehouseFactory                 $warehouseFactory,
         private EntityManagerInterface           $entityManager,
         private FulfillmentProductCostCalculator $fulfillmentProductCostCalculator,
-        private KpyPublicApi                     $kpyPublicApi,
+        private KpyPublicApiInterface            $kpyPublicApi,
         private WarehouseProductRepository       $warehouseProductRepository,
     )
     {

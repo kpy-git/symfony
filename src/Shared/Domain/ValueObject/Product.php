@@ -8,8 +8,9 @@ readonly class Product
         private ProductCode $productCode,
         private float $weight,
         private int $brandId,
-        private bool $pack,
-        private bool $jirafa,
+        private float $salesPrice,
+        private bool $pack = false,
+        private bool $jirafa = false,
     )
     {
     }
@@ -40,5 +41,15 @@ readonly class Product
     public function isPack(): bool
     {
         return $this->pack;
+    }
+
+    public function getSalesPrice(): float
+    {
+        return $this->salesPrice;
+    }
+
+    public function isBoske(): bool
+    {
+        return 178 === $this->getBrandId();
     }
 }

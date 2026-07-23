@@ -13,9 +13,10 @@ use Doctrine\ORM\EntityManagerInterface;
 class WarehouseProductRepository
 {
     private \App\Warehouse\Infrastructure\Persistence\Doctrine\Repository\WarehouseProductRepository $doctrineWarehouseProductRepository;
+
     public function __construct(
         private readonly DatabaseInterface $doctrineDatabase,
-        EntityManagerInterface $entityManager
+        EntityManagerInterface             $entityManager
     )
     {
         $this->doctrineWarehouseProductRepository = $entityManager->getRepository(WarehouseProduct::class);
@@ -31,7 +32,7 @@ class WarehouseProductRepository
     }
 
     /**
-     * @return WarehouseProduct[] Returns an array of ProductWarehouse objects
+     * @return WarehouseProduct[]
      */
     public function findProductsInWarehouse(Warehouse $warehouse): array
     {
@@ -77,5 +78,19 @@ class WarehouseProductRepository
                 $this->doctrineDatabase->getSqlError()
             );
         }
+    }
+
+    /**
+     * @return WarehouseProductFulfillmentCost[]
+     */
+    public function findAllDefaultProductFulfillmentCost(): array
+    {
+        return array_map(static function (WarehouseProduct $product): WarehouseProductFulfillmentCost {
+            return new WarehouseProductFulfillmentCost(
+                ProductCode::from($product->getProductId(), $product->getProductAttributeId()),
+                $product->getWarehouse()->getId(),
+                $product->getFulfillmentPrice(),
+            );
+        }, $this->doctrineWarehouseProductRepository->findBy(['isDefault' => true]));
     }
 }

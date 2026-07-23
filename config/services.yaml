@@ -146,3 +146,6 @@ services:
 
     App\Shared\Infrastructure\API\KpyPublicApi: ~
     App\Shared\Infrastructure\API\KpyPublicApiInterface: '@App\Shared\Infrastructure\API\KpyPublicApi'
+
+    App\Warehouse\Infrastructure\API\WarehousePublicApi: ~
+    App\Warehouse\Infrastructure\API\WarehousePublicApiInterface: '@App\Warehouse\Infrastructure\API\WarehousePublicApi'

@@ -4,30 +4,17 @@ namespace App\Warehouse\Domain\ValueObject;
 
 use App\Shared\Domain\ValueObject\ProductCode;
 
-readonly class Product
+readonly class Product extends \App\Shared\Domain\ValueObject\Product
 {
     public function __construct(
-        private ProductCode $productCode,
-        private int         $brand,
-        private float       $weight,
-        private float       $costPrice,
+        ProductCode   $productCode,
+        int           $brand,
+        float         $weight,
+        private float $costPrice,
+        float         $salesPrice,
     )
     {
-    }
-
-    public function getProductCode(): ProductCode
-    {
-        return $this->productCode;
-    }
-
-    public function getBrand(): int
-    {
-        return $this->brand;
-    }
-
-    public function getWeight(): float
-    {
-        return $this->weight;
+        parent::__construct($productCode, $weight, $brand, $salesPrice);
     }
 
     public function getCostPrice(): float
@@ -35,8 +22,4 @@ readonly class Product
         return $this->costPrice;
     }
 
-    public function isBoske(): bool
-    {
-        return 178 === $this->brand;
-    }
 }

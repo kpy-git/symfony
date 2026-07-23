@@ -64,7 +64,7 @@ enum Shop: string
     public function getKeyColumnSalePrice(): string
     {
         return match ($this) {
-            self::KOMPY_ES => 'PYM',
+            self::KOMPY_ES => 'sales_price_es',
         };
     }
 }

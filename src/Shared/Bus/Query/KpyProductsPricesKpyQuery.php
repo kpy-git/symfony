@@ -23,7 +23,7 @@ readonly class KpyProductsPricesKpyQuery implements KpyQueryInterface
     public function fetch(array $params = []): array
     {
         return $this->doctrineDatabase->execute(
-            "SELECT id_product, id_product_attribute, sales_price_es FROM kpy_product_prices"
+            "SELECT id_product, id_product_attribute, sales_price_es FROM kpy_product"
         );
     }
 }

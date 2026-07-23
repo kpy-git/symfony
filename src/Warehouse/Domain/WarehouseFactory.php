@@ -2,13 +2,13 @@
 
 namespace App\Warehouse\Domain;
 
+use App\Shared\Infrastructure\API\KpyPublicApiInterface;
 use App\ShippingCostCalculator\Domain\Builder\CarrierBuilder;
 use App\Warehouse\Domain\CostStrategy\CostStrategyType;
 use App\Warehouse\Domain\CostStrategy\WarehouseCostStrategyInterface;
 use App\Warehouse\Domain\Exception\WarehouseException;
 use App\Warehouse\Domain\Exception\WarehouseNotFoundException;
 use App\Warehouse\Domain\ValueObject\Package;
-use App\Warehouse\Infrastructure\API\KpyPublicApi;
 use App\Warehouse\Infrastructure\Persistence\Doctrine\Model\PackageModel;
 use App\Warehouse\Infrastructure\Persistence\Repository\WarehouseProductRepository;
 use Doctrine\ORM\EntityManagerInterface;
@@ -23,7 +23,7 @@ class WarehouseFactory
         #[AutowireIterator('kpy.warehouse.cost_strategy')]
         private readonly iterable                   $costStrategies,
         private readonly CarrierBuilder             $carrierBuilder,
-        private readonly KpyPublicApi               $kpyPublicApi,
+        private readonly KpyPublicApiInterface      $kpyPublicApi,
         private readonly WarehouseProductRepository $warehouseProductRepository,
     )
     {

@@ -2,6 +2,7 @@
 
 namespace App\Shared\Infrastructure\API;
 
+use App\Shared\Domain\Shop;
 use App\Shared\Domain\ValueObject\Product;
 use App\Shared\Domain\ValueObject\ProductCode;
 
@@ -16,4 +17,10 @@ interface KpyPublicApiInterface
     public function getProduct(ProductCode $productCode): Product;
 
     public function getAllProductsBySKU(): array;
+
+    public function getAllImagesIndexByProduct(): array;
+
+    public function getAllFirstImagesIndexByProduct(): array;
+
+    public function getProductSalesPricesByShop(Shop $shop): array;
 }

@@ -4,10 +4,10 @@ namespace App\Warehouse\Domain;
 
 use App\Shared\Domain\Destination;
 use App\Shared\Domain\ValueObject\ProductCode;
+use App\Shared\Infrastructure\API\KpyPublicApiInterface;
 use App\ShippingCostCalculator\Domain\Carrier;
 use App\Warehouse\Domain\CostStrategy\WarehouseCostStrategyInterface;
 use App\Warehouse\Domain\ValueObject\Product;
-use App\Warehouse\Infrastructure\API\KpyPublicApi;
 use App\Warehouse\Infrastructure\Persistence\Repository\WarehouseProductRepository;
 
 readonly class Warehouse
@@ -19,7 +19,7 @@ readonly class Warehouse
         private Carrier                        $carrier,
         private PackagingHandler               $packagingHandler,
         private WarehouseProductRepository     $warehouseProductRepository,
-        private KpyPublicApi                   $kpyPublicApi,
+        private KpyPublicApiInterface          $kpyPublicApi,
     )
     {
     }
@@ -79,7 +79,8 @@ readonly class Warehouse
                 $productCode,
                 $product->getBrandId(),
                 $product->getWeight(),
-                $productsWarehouseEntity->getFinalCostPrice()
+                $productsWarehouseEntity->getFinalCostPrice(),
+                $product->getSalesPrice()
             );
         }
 

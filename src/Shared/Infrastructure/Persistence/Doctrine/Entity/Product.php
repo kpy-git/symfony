@@ -3,6 +3,7 @@
 namespace App\Shared\Infrastructure\Persistence\Doctrine\Entity;
 
 use App\Shared\Infrastructure\Persistence\Doctrine\Repository\ProductRepository;
+use Doctrine\DBAL\Types\Types;
 use Doctrine\ORM\Mapping as ORM;
 
 #[ORM\Entity(repositoryClass: ProductRepository::class)]
@@ -29,6 +30,8 @@ class Product
     #[ORM\Column(type: "smallint", options: ['unsigned' => true])]
     private ?int $brandId = null;
 
+    #[ORM\Column(name: 'sales_price_es', type: Types::DECIMAL, precision: 6, scale: 2)]
+    private ?string $salesPriceES = null;
 
     public function getProductId(): ?int
     {
@@ -96,6 +99,19 @@ class Product
     public function setBrandId(?int $brandId): static
     {
         $this->brandId = $brandId;
+        return $this;
+    }
+
+
+    public function getSalesPriceES(): ?string
+    {
+        return $this->salesPriceES;
+    }
+
+    public function setSalesPriceES(string $salesPriceES): static
+    {
+        $this->salesPriceES = $salesPriceES;
+
         return $this;
     }
 }

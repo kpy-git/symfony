@@ -5,6 +5,7 @@ namespace App\Connectif;
 use App\Connectif\Query\ConnectifQueryBus;
 use App\Shared\Bus\Query\KpyQueryBus;
 use App\Shared\Bus\Query\KpyQueryNotFoundException;
+use App\Shared\Domain\ValueObject\ProductCode;
 
 readonly class ProductInfoProvider
 {
@@ -74,7 +75,7 @@ readonly class ProductInfoProvider
     public function firstImageByProductId(): array
     {
         return array_reduce(
-            $this->sharedQueryBus->fetch('kpy.query.shared.product_images', ['only_first_image' => true]),
+            $this->sharedQueryBus->fetch('kpy.shared.query.product_images', ['only_first_image' => true]),
             static function (array $carry, array $row) {
                 $carry[$row['id_product']] = $row['id_image'];
                 return $carry;
@@ -107,9 +108,9 @@ readonly class ProductInfoProvider
     public function getSalesPricesByProduct(): array
     {
         return array_reduce(
-            $this->sharedQueryBus->fetch('kpy.query.shared.sales_prices'),
+            $this->sharedQueryBus->fetch('kpy.shared.query.products_prices'),
             static function (array $carry, array $row) {
-                $carry[$row['SKU']] = (float)$row['SALES_PRICE'];
+                $carry[(string)ProductCode::from($row['id_product'], $row['id_product_attribute'])] = (float)$row['sales_price_es'];
                 return $carry;
             }, []
         );
