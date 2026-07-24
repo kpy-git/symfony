@@ -2,6 +2,7 @@
 
 namespace App\Warehouse\Application;
 
+use App\Shared\Bus\Query\KpyQueryBus;
 use App\Shared\Domain\Exception\KpyInvalidProductCode;
 use App\Shared\Domain\ValueObject\ProductCode;
 use App\Warehouse\Command\CommandBus;
@@ -15,8 +16,9 @@ use Symfony\Component\Console\Style\SymfonyStyle;
 readonly class SyncStockTiendaConsoleCommand
 {
     public function __construct(
-        private QueryBus $queryBus,
-        private CommandBus $commandBus,
+        private QueryBus    $queryBus,
+        private KpyQueryBus $kpyQueryBus,
+        private CommandBus  $commandBus,
     )
     {
     }
@@ -27,7 +29,7 @@ readonly class SyncStockTiendaConsoleCommand
         $stockTienda = $this->queryBus->fetch('kpy.warehouse.query.stock_kompy_chinales');
 
         $skuInNeftys = array_map(
-            static fn (array $row): string => $row['sku'],
+            static fn(array $row): string => $row['sku'],
             $this->queryBus->fetch('kpy.warehouse.query.stock_neftys')
         );
 
@@ -39,6 +41,7 @@ readonly class SyncStockTiendaConsoleCommand
                 $productCode = ProductCode::fromSKU($product['SKU']);
                 if (in_array($product['SKU'], $skuInNeftys)) {
                     $duplicated++;
+                    continue;
                 }
 
                 $this->commandBus->execute('kpy.warehouse.command.update_prestashop_stock', [
@@ -46,6 +49,22 @@ readonly class SyncStockTiendaConsoleCommand
                     'quantity' => (int)$product['STOCK'],
                 ]);
                 $updated++;
+
+                $packs = $this->kpyQueryBus->fetch('kpy.shared.query.monopack_within_product', [
+                    'product_code' => $productCode,
+                ]);
+
+                if (!empty($packs)) {
+                    foreach ($packs as $pack) {
+                        $this->commandBus->execute('kpy.warehouse.command.update_prestashop_stock', [
+                            'product_code' => ProductCode::fromSKU($pack['id_product_pack']),
+                            'quantity' => floor((int)$product['STOCK'] / $pack['quantity']),
+                        ]);
+
+                        $updated++;
+                    }
+                }
+
             } catch (KpyInvalidProductCode $e) {
                 continue;
             }
