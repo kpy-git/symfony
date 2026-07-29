@@ -1,13 +1,16 @@
 import '../styles/warehouse/fulfillment.css';
 
 import qz from 'qz-tray';
+import {createCopyButtons} from "../app.js";
 
 
-document.getElementById('listaPedidos').addEventListener('click', (e) => {
+document.getElementById('listaPedidos').addEventListener('click', async (e) => {
     if (e.target.closest('.item-pedido')) {
-        verDetalle(e.target.closest('.item-pedido').dataset.pedido)
+        await verDetalle(e.target.closest('.item-pedido').dataset.pedido)
     }
 });
+
+const printerConfig = JSON.parse(document.getElementById('printer-config').textContent);
 
 async function verDetalle(id) {
     // Marcar visualmente el elemento seleccionado en la lista izquierda
@@ -28,9 +31,15 @@ async function verDetalle(id) {
     const data = await response.json();
 
     document.getElementById('panelDetalle').innerHTML = `${data.html}`;
+    createCopyButtons();
 }
 
 document.getElementById('panelDetalle').addEventListener('click', async (e) => {
+    if (e.target.matches('.btn-bulto')) {
+        modificarBultos(e.target.classList.contains('add') ? 1 : -1);
+        return;
+    }
+
     if (!e.target.closest('.btn-preparar')) {
         return;
     }
@@ -38,23 +47,42 @@ document.getElementById('panelDetalle').addEventListener('click', async (e) => {
     const btn = e.target.closest('.btn-preparar');
     btn.disabled = true;
 
-    const id = document.querySelector('.detalle-bloque').dataset.id;
+    const orderID = document.querySelector('.detalle-bloque').dataset.id;
 
-    setTimeout(() => {
-        const itemLista = document.getElementById(`li-${id}`);
-        if (itemLista) {
-            itemLista.style.display = 'none';
-        }
+    const shipmentResponse = await fetch(`/ajaxCreateShipment`, {
+        method: 'POST',
+        body: new URLSearchParams({
+            order: orderID,
+            parcels: document.getElementById('input__parcels').value,
+        }),
+    });
 
-        const panel = document.getElementById('panelDetalle');
-        panel.innerHTML = `
+    const shipmentData = await shipmentResponse.json();
+
+    if (shipmentData.status !== 200) {
+        document.getElementById('panelDetalle').innerHTML = `
             <div class="vista-vacia" style="flex-direction: column; gap: 10px;">
                 <span style="font-size: 3rem;">📦</span>
-                <h3 style="color: #27ae60;">¡Pedido #${id} preparado!</h3>
-                <p style="color: #555;">Etiqueta de envío generada y enviada a la impresora.</p>
-            </div>
-        `;
-    }, 1000);
+                <h3 style="color: red;">¡Ups! Ha ocurrido un error al obtener la etiqueta</h3>
+                <p style="color: #555;">${shipmentData.message}</p>
+            </div>`;
+        return;
+    }
+
+
+    const itemLista = document.getElementById(`li-${orderID}`);
+    if (itemLista) {
+        itemLista.style.display = 'none';
+    }
+
+    const panel = document.getElementById('panelDetalle');
+    panel.innerHTML = `
+        <div class="vista-vacia" style="flex-direction: column; gap: 10px;">
+            <span style="font-size: 3rem;">📦</span>
+            <h3 style="color: #27ae60;">¡Pedido #${orderID} preparado!</h3>
+            <p style="color: #555;">Etiqueta de envío generada y enviada a la impresora.</p>
+        </div>
+    `;
 
     try {
         qz.security.setSignatureAlgorithm("SHA512");
@@ -103,19 +131,23 @@ document.getElementById('panelDetalle').addEventListener('click', async (e) => {
             await qz.websocket.connect();
         }
 
-        const conf = qz.configs.create({
-            host: '192.168.1.56',
-            port: 9100,
-        });
+        const conf = qz.configs.create(printerConfig);
 
-        const labelResponse = await fetch(`/ajaxGetLabel?order=865904`);
-
-        const labelData = await labelResponse.json();
-
-        await qz.print(conf, [labelData['label']]);
+        await qz.print(conf, [shipmentData.label]);
 
     } catch (error) {
         console.error(error);
         alert('No puedo imprimir: ' + error.message);
     }
 });
+
+function modificarBultos(delta) {
+    const input = document.getElementById('input__parcels');
+    if (!input) return;
+
+    let valorActual = parseInt(input.value) || 1;
+    valorActual += delta;
+
+    if (valorActual < 1) valorActual = 1; // Mínimo 1 bulto
+    input.value = valorActual;
+}

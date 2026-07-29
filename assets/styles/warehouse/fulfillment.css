@@ -196,3 +196,105 @@ header {
     border-left-color: #ffffff;
     animation: spin 0.8s linear infinite;
 }
+
+.input-bultos {
+    width: 60px;
+    height: 100%;
+    border: none;
+    text-align: center;
+    font-size: 1.2rem;
+    font-weight: bold;
+    color: #2d3748;
+    -moz-appearance: textfield; /* Oculta flechas estándar en Firefox */
+}
+
+/* Oculta las flechas por defecto en navegadores Webkit (Chrome, Safari, Edge) */
+.input-bultos::-webkit-outer-spin-button,
+.input-bultos::-webkit-inner-spin-button {
+    -webkit-appearance: none;
+    margin: 0;
+}
+
+.input-bultos:focus {
+    outline: none;
+}
+.panel-acciones {
+    display: flex;
+    align-items: flex-end;
+    gap: 20px;
+    background-color: #f8f9fa;
+    padding: 20px;
+    border-radius: 8px;
+    border: 1px solid #e2e8f0;
+}
+
+.grupo-bultos {
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+}
+
+.grupo-bultos label {
+    font-size: 0.85rem;
+    font-weight: bold;
+    color: #4a5568;
+    text-transform: uppercase;
+}
+
+/* Selector táctil personalizado de Bultos */
+.selector-bultos {
+    display: flex;
+    align-items: center;
+    background: #ffffff;
+    border: 2px solid #cbd5e0;
+    border-radius: 6px;
+    overflow: hidden;
+    height: 50px;
+}
+
+.btn-bulto {
+    background-color: #edf2f7;
+    color: #2d3748;
+    border: none;
+    width: 44px;
+    height: 100%;
+    font-size: 1.3rem;
+    font-weight: bold;
+    cursor: pointer;
+    transition: background 0.2s;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    user-select: none;
+}
+
+.btn-bulto:hover {
+    background-color: #e2e8f0;
+}
+
+.btn-bulto:active {
+    background-color: #cbd5e0;
+}
+
+/* Campo de número de bultos */
+.input-bultos {
+    width: 60px;
+    height: 100%;
+    border: none;
+    text-align: center;
+    font-size: 1.2rem;
+    font-weight: bold;
+    color: #2d3748;
+    -moz-appearance: textfield; /* Oculta flechas estándar en Firefox */
+}
+
+/* Oculta las flechas por defecto en navegadores Webkit (Chrome, Safari, Edge) */
+.input-bultos::-webkit-outer-spin-button,
+.input-bultos::-webkit-inner-spin-button {
+    -webkit-appearance: none;
+    margin: 0;
+}
+
+.input-bultos:focus {
+    outline: none;
+}

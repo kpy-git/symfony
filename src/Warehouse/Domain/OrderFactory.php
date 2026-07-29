@@ -30,7 +30,7 @@ readonly class OrderFactory
             $header['city'],
             $header['state'],
             $header['postcode'],
-            $header['country']
+            $header['country'],
         );
 
         $order = new Order(
@@ -38,6 +38,14 @@ readonly class OrderFactory
             \DateTimeImmutable::createFromFormat('Y-m-d H:i:s', $header['date_add']),
             $customer,
         );
+
+        if ($header['crm'] > 0) {
+            $order->setCRM($header['crm']);
+        }
+
+        if (!empty(trim($header['notes']))) {
+            $order->setNotes($header['notes']);
+        }
 
         $lines = $this->queryBus->fetch('kpy.warehouse.query.order_products', ['id_order' => $orderId]);
 
@@ -47,6 +55,7 @@ readonly class OrderFactory
                 $line['name'],
                 $line['quantity'],
                 $line['ean'] ?? '',
+                $line['weight'],
             ));
         }
 

@@ -22,7 +22,7 @@ class JsonResponseGenerator
             'status' => $status,
             'timestamp' => time(),
             'message' => $message,
-        ]);
+        ], $status);
     }
 
     public function fromException(\Exception $exception, int $status = Response::HTTP_INTERNAL_SERVER_ERROR): JsonResponse
