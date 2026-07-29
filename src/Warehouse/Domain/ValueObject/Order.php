@@ -11,6 +11,8 @@ class Order
 
     private float $crm;
 
+    private string $notes;
+
     public function __construct(
         private readonly int                $orderId,
         private readonly \DateTimeImmutable $orderDate,
@@ -73,7 +75,7 @@ class Order
 
     public function getWeight(): float
     {
-        return $this->weight;
+        return max(floor($this->weight), 1);
     }
 
     public function getCrm(): float
@@ -89,7 +91,24 @@ class Order
 
     public function getNotes(): string
     {
-        return 'Observaciones del cliente';
+        return $this->notes;
     }
 
+    public function setNotes(string $notes): static
+    {
+        /**
+         * Elimina todos los caracteres excepto:
+         * - números
+         * - letras (las tildes y la ñ están permitidas)
+         * - ([espacios].,-_/)
+         *
+         * Elimina saltos de línea/espacios innecesarios.
+         * /u del final garantiza que las tildes y caracteres multibyte se procesen correctamente y no rompa nada
+         */
+        $this->notes = preg_replace('/[^\p{L}\p{N}\s.,\-_\/]/u', '', $notes)
+                |> (static fn($x) => preg_replace('/\s+/', ' ', $x))
+                |> trim(...);
+
+        return $this;
+    }
 }

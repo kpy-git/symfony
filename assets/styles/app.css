@@ -4,6 +4,24 @@
     padding: 0;
 }
 
+.sku {
+    font-size: small;
+    color: deepskyblue;
+}
+
+.sku {
+    margin-left: 5px;
+    margin-right: 5px;
+    width: 100px;
+    font-weight: 600;
+}
+.sku::before {
+    content: '[';
+}
+.sku::after {
+    content: ']';
+}
+
 body {
     background-color: skyblue;
 }

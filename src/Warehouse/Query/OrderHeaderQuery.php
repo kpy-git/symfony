@@ -27,7 +27,8 @@ readonly class OrderHeaderQuery implements QueryInterface
                    a .city,
                    a.phone,
                    cl.name as `country`, s.name as `state`,
-                   if(o.module = 'kpycashondelivery', o.total_paid, 0) as `crm`
+                   if(o.module = 'kpycashondelivery', o.total_paid, 0) as `crm`,
+                   ifnull(m.message, '') as `notes`
             from ps_orders o
             inner join ps_customer c
                 on c.id_customer = o.id_customer
@@ -37,6 +38,8 @@ readonly class OrderHeaderQuery implements QueryInterface
                 on cl.id_country = a.id_country and cl.id_lang = 1
             inner join ps_state s
                 on s.id_state = a.id_state
+            left join ps_message m
+                on m.id_order=o.id_order and m.private=0
             where o.id_order = " . $params['id_order']
         );
     }

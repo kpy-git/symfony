@@ -24,14 +24,27 @@
             {% for product in products %}
             <tr>
             <td class="td-cantidad"><span class="badge-cantidad">x{{ product.quantity }}</span></td>
-                <td>{{ product.name }}</td>
+                <td>{{ product.name }} <span class="sku" data-copy="{{ product.productCode.sku }}">{{ product.productCode.sku }}</span></td>
                 <td>{{ product.ean }}</td>
             </tr>
             {% endfor %}
         </tbody>
     </table>
 
-    <button class="btn-preparar">
-        Obtener etiqueta
-    </button>
+    <div class="panel-acciones">
+        <div class="grupo-bultos">
+            <label for="numBultos">Nº Bultos</label>
+            <div class="selector-bultos">
+                <button type="button" class="btn-bulto minus">-</button>
+                <input type="number" id="input__parcels" class="input-bultos" value="1" min="1">
+                <button type="button" class="btn-bulto add">+</button>
+            </div>
+        </div>
+
+        <button class="btn-preparar">
+            Obtener etiqueta
+        </button>
+    </div>
+
+
 </div>

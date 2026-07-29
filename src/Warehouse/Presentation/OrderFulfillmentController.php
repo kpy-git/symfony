@@ -4,11 +4,13 @@ namespace App\Warehouse\Presentation;
 
 use App\Shared\Domain\Exception\KpyException;
 use App\Shared\Domain\Service\JsonResponseGenerator;
-use App\Shared\Infrastructure\Database\DatabaseInterface;
+use App\Shared\Domain\Service\OrderStatusUpdater;
 use App\Warehouse\Application\ShipmentGenerator;
 use App\Warehouse\Domain\OrderFactory;
+use App\Warehouse\Infrastructure\Persistence\Doctrine\Model\ShipmentEntity;
 use App\Warehouse\Infrastructure\Persistence\PrinterConfigRepository;
 use App\Warehouse\Query\QueryBus;
+use Doctrine\ORM\EntityManagerInterface;
 use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
 use Symfony\Component\DependencyInjection\Attribute\Autowire;
 use Symfony\Component\HttpFoundation\JsonResponse;
@@ -30,9 +32,9 @@ final class OrderFulfillmentController extends AbstractController
     #[Route('/', name: 'fulfillment')]
     public function index(PrinterConfigRepository $printerConfigRepository): Response
     {
-        // todo - el estado y la configuracion de la impresora hay que sacarlos en función del role del usuario
+        // todo - el estado y la configuración de la impresora hay que sacarlos en función del role del usuario
         $pendingOrders = $this->queryBus->fetch('kpy.warehouse.query.pending_orders_kompychinales', [
-            'state' => $_ENV['OWNERSHIP_WAREHOUSE_OS'],
+            'state' => (int)$_ENV['OWNERSHIP_WAREHOUSE_OS'],
         ]);
 
         return $this->render('warehouse/fulfillment/index.html.twig', [
@@ -60,17 +62,32 @@ final class OrderFulfillmentController extends AbstractController
     public function createShipment(
         Request $request,
         OrderFactory $orderFactory,
-        ShipmentGenerator $shipmentGenerator
+        ShipmentGenerator $shipmentGenerator,
+        EntityManagerInterface $entityManager,
+        OrderStatusUpdater $orderStatusUpdater,
     ): JsonResponse
     {
         try {
-            $order = $orderFactory->from((int)$request->request->get('order'));
+            $orderId = (int)$request->request->get('order');
+            $parcels = (int)$request->request->get('parcels');
 
-            // TODO - los bultos tienen que venir en la petición
-            $shipment = $shipmentGenerator->generateShipment($order, 1);
+            $order = $orderFactory->from($orderId);
+
+            $shipment = $shipmentGenerator->generateShipment($order, $parcels);
+
+            $entity = new ShipmentEntity();
+            $entity
+                ->setOrderId($order->getOrderId())
+                ->setTrackingNumber($shipment->getTrackingNumber())
+                ->setLabel($shipment->getZpl());
+
+            $entityManager->persist($entity);
+            $entityManager->flush();
+
+            $orderStatusUpdater->setCurrentState($orderId, (int)$_ENV['SHIP_READY_OS']);
 
             return $this->jsonResponseGenerator->success([
-                'shipment' => json_encode([$shipment])
+                'label' => $shipment->getZpl()
             ]);
 
         } catch (KpyException $kpyException) {
@@ -79,12 +96,13 @@ final class OrderFulfillmentController extends AbstractController
     }
 
     #[Route('/ajaxGetLabel', name: '_ajax_get_label', methods: ['GET'])]
-    public function getLabel(Request $request, DatabaseInterface $aquaDatabase): JsonResponse
+    public function getLabel(Request $request, EntityManagerInterface $entityManager): JsonResponse
     {
         $order = $request->query->get('order');
+        $shipmentEntity = $entityManager->getRepository(ShipmentEntity::class)->findBy(['orderId' => $order]);
 
         return $this->jsonResponseGenerator->success([
-            'label' => $aquaDatabase->getValue("SELECT ETIQUETA FROM DATPYMETIQUETAS01 WITH(NOLOCK) WHERE PEDIDO='$order'")
+            'label' => $shipmentEntity->getLabel(),
         ]);
     }
 

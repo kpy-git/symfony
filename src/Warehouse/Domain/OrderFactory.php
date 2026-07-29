@@ -43,6 +43,10 @@ readonly class OrderFactory
             $order->setCRM($header['crm']);
         }
 
+        if (!empty(trim($header['notes']))) {
+            $order->setNotes($header['notes']);
+        }
+
         $lines = $this->queryBus->fetch('kpy.warehouse.query.order_products', ['id_order' => $orderId]);
 
         foreach ($lines as $line) {

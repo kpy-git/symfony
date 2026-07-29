@@ -9,4 +9,6 @@ return [
     'GOOGLE_SFTP_USER' => null,
     'MRW_CORDOBA_ABONADO' => null,
     'MRW_CORDOBA_FRANQUICIA' => null,
+    'MRW_CORDOBA_PASSWORD' => null,
+    'MRW_CORDOBA_USER' => null,
 ];
