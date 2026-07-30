@@ -110,7 +110,7 @@ class GoogleMerchantFeedHandler
                 $_ENV['GOOGLE_SFTP_USER'],
                 $_ENV['GOOGLE_SFTP_PASSWORD'],
                 $this->filename,
-                $this->googleVarDir . $this->filename,
+                $this->googleFeedDir . '/' . $this->filename,
                 (int)$_ENV['GOOGLE_SFTP_PORT']
             );
         }
