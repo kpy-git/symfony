@@ -4,9 +4,9 @@ namespace App\Google\Domain\Query;
 
 use Symfony\Component\DependencyInjection\Attribute\Autowire;
 
-class ProductWithAlternativeSkusQuery implements QueryInterface
+readonly class ProductWithAlternativeSkusQuery implements QueryInterface
 {
-    public function __construct(#[Autowire('%kpy.google_dir%')] private string $path)
+    public function __construct(#[Autowire('%kpy.google.var_dir%')] private string $path)
     {
     }
 

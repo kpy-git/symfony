@@ -9,11 +9,12 @@
 parameters:
     kpy.base_domain: '%env(BASE_DOMAIN)%'
 
-    kpy.google_dir: '%kernel.project_dir%/var/google'
-
     kpy.feeds_dir: '%kernel.project_dir%/var/feeds'
 
     connectif.log_dir: '%kernel.logs_dir%/connectif'
+
+    kpy.google.var_dir: '%kernel.project_dir%/var/google'
+    kpy.google.feed_dir: '%kpy.feeds_dir%/google'
 
     kpy.priceshape.var_dir: '%kpy.feeds_dir%/priceshape'
 

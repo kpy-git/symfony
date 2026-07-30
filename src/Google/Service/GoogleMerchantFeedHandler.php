@@ -6,18 +6,21 @@ use App\Google\Domain\Command\CommandBus;
 use App\Google\Domain\Exception\KpyGoogleException;
 use App\Google\Domain\GoogleDebugMode;
 use App\Google\Domain\GoogleMerchantFeed;
-use App\Google\Infrastructure\API\PriceshapePublicApi;
 use App\Google\Infrastructure\Provider\Provider;
+use App\Priceshape\Infrastructure\API\PriceshapePublicApiInterface;
 use App\Shared\Bus\Command\KpyCommandNotFoundException;
 use App\Shared\Domain\Destination;
 use App\Shared\Domain\Service\SFTPFileUploader;
 use App\Shared\Domain\Service\UrlGenerator;
 use App\Shared\Domain\Shop;
 use App\Shared\Domain\ValueObject\ProductCode;
-use App\Shared\Infrastructure\Database\Exception\KpyNotFoundDatabaseException;
+use App\Shared\Infrastructure\API\KpyPublicApiInterface;
 use App\ShippingCostCalculator\Domain\Builder\CarrierBuilder;
 use App\ShippingCostCalculator\Domain\Service\CalculatorShippingCost;
+use App\Warehouse\Domain\ValueObject\WarehouseProductFulfillmentCost;
+use App\Warehouse\Infrastructure\API\WarehousePublicApiInterface;
 use Symfony\Component\DependencyInjection\Attribute\Autowire;
+use Symfony\Component\Filesystem\Filesystem;
 
 class GoogleMerchantFeedHandler
 {
@@ -43,25 +46,24 @@ class GoogleMerchantFeedHandler
 
     private string $filename;
 
-    private string $varDir;
-
     private int $totalCountProducts;
 
-    /**
-     * @throws KpyNotFoundDatabaseException
-     */
     public function __construct(
-        private readonly CalculatorShippingCost $calculatorShippingCost,
-        private readonly Provider               $provider,
-        private readonly CarrierBuilder         $carrierBuilder,
-        private readonly CommandBus             $commandBus,
-        private readonly UrlGenerator           $urlGenerator,
-        #[Autowire('%kernel.project_dir%')]
-        string                                  $srcDir,
-        private readonly PriceshapePublicApi    $priceshapePublicApi,
+        private readonly CalculatorShippingCost       $calculatorShippingCost,
+        private readonly Provider                     $provider,
+        private readonly CarrierBuilder               $carrierBuilder,
+        private readonly CommandBus                   $commandBus,
+        private readonly UrlGenerator                 $urlGenerator,
+        #[Autowire('%kpy.google.var_dir%')]
+        private string                                $googleVarDir,
+        #[Autowire('%kpy.google.feed_dir%')]
+        private string                                $googleFeedDir,
+        private readonly PriceshapePublicApiInterface $priceshapePublicApi,
+        private readonly WarehousePublicApiInterface  $warehouseApi,
+        private readonly KpyPublicApiInterface        $sharedApi,
+        private readonly Filesystem $filesystem,
     )
     {
-        $this->varDir = $srcDir . '/var/google/';
 
         $this->filename = 'kompymascotasfeed.xml';
 
@@ -91,13 +93,13 @@ class GoogleMerchantFeedHandler
             $this->filename = 'debug_' . $this->filename;
         }
 
-        $fullPath = $this->varDir . $this->filename;
+        $fullPath = $this->googleFeedDir . '/' . $this->filename;
 
         if (file_exists($fullPath) && !is_writable($fullPath)) {
             throw new KpyGoogleException('No se puede escribir el fichero ' . $fullPath);
         }
 
-        file_put_contents($fullPath, $feed, LOCK_EX);
+        $this->filesystem->dumpFile($fullPath, $feed);
     }
 
     private function uploadFeed(): void
@@ -108,7 +110,7 @@ class GoogleMerchantFeedHandler
                 $_ENV['GOOGLE_SFTP_USER'],
                 $_ENV['GOOGLE_SFTP_PASSWORD'],
                 $this->filename,
-                $this->varDir . $this->filename,
+                $this->googleVarDir . $this->filename,
                 (int)$_ENV['GOOGLE_SFTP_PORT']
             );
         }
@@ -123,6 +125,20 @@ class GoogleMerchantFeedHandler
         );
 
         $this->infoAqua = $this->provider->infoAqua();
+
+        $productsPrices = [];
+        $productsFulfillmentPrices = $this->warehouseApi->getDefaultFulfillmentCostsIndexByProduct();
+
+        /** @var WarehouseProductFulfillmentCost $productFulfillmentPrice */
+        foreach ($productsFulfillmentPrices as $productFulfillmentPrice) {
+            $productsPrices[$productFulfillmentPrice->getProductCode()->getSku()]['fulfillment_price'] = $productFulfillmentPrice->getFulfillmentCost();
+        }
+
+        $productSalesPrices = $this->sharedApi->getProductSalesPricesByShop($shop);
+
+        foreach ($productSalesPrices as $sku => $productSalesPrice) {
+            $productsPrices[$sku]['sales_price'] = $productSalesPrice;
+        }
 
         $marcasProhibidas = $this->provider->marcasProhibidas($shop->getId());
         $productosProhibidos = $this->provider->productosProhibidos($shop->getId());
@@ -190,7 +206,7 @@ class GoogleMerchantFeedHandler
                 continue;
             }
 
-            $producto['price'] = $this->infoAqua[$sku][$shop->getKeyColumnSalePrice()];
+            $producto['price'] = $productsPrices[$sku]['sales_price'];
 
             if ($producto['price'] == 0 || $producto['pvp'] == 0) {
                 continue;
@@ -225,7 +241,9 @@ class GoogleMerchantFeedHandler
                 $producto['availabity'] = "in stock";
             }*/
             // la disponibilidad va ahora en la custom_label3
-            $producto['availabity'] = 'in stock';
+            $availability = $producto['stock'] > 0 || in_array($producto['id_manufacturer'], [3, 77, 78, 75,93, 173]) ? 'in stock' : 'out of stock';
+
+            $producto['availabity'] = $availability;
 
             $producto['url'] = $this->urlGenerator->getProductLink(
                 ProductCode::fromSKU($sku),
@@ -302,7 +320,7 @@ class GoogleMerchantFeedHandler
                 ? 'COMPETITIVO'
                 : $this->getCustomLabel1($sku);
             $producto['custom_label_2'] = $this->getCustomLabel2($sku);
-            $producto['custom_label_3'] = $this->getCustomLabel3($sku, in_array($producto['id_manufacturer'], $brandsWithStockSync));
+            $producto['custom_label_3'] = $availability;
 
             $precio = $producto['price'];
             if (array_key_exists($sku, $this->productosConPrecioEspecial)) {
@@ -318,14 +336,19 @@ class GoogleMerchantFeedHandler
                 }
             }
 
-            // si el iva de compra viene al 0 al 99% será un pack, los packs solo son de pienso
+            // si el iva de compra viene al 0 al 99.9% será un pack, los packs solo son de pienso
             $ivaDeCompra = $this->infoAqua[$sku]['ivaParaCompras'] > 0 ? $this->infoAqua[$sku]['ivaParaCompras'] : 1.1;
-            $coste = $this->infoAqua[$sku]['costeConIva'] / $ivaDeCompra;
-            $grossMargin = $this->calculateGrossMargin(
-                $coste,
-                $precio / (1 + ((float)$producto['iva'] / 100)),
-                $producto['peso']
-            );
+            $salesPriceWithoutVat = $precio / $ivaDeCompra;
+            if (isset($productsPrices[$sku]['fulfillment_price'])) {
+                $grossMargin = round(($salesPriceWithoutVat - $productsPrices[$sku]['fulfillment_price']) / $salesPriceWithoutVat * 100, 2);
+            } else {
+                $coste = $this->infoAqua[$sku]['costeConIva'] / $ivaDeCompra;
+                $grossMargin = $this->calculateGrossMargin(
+                    $coste,
+                    $precio / (1 + ((float)$producto['iva'] / 100)),
+                    $producto['peso']
+                );
+            }
 
             $producto['custom_label_4'] = $googleFeed->obtieneEtiquetaDeMargen($grossMargin, $producto['price']);
 
@@ -358,8 +381,7 @@ class GoogleMerchantFeedHandler
                     $pack['image'] = $imagenesPersonalizadas[$pack['sku']];
                 }
 
-                $tokens = explode('-', $packs[$sku]['id_pack']);
-                $pack['price'] = $this->infoAqua[$pack['sku']][$shop->getKeyColumnSalePrice()] ?? 0;
+                $pack['price'] = $productsPrices[$pack['sku']]['sales_prices'] ?? 0;
                 $pack['pvp'] = round($producto['pvp'] * (int)$packs[$sku]['quantity'], 2);
 
                 // hay packs que estan en la tabla pym_packs pero que ya no existen como producto en prestashop
@@ -400,12 +422,12 @@ class GoogleMerchantFeedHandler
                 $pack['custom_label_0'] = $this->getCustomLabel0($packs[$sku]['id_pack']);
                 $pack['custom_label_1'] = $this->getCustomLabel1($producto['sku']);
                 $pack['custom_label_2'] = $this->getCustomLabel2($packs[$sku]['id_pack']);
-                $pack['custom_label_3'] = $producto['custom_label_3']; // para la disponibilidad se coge el producto que va dentro del pack
+                $pack['custom_label_3'] = $availability; // para la disponibilidad se coge el producto que va dentro del pack
 
-                $precio = $pack['price'];
+                $precioPack = $pack['price'];
                 if (array_key_exists($pack['sku'], $this->productosConPrecioEspecial)) {
                     // los productos con precio especial se le calcula el margen con el descuento original no con el de special price
-                    $precio = $pack['pvp'] * (1 - ($this->productosConPrecioEspecial[$pack['sku']]['old_discount'] / 100));
+                    $precioPack = $pack['pvp'] * (1 - ($this->productosConPrecioEspecial[$pack['sku']]['old_discount'] / 100));
                 }
 
                 if (array_key_exists($packs[$sku]['id_pack'], $cuponesAplicadosDirectamenteEnGS)) {
@@ -416,15 +438,18 @@ class GoogleMerchantFeedHandler
                     }
                 }
 
-                // si el iva de compra viene al 0 al 99% será un pack, los packs solo son de pienso
-                $ivaDeCompra = $this->infoAqua[$sku]['ivaParaCompras'] > 0 ? $this->infoAqua[$sku]['ivaParaCompras'] : 1.1;
-                $coste = $this->infoAqua[$sku]['costeConIva'] / $ivaDeCompra;
-                $grossMargin = $this->calculateGrossMargin(
-                    $coste,
-                    $precio / (1 + ((float)$producto['iva'] / 100)),
-                    $producto['peso'],
-                    (int)$packs[$sku]['quantity']
-                );
+                $salesPriceWithoutVat = $precioPack / $ivaDeCompra;
+                if (isset($productsPrices[$pack['sku']]['fulfillment_price'])) {
+                    $grossMargin = round(($salesPriceWithoutVat - $productsPrices[$pack['sku']]['fulfillment_price']) / $salesPriceWithoutVat * 100, 2);
+                } else {
+                    $coste = $this->infoAqua[$sku]['costeConIva'] / $ivaDeCompra;
+                    $grossMargin = $this->calculateGrossMargin(
+                        $coste,
+                        $precio / (1 + ((float)$producto['iva'] / 100)),
+                        $producto['peso'],
+                        (int)$packs[$sku]['quantity']
+                    );
+                }
 
                 $pack['custom_label_4'] = $googleFeed->obtieneEtiquetaDeMargen($grossMargin, $pack['price']);
 

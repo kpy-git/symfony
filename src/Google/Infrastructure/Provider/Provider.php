@@ -24,8 +24,8 @@ class Provider
     public function __construct(
         private readonly DatabaseBus $databaseBus,
         private readonly QueryBus $queryBus,
-        #[Autowire('%kpy.google_dir%')]
-        private readonly string $googleDir
+        #[Autowire('%kpy.google.var_dir%')]
+        private readonly string $googleVarDir,
     )
     {
         $this->aquaDatabase = $this->databaseBus->getAquaDatabase();
@@ -301,7 +301,7 @@ class Provider
 
     public function getMeasuringUnits(): array
     {
-        $file = fopen($this->googleDir . '/measuring.csv', 'rb');
+        $file = fopen($this->googleVarDir . '/measuring.csv', 'rb');
         $measuring = [];
 
         if (!$file) {
@@ -329,7 +329,7 @@ class Provider
             return self::$topProducts;
         }
 
-        $file = fopen($this->googleDir . '/top_products.csv', 'rb');
+        $file = fopen($this->googleVarDir . '/top_products.csv', 'rb');
 
         if (!$file) {
             return [];

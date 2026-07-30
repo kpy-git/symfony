@@ -10,20 +10,21 @@ use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
 use Symfony\Component\HttpFoundation\JsonResponse;
 use Symfony\Component\Routing\Attribute\Route;
 
-#[Route("/google", name: 'google_')]
+#[Route(host: 'ops.%kpy.base_domain%', name: 'google_')]
 final class GoogleController extends AbstractController
 {
     public function __construct(private readonly JsonResponseGenerator $responseGenerator)
     {
     }
 
-    #[Route('/feed', host: 'ops.%kpy.base_domain%', name: 'feed', methods: ['GET'])]
+    #[Route('/feed/google/{shop}', name: 'feed', methods: ['GET'])]
     public function feed(
-        GoogleMerchantFeedHandler $feedHandler
+        GoogleMerchantFeedHandler $feedHandler,
+        Shop $shop = Shop::KOMPY_ES
     ): JsonResponse
     {
         try {
-            $feedHandler->syncFeed(Shop::KOMPY_ES);
+            $feedHandler->syncFeed($shop);
 
             return $this->responseGenerator->success([
                 'previous_products' => $feedHandler->totalPreviousProducts(),
