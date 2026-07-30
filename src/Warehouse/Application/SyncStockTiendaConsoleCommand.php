@@ -65,13 +65,12 @@ class SyncStockTiendaConsoleCommand
         // productos que solo están en stock en PrestaShop para comprobar si todavía están en stock en tienda
         // cuando un producto se vende en la tienda y se queda a 0 ya no se sincronizaría nunca y se quedaría mal en PS
         $stockPrestaShopOnly = array_map(
-            static fn(array $row): string => ProductCode::from($row['id_product'], $row['id_product_attribute']),
+            static fn(array $row): ProductCode => ProductCode::from($row['id_product'], $row['id_product_attribute']),
             $this->queryBus->fetch('kpy.warehouse.query.stock_prestashop_only')
         );
 
         $updatedOutstockProducts = 0;
 
-        /** @var ProductCode $product */
         foreach ($stockPrestaShopOnly as $product) {
             if (isset($stockTienda[$product->getSku()])) {
                 continue;
