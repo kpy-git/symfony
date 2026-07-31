@@ -10,7 +10,8 @@ security:
         feed_provider:
             memory:
                 users:
-                    priceshape: { password: '$2y$13$HCS5IVaUBa9XbUSW7aMBuuQRLWgVaZzXIYPV1Uznk/m3GL9aFz2fu', roles: [ROLE_FEED_CONSUMER]}
+                    priceshape: { password: '$2y$13$HCS5IVaUBa9XbUSW7aMBuuQRLWgVaZzXIYPV1Uznk/m3GL9aFz2fu', roles: [ROLE_FEED_PRICESHAPE] }
+                    google: { password: '$2y$13$OWSdkKlpiIdGsFYPCDFhG.6wHU4i3R.eLgQ/z/WlcC0CbG.3.9X/O', roles: [ROLE_FEED_GOOGLE] }
 
         warehouse_provider:
             memory:
@@ -59,7 +60,8 @@ security:
 
     # Note: Only the *first* matching rule is applied
     access_control:
-        - { host: ^ops\.kompymascotas\.com$, path: ^/feed/, roles: ROLE_FEED_CONSUMER }
+        - { host: ^ops\.kompymascotas\.com$, path: ^/feed/google, roles: ROLE_FEED_GOOGLE }
+        - { host: ^ops\.kompymascotas\.com$, path: ^/feed/priceshape, roles: ROLE_FEED_PRICESHAPE }
         - { host: ^ops\.kompymascotas\.com$, roles: ROLE_CRONJOB }
         - { host: ^warehouse\.kompymascotas\.com$, roles: ROLE_WAREHOUSE}
         # - { path: ^/admin, roles: ROLE_ADMIN }
