@@ -22,6 +22,7 @@ class Order
         $this->products = [];
         $this->weight = 0;
         $this->crm = 0;
+        $this->notes = '';
     }
 
     public function addProduct(OrderProduct $newProduct): void
@@ -39,7 +40,8 @@ class Order
                     $product->getProductCode(),
                     $product->getName(),
                     $product->getQuantity() + $newProduct->getQuantity(),
-                    $product->getEan()
+                    $product->getEan(),
+                    $product->getWeight(),
                 );
                 continue;
             }
