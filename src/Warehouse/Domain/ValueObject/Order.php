@@ -34,20 +34,30 @@ class Order
             return;
         }
 
+        $newProducts = [];
+        $inserted = false;
+
         foreach ($this->products as $product) {
             if ($product->equals($newProduct)) {
-                $this->products[] = new OrderProduct(
+                $newProducts[] = new OrderProduct(
                     $product->getProductCode(),
                     $product->getName(),
                     $product->getQuantity() + $newProduct->getQuantity(),
                     $product->getEan(),
                     $product->getWeight(),
                 );
+                $inserted = true;
                 continue;
             }
 
-            $this->products[] = $newProduct;
+            $newProducts[] = $product;
         }
+
+        if (!$inserted) {
+            $newProducts[] = $newProduct;
+        }
+
+        $this->products = [...$newProducts];
     }
 
     public function getOrderId(): int
