@@ -241,7 +241,7 @@ class GoogleMerchantFeedHandler
                 $producto['availabity'] = "in stock";
             }*/
             // la disponibilidad va ahora en la custom_label3
-            $availability = $producto['stock'] > 0 || in_array($producto['id_manufacturer'], [3, 77, 78, 75,93, 173]) ? 'in stock' : 'out of stock';
+            $availability = $producto['stock'] > 0 || in_array($producto['id_manufacturer'], [3, 77, 78, 75, 93, 173, 121, 203, 4, 48, 49, 13, 199, 25, 58, 92, 62]) ? 'in stock' : 'out of stock';
 
             $producto['availabity'] = $availability;
 
