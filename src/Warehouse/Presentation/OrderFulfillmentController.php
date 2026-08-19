@@ -4,9 +4,8 @@ namespace App\Warehouse\Presentation;
 
 use App\Shared\Domain\Exception\KpyException;
 use App\Shared\Domain\Service\JsonResponseGenerator;
-use App\Shared\Domain\Service\OrderStatusUpdater;
+use App\Shared\Domain\Service\OrderReadyToShipUpdater;
 use App\Warehouse\Application\ShipmentGenerator;
-use App\Warehouse\Command\CommandBus;
 use App\Warehouse\Domain\OrderFactory;
 use App\Warehouse\Infrastructure\Persistence\Doctrine\Model\ShipmentEntity;
 use App\Warehouse\Infrastructure\Persistence\PrinterConfigRepository;
@@ -65,8 +64,7 @@ final class OrderFulfillmentController extends AbstractController
         OrderFactory $orderFactory,
         ShipmentGenerator $shipmentGenerator,
         EntityManagerInterface $entityManager,
-        OrderStatusUpdater $orderStatusUpdater,
-        CommandBus $commandBus
+        OrderReadyToShipUpdater $orderReadyToShipUpdater,
     ): JsonResponse
     {
         try {
@@ -86,12 +84,7 @@ final class OrderFulfillmentController extends AbstractController
             $entityManager->persist($entity);
             $entityManager->flush();
 
-            $commandBus->execute('kpy.warehouse.command.update_trackingnumber_prestashop', [
-                'orderId' => $orderId,
-                'trackingNumber' => $shipment->getTrackingNumber(),
-            ]);
-
-            $orderStatusUpdater->setCurrentState($orderId, (int)$_ENV['SHIP_READY_OS']);
+            $orderReadyToShipUpdater->updateOrder($orderId, $shipment->getTrackingNumber());
 
             return $this->jsonResponseGenerator->success([
                 'label' => $shipment->getZpl()

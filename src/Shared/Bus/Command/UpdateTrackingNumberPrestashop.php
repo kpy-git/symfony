@@ -1,10 +1,13 @@
 <?php
 
-namespace App\Warehouse\Command;
+namespace App\Shared\Bus\Command;
+
 
 use App\Shared\Infrastructure\Database\DatabaseInterface;
+use Symfony\Component\DependencyInjection\Attribute\AutoconfigureTag;
 
-readonly class UpdateTrackingNumberPrestashop implements CommandInterface
+#[AutoconfigureTag('kpy.shared.command')]
+readonly class UpdateTrackingNumberPrestashop implements KpyCommandInterface
 {
     public function __construct(private DatabaseInterface $kompyDatabase)
     {
@@ -12,7 +15,7 @@ readonly class UpdateTrackingNumberPrestashop implements CommandInterface
 
     public function getName(): string
     {
-        return 'kpy.warehouse.command.update_trackingnumber_prestashop';
+        return 'kpy.shared.command.update_trackingnumber_prestashop';
     }
 
     public function execute(array $params = []): bool
