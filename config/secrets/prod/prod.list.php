@@ -1,6 +1,7 @@
 <?php
 
 return [
+    'CLIENT_ID_INTEGRACIONES_PARSER' => null,
     'CONNECTIF_API_KEY' => null,
     'CRON_BEARER_TOKEN' => null,
     'GOOGLE_SFTP_HOST' => null,
@@ -12,4 +13,6 @@ return [
     'MRW_CORDOBA_PASSWORD' => null,
     'MRW_CORDOBA_USER' => null,
     'ORDER_DISPATCHER_SECRET' => null,
+    'SECRET_INTEGRACIONES_PARSER' => null,
+    'TENANT_ID_INTEGRACIONES_PARSER' => null,
 ];
