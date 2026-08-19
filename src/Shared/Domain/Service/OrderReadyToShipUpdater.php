@@ -17,7 +17,7 @@ readonly class OrderReadyToShipUpdater
     {
         $this->commandBus->execute('kpy.shared.command.update_trackingnumber_prestashop', [
             'orderId' => $orderId,
-            'trackingNumber' => $trackingNumber(),
+            'trackingNumber' => $trackingNumber,
         ]);
 
         $this->orderStatusUpdater->setCurrentState($orderId, (int)$_ENV['SHIP_READY_OS']);
