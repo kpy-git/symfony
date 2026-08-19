@@ -17,6 +17,8 @@ use Symfony\Component\Console\Style\SymfonyStyle;
 #[AsCommand('kpy:warehouse:neftys-orders-notifications-parser')]
 class ParserNeftysOrderNotifications
 {
+    private string $mailbox = 'integraciones@kompymascotas.com';
+
     public function __invoke(
         MicrosoftGraphAuth      $microsoftGraphAuth,
         ExchangeMailboxHandler  $exchangeMailboxReader,
@@ -34,7 +36,7 @@ class ParserNeftysOrderNotifications
             $exchangeMailboxReader->setToken($accessToken);
 
             $emails = $exchangeMailboxReader->getUnreadMails(
-                'integraciones@kompymascotas.com',
+                $this->mailbox,
                 'AAMkAGJjNjI3MWZkLTg3ZDAtNDI4ZC04MmRjLWE1MjExOTUwNGM2NQAuAAAAAACHjNKcrBEXQIXGfa1KCTQwAQC1wf2mYLyyRLEwEvVSntgWAAAK8rEEAAA='
             );
 
@@ -52,8 +54,10 @@ class ParserNeftysOrderNotifications
                     continue;
                 }
 
-                //$orderReadyToShipUpdater->updateOrder($neftysMailParser->getOrderId(), $neftysMailParser->getTrackingNumber());
+                $orderReadyToShipUpdater->updateOrder($neftysMailParser->getOrderId(), $neftysMailParser->getTrackingNumber());
                 $orderCount++;
+
+                $exchangeMailboxReader->markAsRead($this->mailbox, $email->getId());
             }
 
             $io->success($orderCount . " pedidos actualizados");
