@@ -2,6 +2,7 @@
 
 namespace App\Warehouse\Domain\Carrier\MRW;
 
+use App\Warehouse\Domain\CarrierTrackeableInterface;
 use App\Warehouse\Domain\Exception\ShipmentException;
 use App\Warehouse\Domain\ExpeditionableInterface;
 use App\Warehouse\Domain\ValueObject\Order;
@@ -11,7 +12,7 @@ use Symfony\Component\Filesystem\Filesystem;
 use Symfony\Component\Serializer\SerializerInterface;
 use Symfony\Contracts\HttpClient\HttpClientInterface;
 
-readonly class MRW implements ExpeditionableInterface
+readonly class MRW implements ExpeditionableInterface, CarrierTrackeableInterface
 {
     private string $logPath;
 
@@ -283,6 +284,34 @@ XML;
             </mrw:request>
         </mrw:GetEtiquetaEnvio>
     </soapenv:Body>
+</soapenv:Envelope>
+XML;
+
+    }
+
+    public function getHistoryByTrackingNumberAfter(string $tracking, int $updatedAfter): array
+    {
+        return [];
+    }
+
+    private function prepareRequestsForTracking(string $tracking): string
+    {
+        return <<<XML
+<soapenv:Envelope xmlns:soapenv="http://schemas.xmlsoap.org/soap/envelope/" xmlns:tem="http://tempuri.org/">
+   <soapenv:Header/>
+   <soapenv:Body>
+      <tem:GetEnvios>
+         <tem:login>$this->user</tem:login>
+         <tem:pass>$this->password</tem:pass>
+         <tem:codigoIdioma>3082</tem:codigoIdioma>
+         <tem:tipoFiltro>0</tem:tipoFiltro>
+         <tem:valorFiltroDesde>$tracking</tem:valorFiltroDesde>
+         <tem:valorFiltroHasta>$tracking</tem:valorFiltroHasta>
+         <tem:tipoInformacion>1</tem:tipoInformacion>
+         <tem:codigoAbonado>$this->abonado</tem:codigoAbonado>
+         <tem:codigoFranquicia>$this->franquicia</tem:codigoFranquicia>
+      </tem:GetEnvios>
+   </soapenv:Body>
 </soapenv:Envelope>
 XML;
 
