@@ -31,6 +31,8 @@ services:
         autoconfigure: true # Automatically registers your services as commands, event subscribers, etc.
 
         bind:
+            $environment: '%kernel.environment%'
+
             $aquaDSN: '%env(AQUA_DSN)%'
             $aquaUser: '%env(AQUA_USER)%'
             $aquaPassword: '%env(AQUA_PASSWORD)%'
@@ -54,6 +56,8 @@ services:
             $kompyDatabase: '@kompyDatabase'
 
             $debugCarrierRequest: '%env(bool:DEBUG_CARRIER_REQUEST)%'
+
+            $shippedOS: '%env(int:SHIPPED_OS)%'
 
     # makes classes in src/ available to be used as services
     # this creates a service per class whose id is the fully-qualified class name
@@ -136,9 +140,25 @@ services:
         arguments:
             $aquaDatabase: '@aquaDatabase'
 
-    mrw:
-        class: App\ShippingCostCalculator\Domain\Carrier
-        factory: ['@App\ShippingCostCalculator\Domain\Builder\CarrierBuilder', 'getMRW']
+    App\Warehouse\Domain\Carrier\MRW\Cordoba:
+        class: App\Warehouse\Domain\Carrier\MRW\MRW
+        arguments:
+            $franquicia: '%env(MRW_CORDOBA_FRANQUICIA)%'
+            $abonado: '%env(MRW_CORDOBA_ABONADO)%'
+            $user: '%env(MRW_CORDOBA_USER)%'
+            $password: '%env(MRW_CORDOBA_PASSWORD)%'
+        tags:
+            - { name: 'kpy.warehouse.carrier', key: 'mrw_cordoba'}
+
+    App\Warehouse\Domain\Carrier\MRW\Viladecans:
+        class: App\Warehouse\Domain\Carrier\MRW\MRW
+        arguments:
+            $franquicia: '%env(MRW_VILADECANS_FRANQUICIA)%'
+            $abonado: '%env(MRW_VILADECANS_ABONADO)%'
+            $user: '%env(MRW_VILADECANS_USER)%'
+            $password: '%env(MRW_VILADECANS_PASSWORD)%'
+        tags:
+            - { name: 'kpy.warehouse.carrier', key: 'mrw_viladecans' }
 
     # siempre que un servicio requiere la interfaz GooglePublicApiInterface se inyectará la clase GooglePublicApi
     App\Google\Infrastructure\API\GooglePublicApi: ~

@@ -14,8 +14,7 @@ readonly class CarrierStatesAssociator
     public function __construct(
         #[Autowire('%kernel.project_dir%')]
         string $srcDir,
-        #[Autowire('%env(SHIPPED_OS)%')]
-        private string $shippedOS,
+        private int $shippedOS,
     )
     {
         $this->configFile = $srcDir . DIRECTORY_SEPARATOR . 'config/tracking/config.json';

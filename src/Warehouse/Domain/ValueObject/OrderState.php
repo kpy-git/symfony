@@ -4,20 +4,16 @@ namespace App\Warehouse\Domain\ValueObject;
 
 class OrderState
 {
-    private int $orderId;
 
-    private string $trackingNumber;
-
-    private int $currentState;
-
-    private \DateTimeImmutable $updateAt;
-
-    public function __construct(int $orderId, string $trackingNumber, int $currentState, \DateTimeImmutable $updateAt)
+    public function __construct(
+        private readonly int                $orderId,
+        private readonly string             $trackingNumber,
+        private int                         $currentState,
+        private readonly \DateTimeImmutable $updateAt,
+        private bool                        $shipped,
+        private readonly string             $warehouse
+    )
     {
-        $this->orderId = $orderId;
-        $this->trackingNumber = $trackingNumber;
-        $this->currentState = $currentState;
-        $this->updateAt = $updateAt;
     }
 
     public function getOrderId(): int
@@ -46,10 +42,21 @@ class OrderState
         return $this;
     }
 
-    public function setUpdateAt(\DateTimeImmutable $updateAt): OrderState
+    public function shipped(): void
     {
-        $this->updateAt = $updateAt;
-        return $this;
+        $this->shipped = true;
     }
 
+    public function isShipped(): bool
+    {
+        return $this->shipped;
+    }
+
+    /**
+     * @return string
+     */
+    public function getWarehouse(): string
+    {
+        return $this->warehouse;
+    }
 }

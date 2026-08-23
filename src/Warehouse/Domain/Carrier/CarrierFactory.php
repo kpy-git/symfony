@@ -3,15 +3,18 @@
 namespace App\Warehouse\Domain\Carrier;
 
 use App\Warehouse\Domain\Exception\CarrierNotFoundException;
-use App\Warehouse\Domain\ExpeditionableInterface;
-use Symfony\Component\DependencyInjection\Attribute\AutowireIterator;
+use App\Warehouse\Infrastructure\Persistence\Doctrine\Model\Warehouse;
+use Doctrine\ORM\EntityManagerInterface;
+use Psr\Container\ContainerInterface;
+use Symfony\Component\DependencyInjection\Attribute\AutowireLocator;
 
 readonly class CarrierFactory
 {
     public function __construct(
-        /** @var ExpeditionableInterface[] $carriers */
-        #[AutowireIterator('kpy.warehouse.carrier')]
-        private iterable $carriers,
+        /** @var CarrierInterface[] $carriers */
+        #[AutowireLocator('kpy.warehouse.carrier', indexAttribute: 'key')]
+        private ContainerInterface $carriers,
+        private EntityManagerInterface $entityManager,
     )
     {
     }
@@ -19,22 +22,31 @@ readonly class CarrierFactory
     /**
      * @throws CarrierNotFoundException
      */
-    public function getByService(string $service): ExpeditionableInterface
+    public function getByService(string $service): CarrierInterface
     {
-        foreach ($this->carriers as $carrier) {
-            if ($carrier->associatedService() === $service) {
-                return $carrier;
-            }
+        if (!$this->carriers->has($service)) {
+            throw new CarrierNotFoundException('No hay ningún transportista disponible para el servicio solicitado, ' . $service);
         }
 
-        throw new CarrierNotFoundException('No hay ningún transportista disponible para el servicio solicitado');
+        return $this->carriers->get($service);
     }
 
     /**
      * @throws CarrierNotFoundException
      */
-    public function getMRWCordoba(): ExpeditionableInterface
+    public function getMRWCordoba(): CarrierInterface
     {
-        return $this->getByService('CORDOBA');
+        return $this->getByService('mrw_cordoba');
+    }
+
+    /**
+     * @throws CarrierNotFoundException
+     */
+    public function getByWarehouse(string $warehouseName): CarrierInterface
+    {
+        /** @var Warehouse $warehouse */
+        $warehouse = $this->entityManager->getRepository(Warehouse::class)->findOneBy(['name' => mb_strtoupper($warehouseName)]);
+
+        return $this->getByService($warehouse->getCarrierService());
     }
 }

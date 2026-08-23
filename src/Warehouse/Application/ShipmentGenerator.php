@@ -10,7 +10,7 @@ use App\Warehouse\Domain\ValueObject\Shipment;
 readonly class ShipmentGenerator
 {
     public function __construct(
-        private readonly CarrierFactory $carrierFactory
+        private CarrierFactory $carrierFactory
     )
     {
     }

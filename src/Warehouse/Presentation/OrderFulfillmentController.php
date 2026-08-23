@@ -7,6 +7,7 @@ use App\Shared\Domain\Service\JsonResponseGenerator;
 use App\Shared\Domain\Service\OrderReadyToShipUpdater;
 use App\Warehouse\Application\ShipmentGenerator;
 use App\Warehouse\Domain\OrderFactory;
+use App\Warehouse\Domain\OrderTrackerUpdater;
 use App\Warehouse\Infrastructure\Persistence\Doctrine\Model\ShipmentEntity;
 use App\Warehouse\Infrastructure\Persistence\PrinterConfigRepository;
 use App\Warehouse\Query\QueryBus;
@@ -147,5 +148,21 @@ final class OrderFulfillmentController extends AbstractController
             Response::HTTP_OK,
             ['Content-Type' => 'text/plain']
         );
+    }
+
+    #[Route('/tracking/{tracking}', name: '_tracking', methods: ['GET'])]
+    public function trackingTest(string $tracking, OrderTrackerUpdater $orderTrackerUpdater): JsonResponse
+    {
+        return $this->jsonResponseGenerator->success([
+            'tracking' => $orderTrackerUpdater->getHistoryByTrackingNumber($tracking),
+        ]);
+    }
+
+    #[Route('/tracking/order/{order}', name: '_order_tracking', methods: ['GET'])]
+    public function trackingOrderTest(int $order, OrderTrackerUpdater $orderTrackerUpdater): JsonResponse
+    {
+        $orderTrackerUpdater->updateHistoryByOrder($order);
+
+        return $this->jsonResponseGenerator->success();
     }
 }

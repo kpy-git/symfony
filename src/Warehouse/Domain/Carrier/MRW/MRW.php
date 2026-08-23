@@ -2,45 +2,38 @@
 
 namespace App\Warehouse\Domain\Carrier\MRW;
 
-use App\Warehouse\Domain\CarrierTrackeableInterface;
+use App\Warehouse\Domain\Carrier\CarrierInterface;
 use App\Warehouse\Domain\Exception\ShipmentException;
-use App\Warehouse\Domain\ExpeditionableInterface;
 use App\Warehouse\Domain\ValueObject\Order;
 use App\Warehouse\Domain\ValueObject\Shipment;
 use Symfony\Component\DependencyInjection\Attribute\Autowire;
 use Symfony\Component\Filesystem\Filesystem;
+use Symfony\Component\Serializer\Normalizer\AbstractNormalizer;
 use Symfony\Component\Serializer\SerializerInterface;
 use Symfony\Contracts\HttpClient\HttpClientInterface;
 
-readonly class MRW implements ExpeditionableInterface, CarrierTrackeableInterface
+final class MRW implements CarrierInterface
 {
     private string $logPath;
 
     public function __construct(
-        #[Autowire('%env(MRW_CORDOBA_FRANQUICIA)%')]
-        private string              $franquicia,
-        #[Autowire('%env(MRW_CORDOBA_ABONADO)%')]
-        private string              $abonado,
-        #[Autowire('%env(MRW_CORDOBA_USER)%')]
-        private string              $user,
-        #[Autowire('%env(MRW_CORDOBA_PASSWORD)%')]
-        private string              $password,
+        private readonly string              $franquicia,
+        private readonly string              $abonado,
+        private readonly string              $user,
+        private readonly string              $password,
+        private readonly HttpClientInterface $client,
+        private readonly SerializerInterface $serializer,
+        private readonly Filesystem          $filesystem,
+        private readonly bool                $debugCarrierRequest,
         #[Autowire('%env(MRW_SERVICIO)%')]
-        private string $service,
-        private Filesystem          $filesystem,
+        readonly private string              $mrwServiceCode,
         #[Autowire('%kernel.logs_dir%')]
-        string                      $logPath,
-        private bool $debugCarrierRequest,
-        private HttpClientInterface $client,
-        private SerializerInterface $serializer
+        string                               $logPath,
+        #[Autowire('%env(MRW_TRACKING_URL)%')]
+        readonly private string              $urlTrackingServices
     )
     {
         $this->logPath = $logPath . '/mrw/';
-    }
-
-    public function associatedService(): string
-    {
-        return 'CORDOBA';
     }
 
     /**
@@ -55,7 +48,7 @@ readonly class MRW implements ExpeditionableInterface, CarrierTrackeableInterfac
 
         $response = $this->executeNewShipmentRequest($body);
 
-        $cleanXml = $this->extractResultXml($response, 'TransmEnvioResult');
+        $cleanXml = $this->extractElementFromXml($response, 'TransmEnvioResult');
 
         $result = $this->serializer->deserialize($cleanXml, TransmEnvioResultDTO::class, 'xml');
 
@@ -68,7 +61,7 @@ readonly class MRW implements ExpeditionableInterface, CarrierTrackeableInterfac
 
         $labelsResponse = $this->executeGetLabelRequest($bodyLabel);
 
-        $labelXml = $this->extractResultXml($labelsResponse, 'GetEtiquetaEnvioResult');
+        $labelXml = $this->extractElementFromXml($labelsResponse, 'GetEtiquetaEnvioResult');
         $resultLabel = $this->serializer->deserialize($labelXml, GetEtiquetaEnvioResultDTO::class, 'xml');
 
 
@@ -145,7 +138,7 @@ readonly class MRW implements ExpeditionableInterface, CarrierTrackeableInterfac
                <mrw:NumeroAlbaran/>
                <mrw:Referencia>{$order->getOrderId()}</mrw:Referencia>
                <mrw:EnFranquicia/>
-               <mrw:CodigoServicio>{$this->service}</mrw:CodigoServicio>
+               <mrw:CodigoServicio>{$this->mrwServiceCode}</mrw:CodigoServicio>
                <mrw:DescripcionServicio/>
                <mrw:Frecuencia/>
                <mrw:CodigoPromocion/>
@@ -211,7 +204,7 @@ XML;
         $response = $this->client->request('POST', $_ENV['MRW_SAGEC'], [
             'headers' => [
                 'Content-Type' => 'text/xml;charset=UTF-8',
-                'action' => '"http://www.mrw.es/TransmEnvio"'
+                'action' => '"http://www.mrw.es/TransmEnvio"',
             ],
             'body' => $body,
         ]);
@@ -224,7 +217,7 @@ XML;
     }
 
 
-    private function extractResultXml(string $xmlContent, string $nodeName): string
+    private function extractElementFromXml(string $xmlContent, string $nodeName): string
     {
         $dom = new \DOMDocument();
         // Evitamos warnings si hay namespaces complejos
@@ -248,7 +241,7 @@ XML;
         $response = $this->client->request('POST', $_ENV['MRW_SAGEC'], [
             'headers' => [
                 'Content-Type' => 'text/xml;charset=UTF-8',
-                'action' => '"http://www.mrw.es/GetEtiquetaEnvio"'
+                'action' => '"http://www.mrw.es/GetEtiquetaEnvio"',
             ],
             'body' => $body,
         ]);
@@ -289,9 +282,70 @@ XML;
 
     }
 
-    public function getHistoryByTrackingNumberAfter(string $tracking, int $updatedAfter): array
+    public function getHistoryByTrackingNumberAfter(string $tracking, int $updatedAfter = 0): array
     {
-        return [];
+        $body = $this->prepareRequestsForTracking($tracking);
+
+        $response = $this->executeTrackingRequest($body);
+
+        $dom = new \DOMDocument();
+        // Evitamos warnings si hay namespaces complejos
+        $dom->loadXML($response, LIBXML_NOERROR | LIBXML_NOWARNING);
+
+        $xpath = new \DOMXPath($dom);
+
+        $history = [];
+
+        $xpath->registerNamespace(
+            'a',
+            'http://schemas.datacontract.org/2004/07/Mrw.TrackingService.Contracts.FrqAbonado'
+        );
+
+        $list = $xpath->query('//a:SeguimientoAbonado/a:Seguimiento');
+
+        foreach ($list as $item) {
+            $state = $this->serializer->deserialize(
+                str_replace(['a:', 'i:'], '',
+                    $dom->saveXML($item)),
+                SeguimientoDTO::class,
+                'xml',
+                [
+                    AbstractNormalizer::IGNORED_ATTRIBUTES => ['PersonaEntrega'],
+                ]
+            );
+
+            if ($state->Publicado->getTimestamp() > $updatedAfter) {
+                $history[] = $state;
+            }
+        }
+
+        return array_reverse($history);
+    }
+
+    private function executeTrackingRequest(string $body): bool|string
+    {
+        if ($this->debugCarrierRequest) {
+            $this->filesystem->dumpFile($this->logPath . 'mrw__tracking_request.xml', $body);
+        }
+
+        $response = $this->client->request('POST', $this->urlTrackingServices, [
+            'headers' => [
+                'Content-Type' => 'text/xml;charset=UTF-8',
+                'SOAPAction' => 'http://tempuri.org/ITrackingService/GetEnvios',
+            ],
+            'body' => $body,
+
+        ]);
+
+        if ($response->getStatusCode() !== 200) {
+            return false;
+        }
+
+        if ($this->debugCarrierRequest) {
+            $this->filesystem->dumpFile($this->logPath . 'mrw__tracking_response.xml', $response->getContent());
+        }
+
+        return $response->getContent();
     }
 
     private function prepareRequestsForTracking(string $tracking): string
