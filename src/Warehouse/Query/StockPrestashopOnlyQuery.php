@@ -4,7 +4,7 @@ namespace App\Warehouse\Query;
 
 use App\Shared\Infrastructure\Database\DatabaseInterface;
 
-readonly class StockPrestashopOnly implements QueryInterface
+readonly class StockPrestashopOnlyQuery implements QueryInterface
 {
     public function __construct(private DatabaseInterface $kompyDatabase)
     {
@@ -27,6 +27,7 @@ readonly class StockPrestashopOnly implements QueryInterface
                     where sa.out_of_stock != 1
                       and sa.quantity > 0
                       and not exists (select 1 from ps_neftys_stock ns where ns.id_product=sa.id_product and ns.id_product_attribute=sa.id_product_attribute)
+                      and not exists (select 1 from ps_kpy_distrivet_stock ds where ds.id_product=sa.id_product and ds.id_product_attribute=sa.id_product_attribute)
                       and not exists (select 1 from ps_kpy_packs kp where kp.id_product_pack = CONCAT_WS('-', p.id_product, ifnull(pa.id_product_attribute, 0)))"
         );
     }
