@@ -84,6 +84,7 @@ class Database implements DatabaseInterface
 
         return str_starts_with($sqlSanitized, 'UPDATE')
             || str_starts_with($sqlSanitized, 'INSERT')
+            || str_starts_with($sqlSanitized, 'TRUNCATE')
             || str_starts_with($sqlSanitized, 'DELETE');
     }
 
@@ -132,7 +133,7 @@ class Database implements DatabaseInterface
 
         //Loop through our $data array.
         foreach ($data as $arrayIndex => $row) {
-            $params = [];
+            $params = array();
 
             foreach ($row as $columnName => $columnValue) {
                 $param = ":" . $columnName . $arrayIndex;
@@ -142,32 +143,19 @@ class Database implements DatabaseInterface
             $rowsSQL[] = "(" . implode(", ", $params) . ")";
         }
 
-        $row_count = count($rowsSQL);
+        $chunks = array_chunk($rowsSQL, $maxValueInsert);
 
-        $sql = "INSERT INTO $table (" . implode(',', $columnNames) . ") VALUES ";
-        $firstRow = true;
+        foreach ($chunks as $part => $values) {
+            $sql = "INSERT INTO {$table} (" . implode(", ", $columnNames) . ") VALUES " . implode(", ", $values);
+            $this->lastSql = $sql;
+            $stmt = $this->prepare($sql);
 
-        foreach ($rowsSQL as $index => $rowSQL) {
-            if ($firstRow) {
-                $firstRow = false;
-            } else {
-                $sql .= ',';
+            $binds = array_slice($toBind, $part*$maxValueInsert*count($columnNames), $maxValueInsert*count($columnNames), true);
+            foreach ($binds as $param => $val) {
+                $stmt->bindValue($param, $val);
             }
 
-            $sql .= $rowSQL;
-
-            if ($index === $row_count - 1 || $index % self::MAX_ROWS_BATCH === 0) {
-                $this->lastSql = $sql;
-                $stmt = $this->prepare($sql);
-
-                foreach ($toBind as $param => $value) {
-                    $stmt->bindValue($param, $value);
-                }
-
-                $stmt->execute();
-                $sql = "INSERT INTO $table (" . implode(',', $columnNames) . ") VALUES ";
-                $firstRow = true;
-            }
+            $stmt->execute();
         }
 
         return count($rowsSQL);
