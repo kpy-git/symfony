@@ -38,7 +38,7 @@ security:
                 realm: "Acceso protegido"
 
         warehouse:
-            host: ^warehouse\.kompymascotas\.com$
+            host: ^(warehouse\.kompymascotas\.com|warehouse\.localhost)$
             provider: warehouse_provider
             http_basic:
                 realm: "Acceso protegido"
@@ -60,14 +60,15 @@ security:
             # switch_user: true
 
     role_hierarchy:
-        ROLE_WAREHOUSE: [ROLE_KOMPY, ROLE_EVOLUTION]
+        ROLE_KOMPY: [ROLE_WAREHOUSE]
+        ROLE_EVOLUTION: [ROLE_WAREHOUSE]
 
     # Note: Only the *first* matching rule is applied
     access_control:
         - { host: ^ops\.kompymascotas\.com$, path: ^/feed/google, roles: ROLE_FEED_GOOGLE }
         - { host: ^ops\.kompymascotas\.com$, path: ^/feed/priceshape, roles: ROLE_FEED_PRICESHAPE }
         - { host: ^ops\.kompymascotas\.com$, roles: ROLE_CRONJOB }
-        - { host: ^warehouse\.kompymascotas\.com$, roles: ROLE_WAREHOUSE}
+        - { host: ^(warehouse\.kompymascotas\.com|warehouse\.localhost)$, roles: ROLE_WAREHOUSE}
         # - { path: ^/admin, roles: ROLE_ADMIN }
         # - { path: ^/profile, roles: ROLE_USER }
 

@@ -19,7 +19,6 @@ use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\HttpFoundation\Response;
 use Symfony\Component\Routing\Attribute\Route;
 
-//#[IsGranted("ROLE_WAREHOUSE")]
 #[Route(host: 'warehouse.%kpy.base_domain%', name: 'warehouse_')]
 final class OrderFulfillmentController extends AbstractController
 {
@@ -31,16 +30,19 @@ final class OrderFulfillmentController extends AbstractController
     }
 
     #[Route('/', name: 'fulfillment')]
-    public function index(PrinterConfigRepository $printerConfigRepository): Response
+    public function index(
+        PrinterConfigRepository $printerConfigRepository
+    ): Response
     {
-        // todo - el estado y la configuración de la impresora hay que sacarlos en función del role del usuario
+        $user = $this->getUser();
+
         $pendingOrders = $this->queryBus->fetch('kpy.warehouse.query.pending_orders_kompychinales', [
-            'state' => (int)$_ENV['OWNERSHIP_WAREHOUSE_OS'],
+            'state' => $user->getUserIdentifier() === 'kompy' ? (int)$_ENV['OWNERSHIP_WAREHOUSE_OS'] : (int)$_ENV['EVOLUTIONS_PETS_WAREHOUSE_OS'],
         ]);
 
         return $this->render('warehouse/fulfillment/index.html.twig', [
             'pendingOrders' => $pendingOrders,
-            'printer_config' => $printerConfigRepository->getConfig('kompy')
+            'printer_config' => $printerConfigRepository->getConfig($user->getUserIdentifier())
         ]);
     }
 

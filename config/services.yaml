@@ -160,6 +160,16 @@ services:
         tags:
             - { name: 'kpy.warehouse.carrier', key: 'mrw_viladecans' }
 
+    App\Warehouse\Domain\Carrier\MRW\Jaen:
+        class: App\Warehouse\Domain\Carrier\MRW\MRW
+        arguments:
+            $franquicia: '%env(MRW_JAEN_FRANQUICIA)%'
+            $abonado: '%env(MRW_JAEN_ABONADO)%'
+            $user: '%env(MRW_JAEN_USER)%'
+            $password: '%env(MRW_JAEN_PASSWORD)%'
+        tags:
+            - { name: 'kpy.warehouse.carrier', key: 'mrw_jaen' }
+
     # siempre que un servicio requiere la interfaz GooglePublicApiInterface se inyectará la clase GooglePublicApi
     App\Google\Infrastructure\API\GooglePublicApi: ~
     App\Google\Infrastructure\API\GooglePublicApiInterface: '@App\Google\Infrastructure\API\GooglePublicApi'
