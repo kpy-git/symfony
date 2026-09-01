@@ -16,7 +16,8 @@ security:
         warehouse_provider:
             memory:
                 users:
-                    kompy: { password: '$2y$13$6zwxFD9ehYHGis1LxTZ96evuTLsjjAr5eZb.BE9oWxyRHz/Y3gEk6', roles: [ ROLE_WAREHOUSE ] }
+                    kompy: { password: '$2y$13$6zwxFD9ehYHGis1LxTZ96evuTLsjjAr5eZb.BE9oWxyRHz/Y3gEk6', roles: [ ROLE_KOMPY ] }
+                    evolutions: { password: '$2y$13$bVLdS4OCm.ZJOCUxbx8vpOhe37XGqI5/odq1WORfiqZQO/pbqPEHG', roles: [ ROLE_EVOLUTION ] }
 
         cron_provider:
             memory:
@@ -57,6 +58,9 @@ security:
 
             # https://symfony.com/doc/current/security/impersonating_user.html
             # switch_user: true
+
+    role_hierarchy:
+        ROLE_WAREHOUSE: [ROLE_KOMPY, ROLE_EVOLUTION]
 
     # Note: Only the *first* matching rule is applied
     access_control:

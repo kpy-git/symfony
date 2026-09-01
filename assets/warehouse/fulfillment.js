@@ -130,8 +130,18 @@ document.getElementById('panelDetalle').addEventListener('click', async (e) => {
         if (!qz.websocket.isActive()) {
             await qz.websocket.connect();
         }
+        
+        let configuration;
+        if (printerConfig.type === 'usb') {
+            configuration = printerConfig.name;
+        } else {
+            configuration = {
+                "host": printerConfig.host,
+                "port": printerConfig.port,
+            }
+        }
 
-        const conf = qz.configs.create(printerConfig);
+        const conf = qz.configs.create(configuration);
 
         await qz.print(conf, [shipmentData.label]);
 

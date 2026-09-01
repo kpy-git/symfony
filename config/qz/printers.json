@@ -1,6 +1,11 @@
 {
     "kompy": {
+        "type": "ethernet",
         "host": "192.168.0.34",
         "port": 9100
+    },
+    "evolutions": {
+        "type": "usb",
+        "name": "Honeywell PC42E-T (203 dpi) - DP"
     }
 }
