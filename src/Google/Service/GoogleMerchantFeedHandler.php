@@ -219,8 +219,8 @@ class GoogleMerchantFeedHandler
             $isMultipack = array_key_exists($sku, $multipacks);
             if (!$isMultipack) {
                 $producto['peso'] = round($this->infoAqua[$sku]['peso'], 2);
-                $producto['ean'] = str_pad(trim($this->infoAqua[$sku]['ean']), 12, "0", STR_PAD_LEFT);
-                $producto['referencia'] = trim($this->infoAqua[$sku]['referencia']);
+                $producto['ean'] = str_pad(trim($this->infoAqua[$sku]['ean'] ?? ''), 12, "0", STR_PAD_LEFT);
+                $producto['referencia'] = trim($this->infoAqua[$sku]['referencia'] ?? '');
             } else {
                 // el ean y la ref son las del producto principal del multipack
                 $skuPrincipal = $multipacks[$sku]['principal'];
