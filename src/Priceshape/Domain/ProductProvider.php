@@ -70,7 +70,7 @@ class ProductProvider
                 ->setSalePrice($salesPrice)
                 ->setCostPrice(round($this->productsPrices[$sku]['fulfillment_price'], 2))
                 ->setGtin($this->aquaProducts[$sku]['EAN'] ?? '')
-                ->setStockGroup($this->aquaProducts[$sku]['GRUPO'])
+                ->setStockGroup($this->aquaProducts[$sku]['GRUPO'] ?? 'C')
                 ->setAvailability($prestashopProduct['stock'] <= 0 ? 'out_of_stock' : 'in_stock')
                 ->setShippingPrice($shipping_price)
                 ->setWeight((float)$this->aquaProducts[$sku]['PESO'])
