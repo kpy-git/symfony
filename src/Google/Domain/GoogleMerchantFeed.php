@@ -128,7 +128,7 @@ class GoogleMerchantFeed
         $nodo .= "<g:sale_price>" . $producto['price'] . " EUR</g:sale_price>\n";
         $nodo .= "<g:description>" . str_replace('&nbsp;', ' ', $producto['description']) . "</g:description>\n";
         $nodo .= "<g:condition>new</g:condition>\n";
-        $nodo .= "<g:mpn>" . $producto['referencia'] . "</g:mpn>\n";
+        $nodo .= "<g:mpn>" . str_replace("&", "&amp;", $producto['referencia']) . "</g:mpn>\n";
         $nodo .= "<g:image_link>" . $producto['image'] . "</g:image_link>\n";
 
         if (!empty($producto['additional_images'])) {

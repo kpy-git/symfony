@@ -47,7 +47,6 @@ class Provider
             $productos[$key]['peso'] = $producto['PESO'];
             $productos[$key]['ean'] = $producto['EAN'];
             $productos[$key]['referencia'] = $producto['REFERENCIA'];
-            $productos[$key]['stock'] = $producto['STOCK_DISPONIBLE'];
             $productos[$key]['sync'] = $producto['STOCK_SYNC'];
             $productos[$key]['grupoLogistico'] = $producto['GRUPOLOGISTICO'];
             $productos[$key]['fabricante'] = $producto['FABRICANTE'];
