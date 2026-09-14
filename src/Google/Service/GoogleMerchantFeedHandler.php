@@ -488,7 +488,7 @@ class GoogleMerchantFeedHandler
     public function getCustomLabel1(string $sku): string
     {
         if (!array_key_exists($sku, $this->priceShapeInfo)) {
-            return 'NO_COMPETITIVO';
+            return 'COMPETITIVO';
         }
 
         return $this->priceShapeInfo[$sku]['caro'] === 'no' ? 'COMPETITIVO' : 'NO_COMPETITIVO';
