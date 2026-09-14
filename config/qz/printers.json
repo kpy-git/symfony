@@ -1,7 +1,7 @@
 {
     "kompy": {
         "type": "ethernet",
-        "host": "192.168.0.34",
+        "host": "192.168.0.5",
         "port": 9100
     },
     "evolutions": {
