@@ -3,11 +3,14 @@
 namespace App\Google\Infrastructure\Provider;
 
 use App\Google\Domain\Query\QueryBus;
+use App\Google\Infrastructure\Persistence\Doctrine\Model\Product;
 use App\Shared\Bus\Query\KpyQueryNotFoundException;
 use App\Shared\Domain\Shop;
+use App\Shared\Domain\ValueObject\ProductCode;
 use App\Shared\Infrastructure\Database\DatabaseBus;
 use App\Shared\Infrastructure\Database\DatabaseInterface;
 use App\Shared\Infrastructure\Database\Exception\KpyNotFoundDatabaseException;
+use Doctrine\ORM\EntityManagerInterface;
 use Symfony\Component\DependencyInjection\Attribute\Autowire;
 
 class Provider
@@ -18,6 +21,8 @@ class Provider
 
     private DatabaseInterface $kompyDatabase;
 
+    private array $googleProducts;
+
     /**
      * @throws KpyNotFoundDatabaseException
      */
@@ -26,10 +31,13 @@ class Provider
         private readonly QueryBus $queryBus,
         #[Autowire('%kpy.google.var_dir%')]
         private readonly string $googleVarDir,
+        EntityManagerInterface $entityManager,
     )
     {
         $this->aquaDatabase = $this->databaseBus->getAquaDatabase();
         $this->kompyDatabase = $this->databaseBus->getKompyDatabase();
+        $this->googleProducts = $entityManager->getRepository(Product::class)->findAll();
+
     }
 
     /**
@@ -245,21 +253,14 @@ class Provider
         return $productos;
     }
 
-    public function getNamesFeed(int $shop): array
+    public function getNamesFeed(): array
     {
-        /* TODO - El nombre del producto en el feed lo tiene que sacar del repositorio */
-        return [];
-
-        $namesFeed  = array();
-        $results = $this->kompyDatabase->execute("SELECT * FROM ps_pym_product_name_gshopping WHERE id_shop = {$shop}");
-
-        if (!empty($results)) {
-            foreach ($results as $result) {
-                $namesFeed[$result['id_product'].'-'.$result['id_product_attribute']] = trim($result['name']);
-            }
-        }
-
-        return $namesFeed;
+        return array_reduce(
+            $this->googleProducts,
+            static function (array $products, Product $product): array {
+                $products[(string)ProductCode::from($product->getProductId(), $product->getProductAttributeId())] = $product->getName();
+                return $products;
+            }, []);
     }
 
     public function getImagenesPersonalizadas(int $shop): array

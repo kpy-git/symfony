@@ -25,7 +25,7 @@ readonly class GenerateMerchantFeedCommand
         try {
             $this->feedHandler->syncFeed(Shop::KOMPY_ES);
 
-            $io->success('Feed generated.');
+            $io->success('Feed generated, ' . $this->feedHandler->totalCountProducts() . ' products.');
 
             return Command::SUCCESS;
 

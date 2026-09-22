@@ -44,6 +44,12 @@ doctrine:
                 dir: '%kernel.project_dir%/src/Warehouse/Infrastructure/Persistence/Doctrine/Model'
                 prefix: 'App\Warehouse\Infrastructure\Persistence\Doctrine\Model'
                 alias: Warehouse
+            Google:
+                type: attribute
+                is_bundle: false
+                dir: '%kernel.project_dir%/src/Google/Infrastructure/Persistence/Doctrine/Model'
+                prefix: 'App\Google\Infrastructure\Persistence\Doctrine\Model'
+                alias: Google
 
 when@test:
     doctrine:

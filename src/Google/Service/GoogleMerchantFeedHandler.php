@@ -152,7 +152,7 @@ class GoogleMerchantFeedHandler
         $this->productosConPrecioEspecial = $this->provider->getProductosConPrecioEspecial($shop->getId());
         $this->productosConRegalos = $this->provider->getProductosConRegalo($this->shop->getId(), $this->shop->getLanguageId());
         $this->combinacionesMayoresFormatosPienso = $this->provider->combinacionesMayoresFormatosPienso();
-        $feedAlternativeNamesProduct = $this->provider->getNamesFeed($shop->getId());
+        $feedAlternativeNamesProduct = $this->provider->getNamesFeed();
         $imagenesPersonalizadas = $this->provider->getImagenesPersonalizadas($shop->getId());
         $this->productosEnRoturaSinStock = $this->provider->getProductosEnRoturaSinStock();
 
@@ -206,7 +206,7 @@ class GoogleMerchantFeedHandler
                 continue;
             }
 
-            $producto['price'] = $productsPrices[$sku]['sales_price'];
+            $producto['price'] = $productsPrices[$sku]['sales_price'] ?? 0;
 
             if ($producto['price'] == 0 || $producto['pvp'] == 0) {
                 continue;
@@ -278,13 +278,15 @@ class GoogleMerchantFeedHandler
                 $nombreProducto = round((float)$this->infoAqua[$sku]['peso'] * 1000, 2) . "Gr " . $producto['name'];
                 $producto['unit_pricing_measure'] = round((float)$this->infoAqua[$sku]['peso'] * 1000, 2) . " g";
                 $producto['unit_pricing_base_measure'] = "100 g";
+
             } else if (stripos($categoria, 'alimentaci') !== false) {
                 $nombreProducto = round((float)$this->infoAqua[$sku]['peso'], 2) . "Kg " . $producto['name'];
                 $producto['unit_pricing_measure'] = round((float)$this->infoAqua[$sku]['peso'], 2) . " kg";
                 $producto['unit_pricing_base_measure'] = "1 kg";
+
             } else {
                 $nombreProducto = str_replace("Formato:", "", ucwords(strtolower(trim($this->infoAqua[$sku]['nombre']))));
-                if (array_key_exists($sku, $measuringUnits)) {
+                if (isset($measuringUnits[$sku])) {
                     $producto['unit_pricing_measure'] = $measuringUnits[$sku]['unit_pricing_measure'];
                     $producto['unit_pricing_base_measure'] = $measuringUnits[$sku]['unit_pricing_base_measure'];
                 }
@@ -294,8 +296,9 @@ class GoogleMerchantFeedHandler
                 $producto['name'] = $nombreProducto . $this->getEtiquetasParaNombreProducto($sku);
             }
 
-            if (array_key_exists($sku, $feedAlternativeNamesProduct)) {
+            if (isset($feedAlternativeNamesProduct[$sku])) {
                 $producto['name'] = $feedAlternativeNamesProduct[$sku];
+
             }
 
             if (array_key_exists($sku, $imagenesPersonalizadas)) {
