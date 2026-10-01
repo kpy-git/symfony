@@ -27,7 +27,7 @@ readonly class UpdateAquaCostProductPrice implements CommandInterface
             "SELECT IIF(EXISTS(SELECT 1 FROM DATIN03 WITH(NOLOCK) WHERE CODIGO='{$params['sku']}'), 'SI', 'NO') AS 'EXISTS'"
         );
 
-        if (!$existsProduct) {
+        if ($existsProduct === 'NO') {
             throw new KpyProductNotFoundException('SKU does not exist in AQUA');
         }
 
