@@ -64,7 +64,7 @@ readonly class UpdateDistrivetProductsCostConsoleCommand
                         'id_product' => $productCode->getProductId(),
                         'id_product_attribute' => $productCode->getProductAttributeId(),
                         'final_cost' => round($cost, 6),
-                        'warehouse_id' => 4,
+                        'warehouse' => 4,
                     ]);
 
                     $countUpdatedProducts++;
