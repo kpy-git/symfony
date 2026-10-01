@@ -3,6 +3,7 @@
 namespace App\Warehouse\Command;
 
 use App\Shared\Domain\Exception\KpyException;
+use App\Shared\Domain\Exception\KpyProductNotFoundException;
 use App\Shared\Infrastructure\Database\DatabaseInterface;
 
 readonly class UpdateAquaCostProductPrice implements CommandInterface
@@ -22,13 +23,21 @@ readonly class UpdateAquaCostProductPrice implements CommandInterface
             throw new KpyException('Supplier, cost and SKU are required.');
         }
 
-        $exists = $this->aquaDatabase->getValue(
-            "SELECT IIF(EXISTS (SELECT 1 FROM DATPC03 WHERE CODIGO='{$params['sku']}' AND PROVEEDOR='{$params['supplier']}'), 'SI', 'NO') AS 'EXISTS'"
+        $existsProduct = $this->aquaDatabase->getValue(
+            "SELECT IIF(EXISTS(SELECT 1 FROM DATIN03 WITH(NOLOCK) WHERE CODIGO='{$params['sku']}'), 'SI', 'NO') AS 'EXISTS'"
+        );
+
+        if (!$existsProduct) {
+            throw new KpyProductNotFoundException('SKU does not exist in AQUA');
+        }
+
+        $existsCostPrice = $this->aquaDatabase->getValue(
+            "SELECT IIF(EXISTS (SELECT 1 FROM DATPC03 WITH(NOLOCK) WHERE CODIGO='{$params['sku']}' AND PROVEEDOR='{$params['supplier']}'), 'SI', 'NO') AS 'EXISTS'"
         ) === 'SI';
 
         $discount = $params['discount'] ?? 0.0;
 
-        if ($exists) {
+        if ($existsCostPrice) {
             return $this->aquaDatabase->execute(
                 "UPDATE DATPC03 SET FOB={$params['cost']}, DESCUENTO={$discount}
                WHERE PROVEEDOR='{$params['supplier']}'

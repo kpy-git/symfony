@@ -3,6 +3,7 @@
 namespace App\Warehouse\Application;
 
 use App\Shared\Domain\Exception\KpyException;
+use App\Shared\Domain\Exception\KpyProductNotFoundException;
 use App\Shared\Domain\ValueObject\ProductCode;
 use App\Shared\Infrastructure\API\KpyPublicApiInterface;
 use App\Warehouse\Command\CommandBus;
@@ -40,28 +41,33 @@ readonly class UpdateDistrivetProductsCostConsoleCommand
             }
 
             foreach ($productsCosts as $productCost) {
-                $productCode = ProductCode::from($productCost['id_product'], $productCost['id_product_attribute']);
+                try {
+                    $productCode = ProductCode::from($productCost['id_product'], $productCost['id_product_attribute']);
 
-                $product = $this->kpyApi->getProduct($productCode);
+                    $product = $this->kpyApi->getProduct($productCode);
 
-                if (!$product->isPack()) {
-                    $this->commandBus->execute('kpy.warehouse.command.update_aqua_cost_product_price', [
-                        'sku' => $productCode->getSku(),
-                        'supplier' => '400000001',
-                        'cost' => $productCost['cost'],
-                    ]);
+                    if (!$product->isPack()) {
+                        $this->commandBus->execute('kpy.warehouse.command.update_aqua_cost_product_price', [
+                            'sku' => $productCode->getSku(),
+                            'supplier' => '400000001',
+                            'cost' => $productCost['cost'],
+                        ]);
+                    }
+
+                    if ($product->getBrandId() === 1) {
+                        // Hills Rappels (7% y 2%) + 15% en factura
+                        $this->commandBus->execute('kpy.warehouse.command.update_final_product_cost', [
+                            'id_product' => $productCode->getProductId(),
+                            'id_product_attribute' => $productCode->getProductAttributeId(),
+                            'final_cost' => round($productCost['cost'] * 0.77469, 6),
+                        ]);
+                    }
+
+                    $countUpdatedProducts++;
+
+                } catch (KpyProductNotFoundException $exception) {
+                    $io->error($exception->getMessage());
                 }
-
-                if ($product->getBrandId() === 1) {
-                    // Hills Rappels (7% y 2%) + 15% en factura
-                    $this->commandBus->execute('kpy.warehouse.command.update_final_product_cost', [
-                        'id_product' => $productCode->getProductId(),
-                        'id_product_attribute' => $productCode->getProductAttributeId(),
-                        'final_cost' => round($productCost['cost'] * 0.77469, 6),
-                    ]);
-                }
-
-                $countUpdatedProducts++;
             }
 
             $io->success( $countUpdatedProducts . ' productos actualizados satisfactoriamente');
