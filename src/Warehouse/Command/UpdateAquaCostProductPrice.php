@@ -28,7 +28,7 @@ readonly class UpdateAquaCostProductPrice implements CommandInterface
         );
 
         if ($existsProduct === 'NO') {
-            throw new KpyProductNotFoundException('SKU does not exist in AQUA');
+            throw new KpyProductNotFoundException('SKU does not exist in AQUA, ' . $params['sku']);
         }
 
         $existsCostPrice = $this->aquaDatabase->getValue(
