@@ -54,14 +54,17 @@ readonly class UpdateDistrivetProductsCostConsoleCommand
                         ]);
                     }
 
+                    $cost = $productCost['cost'];
                     if ($product->getBrandId() === 1) {
                         // Hills Rappels (7% y 2%) + 15% en factura
-                        $this->commandBus->execute('kpy.warehouse.command.update_final_product_cost', [
-                            'id_product' => $productCode->getProductId(),
-                            'id_product_attribute' => $productCode->getProductAttributeId(),
-                            'final_cost' => round($productCost['cost'] * 0.77469, 6),
-                        ]);
+                        $cost = round($productCost['cost'] * 0.77469, 6);
                     }
+
+                    $this->commandBus->execute('kpy.warehouse.command.update_final_product_cost', [
+                        'id_product' => $productCode->getProductId(),
+                        'id_product_attribute' => $productCode->getProductAttributeId(),
+                        'final_cost' => round($cost, 6),
+                    ]);
 
                     $countUpdatedProducts++;
 
