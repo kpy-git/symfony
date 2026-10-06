@@ -2,6 +2,7 @@
 
 namespace App\Warehouse\Command;
 
+use App\Shared\Domain\Exception\KpyException;
 use App\Shared\Infrastructure\Database\DatabaseInterface;
 
 readonly class UpdateFinalProductCost implements CommandInterface
@@ -18,6 +19,10 @@ readonly class UpdateFinalProductCost implements CommandInterface
 
     public function execute(array $params = []): bool
     {
+        if (!isset($params['final_cost'], $params['warehouse'], $params['id_product'], $params['id_product_attribute'])) {
+            throw new KpyException('Required parameters missing');
+        }
+
         if ($this->doctrineDatabase->getValue(
             "select exists (select 1 from warehouse_product
                         where warehouse_id={$params['warehouse']}
@@ -26,10 +31,17 @@ readonly class UpdateFinalProductCost implements CommandInterface
 
             $update = "UPDATE warehouse_product
             SET final_cost_price={$params['final_cost']}
-            WHERE id_product={$params['id_product']} AND id_product_attribute={$params['id_product_attribute']}";
+            WHERE id_product={$params['id_product']}
+              AND id_product_attribute={$params['id_product_attribute']}
+              AND warehouse_id={$params['warehouse']}";
 
-            if (isset($params['warehouse'])) {
-                $update .= " AND warehouse_id=" . $params['warehouse'];
+            if ($params['warehouse'] !== 1) {
+                // siempre que se cambie el precio para un almacén que no sea tienda se cambiará para tienda también
+                $this->doctrineDatabase->execute("UPDATE warehouse_product
+                SET final_cost_price={$params['final_cost']}
+                WHERE id_product={$params['id_product']}
+                  AND id_product_attribute={$params['id_product_attribute']}
+                  AND warehouse_id=1");
             }
 
             return $this->doctrineDatabase->execute($update);
