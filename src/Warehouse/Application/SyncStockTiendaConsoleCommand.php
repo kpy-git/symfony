@@ -43,13 +43,18 @@ class SyncStockTiendaConsoleCommand
             $this->queryBus->fetch('kpy.warehouse.query.stock_neftys')
         );
 
+        $skusInDistrivet = array_map(
+            static fn(array $row): string => $row['sku'],
+            $this->queryBus->fetch('kpy.warehouse.query.stock_distrivet')
+        );
+
         $duplicated = 0;
 
         foreach ($stockTienda as $sku => $stock) {
             try {
                 $productCode = ProductCode::fromSKU($sku);
 
-                if (in_array($sku, $skuInNeftys)) {
+                if (in_array($sku, $skuInNeftys) || in_array($sku, $skusInDistrivet)) {
                     $duplicated++;
                     continue;
                 }
@@ -84,7 +89,7 @@ class SyncStockTiendaConsoleCommand
 
         $io->success($this->updatedProductsCount . ' products(s) updated. ' . $updatedOutstockProducts . ' out of stock in TIENDA.');
 
-        $io->info($duplicated . ' product(s) duplicated with Neftys');
+        $io->info($duplicated . ' product(s) duplicated with Neftys/Distrivet');
 
         return Command::SUCCESS;
     }
