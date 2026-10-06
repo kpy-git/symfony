@@ -56,8 +56,8 @@ readonly class UpdateDistrivetProductsCostConsoleCommand
 
                     $cost = $productCost['cost'];
                     if ($product->getBrandId() === 1) {
-                        // Hills Rappels (7% y 2%) + 15% en factura
-                        $cost = round($productCost['cost'] * 0.77469, 6);
+                        // Hills Rappels (7% y 2%)
+                        $cost = round($productCost['cost'] * 0.9114, 6);
                     }
 
                     $this->commandBus->execute('kpy.warehouse.command.update_final_product_cost', [
