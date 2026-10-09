@@ -60,6 +60,7 @@ readonly class KpyPublicApi implements KpyPublicApiInterface
             $product->getSalesPriceES(),
             $product->isPack(),
             $product->isJirafa(),
+            $product->isActive(),
         );
     }
 

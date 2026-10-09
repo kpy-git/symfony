@@ -33,6 +33,9 @@ class Product
     #[ORM\Column(name: 'sales_price_es', type: Types::DECIMAL, precision: 6, scale: 2)]
     private ?string $salesPriceES = null;
 
+    #[ORM\Column(options: ["default" => 1])]
+    private bool $active = true;
+
     public function getProductId(): ?int
     {
         return $this->productId;
@@ -114,4 +117,16 @@ class Product
 
         return $this;
     }
+
+    public function isActive(): bool
+    {
+        return $this->active;
+    }
+
+    public function setActive(bool $active): static
+    {
+        $this->active = $active;
+        return $this;
+    }
+
 }

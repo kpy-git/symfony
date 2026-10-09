@@ -11,6 +11,7 @@ readonly class Product
         private float $salesPrice,
         private bool $pack = false,
         private bool $jirafa = false,
+        private bool $active = true,
     )
     {
     }
@@ -51,5 +52,10 @@ readonly class Product
     public function isBoske(): bool
     {
         return 178 === $this->getBrandId();
+    }
+
+    public function isActive(): bool
+    {
+        return $this->active;
     }
 }
