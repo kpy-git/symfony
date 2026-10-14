@@ -2,10 +2,14 @@
 
 namespace App\Warehouse\Presentation;
 
+use App\Shared\Domain\Exception\KpyException;
 use App\Shared\Domain\Service\JsonResponseGenerator;
+use App\Warehouse\Infrastructure\Persistence\Repository\OrderMarginRepository;
+use App\Warehouse\Query\QueryBus;
 use App\Warehouse\Service\OrderMarginCalculator;
 use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
 use Symfony\Component\HttpFoundation\JsonResponse;
+use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\Routing\Attribute\Route;
 use Symfony\Component\Serializer\SerializerInterface;
 
@@ -19,15 +23,60 @@ class OrderMarginController extends AbstractController
     }
 
     #[Route('/order/{orderId}', name: 'compute')]
-    public function computeOrderMargin(int                   $orderId,
-                                       OrderMarginCalculator $orderMarginCalculator,
-                                       SerializerInterface   $serializer
+    public function computeOrderMargin(
+        int                   $orderId,
+        OrderMarginCalculator $orderMarginCalculator,
+        SerializerInterface   $serializer,
+        OrderMarginRepository $orderMarginRepository
     ): JsonResponse
     {
-        $margin = $orderMarginCalculator->computeMarginByOrder($orderId);
+        try {
+            $orderMargin = $orderMarginCalculator->computeMarginByOrder($orderId);
 
-        return $this->jsonResponseGenerator->success([
-            'margin' => json_decode($serializer->serialize($margin, 'json'), true),
-        ]);
+            $orderMarginRepository->save($orderMargin);
+
+            return $this->jsonResponseGenerator->success([
+                'orderMargin' => json_decode($serializer->serialize($orderMargin, 'json'), true),
+            ]);
+
+        } catch (KpyException $kpyException) {
+            return $this->jsonResponseGenerator->fromException($kpyException);
+        }
+    }
+
+    #[Route('/missingorders', name: 'missing_orders')]
+    public function computeMissingOrdersMargins(
+        Request               $request,
+        QueryBus              $queryBus,
+        OrderMarginCalculator $orderMarginCalculator,
+        OrderMarginRepository $orderMarginRepository
+    ): JsonResponse
+    {
+        try {
+            $params = [];
+            if ($request->query->has('limit')) {
+                $params['limit'] = $request->query->get('limit');
+            }
+
+            $orders = $queryBus->fetch('kpy.warehouse.query.missing_orders_margin', $params);
+
+            if (empty($orders)) {
+                return $this->jsonResponseGenerator->success([
+                    'msg' => 'No orders found without margin calculated',
+                ]);
+            }
+
+            foreach ($orders as $order) {
+                $orderMargin = $orderMarginCalculator->computeMarginByOrder((int)$order['NUMERO_DOC']);
+                $orderMarginRepository->save($orderMargin);
+            }
+
+            return $this->jsonResponseGenerator->success([
+                'msg' => count($orders) . ' orders margins calculated',
+            ]);
+
+        } catch (KpyException $kpyException) {
+            return $this->jsonResponseGenerator->fromException($kpyException);
+        }
     }
 }

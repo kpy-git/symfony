@@ -11,6 +11,7 @@ class OrderMargin
     private float $totalShippingCost;
     private float $totalPackingCost;
     private float $totalManipulationCost;
+    private float $paymentCommission;
 
     public function __construct(
         private readonly int   $orderId,
@@ -106,6 +107,17 @@ class OrderMargin
     public function getTotalPaid(): float
     {
         return $this->totalPaid;
+    }
+
+    public function getPaymentCommission(): float
+    {
+        return $this->paymentCommission;
+    }
+
+    public function setPaymentCommission(float $paymentCommission): self
+    {
+        $this->paymentCommission = $paymentCommission;
+        return $this;
     }
 
 }

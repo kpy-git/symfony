@@ -2,10 +2,15 @@
 
 namespace App\Warehouse\Service;
 
+use App\Shared\Bus\Query\KpyQueryNotFoundException;
+use App\Shared\Domain\Exception\KpyInvalidProductCode;
 use App\Shared\Domain\Exception\KpyOrderNotFoundException;
 use App\Shared\Domain\ValueObject\ProductCode;
 use App\Shared\Infrastructure\API\KpyPublicApiInterface;
+use App\ShippingCostCalculator\Domain\Exception\ShippingCostException;
 use App\ShippingCostCalculator\Domain\Service\CalculatorShippingCost;
+use App\Warehouse\Domain\Exception\WarehouseNotFoundException;
+use App\Warehouse\Domain\PaymentCommissionStrategy\OrderPaymentType;
 use App\Warehouse\Domain\ValueObject\OrderMargin;
 use App\Warehouse\Domain\ValueObject\OrderMarginProduct;
 use App\Warehouse\Domain\ValueObject\Product;
@@ -25,17 +30,24 @@ readonly class OrderMarginCalculator
     {
     }
 
+    /**
+     * @throws KpyOrderNotFoundException
+     * @throws KpyInvalidProductCode
+     * @throws WarehouseNotFoundException
+     * @throws KpyQueryNotFoundException
+     * @throws ShippingCostException
+     */
     public function computeMarginByOrder(int $orderId): OrderMargin
     {
-        $orderTotals = $this->queryBus->fetch('kpy.warehouse.query.order_margin_header', ['id_order' => $orderId]);
+        $orderHeader = $this->queryBus->fetch('kpy.warehouse.query.order_margin_header', ['id_order' => $orderId]);
 
-        if (empty($orderTotals)) {
+        if (empty($orderHeader)) {
             throw new KpyOrderNotFoundException('Order not found: ' . $orderId);
         }
 
-        $orderMargin = new OrderMargin($orderId, $orderTotals['total_paid_tax_excl']);
+        $orderMargin = new OrderMargin($orderId, $orderHeader['total_paid_tax_excl']);
 
-        $warehouse = $this->warehouseFactory->createFrom('NEFTYS');
+        $warehouse = $this->warehouseFactory->createFrom($orderHeader['warehouse']);
 
         $carrier = $warehouse->getCarrier();
 
@@ -54,22 +66,27 @@ readonly class OrderMarginCalculator
 
             $productWarehouseModel = $this->warehouseProductRepository->findProductInWarehouse($productCode, $warehouse);
 
+            if (!$productWarehouseModel) {
+                $productWarehouseModel = $this->warehouseProductRepository->findProductInWarehouse($productCode, $this->warehouseFactory->createFrom('TIENDA'));
+            }
+
             $warehouseProduct = new Product(
                 $productCode,
                 $product->getBrandId(),
                 $product->getWeight(),
-                $productWarehouseModel->getFinalCostPrice(),
-                $orderProduct['unit_sales_price'],
+                $productWarehouseModel->getFinalCostPrice()
             );
 
             $marginProduct = new OrderMarginProduct(
                 $productCode,
+                (int)$orderProduct['NUMERO'],
+                (int)$orderProduct['POSICION'],
                 $orderProduct['quantity'],
-                $product->getWeight(),
+                $product->getWeight() * $orderProduct['quantity'],
                 $warehouseProduct->getCostPrice() * $orderProduct['quantity']
             );
 
-            $productsCost += $warehouseProduct->getCostPrice();
+            $productsCost += $warehouseProduct->getCostPrice() * $orderProduct['quantity'];
 
             // solo calcula el coste de manipulación la primera vez para los almacenes que tienen coste fijo por pedido
             if ($warehouse->hasManipulationCostPerProduct() || $orderManipulationCost === 0) {
@@ -93,16 +110,23 @@ readonly class OrderMarginCalculator
 
         $packingCost = $warehouse->getPackagingHandler()->getCostFor($orderWeight);
 
+        $paymentCommission = OrderPaymentType::createFromModuleName($orderHeader['module'])
+            ->getCommissionStrategy()
+            ->calculateCommission($orderHeader['total_paid']);
+
         /** @var OrderMarginProduct $orderProduct */
-        foreach ($orderMargin->getProducts() as $orderProduct) {
-            $prorated = $orderProduct->getWeight() / $orderWeight;
+        $orderProducts = $orderMargin->getProducts();
+
+        foreach ($orderProducts as $orderProduct) {
+            $prorated = $orderProduct->getWeight() * $orderProduct->getQuantity() / $orderWeight;
             $orderProduct
-                ->setShippingCost($shippingCost * $prorated);
+                ->setShippingCost($shippingCost * $prorated)
+                ->setPaymentCommission($paymentCommission / count($orderProducts));
 
             if (!$warehouse->hasManipulationCostPerProduct()) {
                 $orderProduct
-                    ->setPackingCost($packingCost * $prorated)
-                    ->setManipulationCost($orderManipulationCost * $prorated);
+                    ->setPackingCost($packingCost / count($orderProducts))
+                    ->setManipulationCost($orderManipulationCost / count($orderProducts));
             }
         }
 
@@ -110,6 +134,7 @@ readonly class OrderMarginCalculator
         $orderMargin->setTotalManipulationCost($orderManipulationCost);
         $orderMargin->setTotalShippingCost($shippingCost);
         $orderMargin->setTotalPackingCost($packingCost);
+        $orderMargin->setPaymentCommission($paymentCommission);
 
         return $orderMargin;
     }

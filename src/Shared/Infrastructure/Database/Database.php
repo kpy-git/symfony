@@ -100,7 +100,7 @@ class Database implements DatabaseInterface
         $this->initializeConnection();
         $this->lastSql = $sql;
 
-        return $this->link->query($sql)->fetch(PDO::FETCH_ASSOC);
+        return $this->link->query($sql)->fetch(PDO::FETCH_ASSOC) ?: [];
     }
 
     public function withError(): bool

@@ -11,7 +11,7 @@ readonly class Product extends \App\Shared\Domain\ValueObject\Product
         int           $brand,
         float         $weight,
         private float $costPrice,
-        float         $salesPrice,
+        float         $salesPrice = 0,
     )
     {
         parent::__construct($productCode, $weight, $brand, $salesPrice);

@@ -8,6 +8,8 @@ class OrderMarginProduct
 {
     public function __construct(
         private ProductCode $productCode,
+        private int $operationNumber,
+        private int $positionNumber,
         private int $quantity,
         private float $weight,
         private float $costPrice,
@@ -22,6 +24,16 @@ class OrderMarginProduct
     public function getProductCode(): ProductCode
     {
         return $this->productCode;
+    }
+
+    public function getOperationNumber(): int
+    {
+        return $this->operationNumber;
+    }
+
+    public function getPositionNumber(): int
+    {
+        return $this->positionNumber;
     }
 
     public function getQuantity(): int
