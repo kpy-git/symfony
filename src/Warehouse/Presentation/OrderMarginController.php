@@ -13,7 +13,7 @@ use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\Routing\Attribute\Route;
 use Symfony\Component\Serializer\SerializerInterface;
 
-#[Route('/margin', name: 'warehouse_order_margin_', host: 'app.%kpy.base_domain%')]
+#[Route('/margin', name: 'warehouse_order_margin_', host: 'ops.%kpy.base_domain%')]
 class OrderMarginController extends AbstractController
 {
     public function __construct(

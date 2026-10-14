@@ -24,6 +24,11 @@ security:
                 users:
                     cronjob: { roles: [ROLE_CRONJOB] }
 
+        margin_provider:
+            memory:
+                users:
+                    kompy: { password: '$2y$13$pACe20g6aOBD1OmQznokF..l9rSeEkNiF8QvW6dtkxmD1VXUPTblC', roles: [ROLE_MARGIN]}
+
     firewalls:
         dev:
             # Ensure dev tools and static assets are always allowed
@@ -34,6 +39,13 @@ security:
             host: ^ops\.kompymascotas\.com$
             pattern: ^/feed/
             provider: feed_provider
+            http_basic:
+                realm: "Acceso protegido"
+
+        ops_margin:
+            host: ^ops\.kompymascotas\.com$
+            pattern: ^/margin/
+            provider: margin_provider
             http_basic:
                 realm: "Acceso protegido"
 
@@ -67,6 +79,7 @@ security:
     access_control:
         - { host: ^ops\.kompymascotas\.com$, path: ^/feed/google, roles: ROLE_FEED_GOOGLE }
         - { host: ^ops\.kompymascotas\.com$, path: ^/feed/priceshape, roles: ROLE_FEED_PRICESHAPE }
+        - { host: ^ops\.kompymascotas\.com$, path: ^/margin, roles: ROLE_MARGIN }
         - { host: ^ops\.kompymascotas\.com$, roles: ROLE_CRONJOB }
         - { host: ^(warehouse\.kompymascotas\.com|warehouse\.localhost)$, roles: ROLE_WAREHOUSE}
         # - { path: ^/admin, roles: ROLE_ADMIN }
