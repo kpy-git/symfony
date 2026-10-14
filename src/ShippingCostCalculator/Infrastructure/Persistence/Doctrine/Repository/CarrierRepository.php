@@ -75,7 +75,7 @@ class CarrierRepository extends ServiceEntityRepository implements CarrierReposi
      */
     public function findByService(string $service): \App\ShippingCostCalculator\Domain\Carrier
     {
-        $carrier = $this->findOneBy(['idServiceAqua' => $service]);
+        $carrier = $this->findOneBy(['service' => $service]);
 
         if (!$carrier) {
             throw new CarrierNotFoundException('Carrier not found');

@@ -11,4 +11,12 @@ enum CostStrategyType: string
     case EVOLUTION_PETS = 'EVOLUTION_PETS';
 
     case DISTRIVET = 'DISTRIVET';
+
+    public function hasCostPerProduct(): bool
+    {
+        return match ($this) {
+            self::NEFTYS, self::DISTRIVET => true,
+            default => false,
+        };
+    }
 }

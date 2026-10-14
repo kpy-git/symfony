@@ -86,4 +86,9 @@ readonly class Warehouse
 
         return $warehouseProducts;
     }
+
+    public function hasManipulationCostPerProduct(): bool
+    {
+        return $this->costStrategy->getType()->hasCostPerProduct();
+    }
 }
