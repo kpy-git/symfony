@@ -118,7 +118,7 @@ readonly class OrderMarginCalculator
         $orderProducts = $orderMargin->getProducts();
 
         foreach ($orderProducts as $orderProduct) {
-            $prorated = $orderProduct->getWeight() * $orderProduct->getQuantity() / $orderWeight;
+            $prorated = $orderProduct->getWeight() / $orderWeight;
             $orderProduct
                 ->setShippingCost($shippingCost * $prorated)
                 ->setPaymentCommission($paymentCommission / count($orderProducts));
