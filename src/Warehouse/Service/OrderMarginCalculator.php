@@ -121,11 +121,11 @@ readonly class OrderMarginCalculator
             $prorated = $orderProduct->getWeight() / $orderWeight;
             $orderProduct
                 ->setShippingCost($shippingCost * $prorated)
+                ->setPackingCost($packingCost * $prorated)
                 ->setPaymentCommission($paymentCommission / count($orderProducts));
 
             if (!$warehouse->hasManipulationCostPerProduct()) {
                 $orderProduct
-                    ->setPackingCost($packingCost / count($orderProducts))
                     ->setManipulationCost($orderManipulationCost / count($orderProducts));
             }
         }
