@@ -3,6 +3,7 @@
 namespace App\Warehouse\Presentation;
 
 use App\Shared\Domain\Exception\KpyException;
+use App\Shared\Domain\Exception\KpyInvalidProductCode;
 use App\Shared\Domain\Exception\KpyProductNotFoundException;
 use App\Shared\Domain\Service\JsonResponseGenerator;
 use App\ShippingCostCalculator\Domain\Exception\ShippingCostException;
@@ -83,6 +84,9 @@ class OrderMarginController extends AbstractController
                     $errors[] = $exception->getMessage() . ", order " . $orderId;
 
                 } catch (ShippingCostException $exception) {
+                    $errors[] = $exception->getMessage() . ", order " . $orderId;
+
+                } catch (KpyInvalidProductCode $exception) {
                     $errors[] = $exception->getMessage() . ", order " . $orderId;
                 }
             }
