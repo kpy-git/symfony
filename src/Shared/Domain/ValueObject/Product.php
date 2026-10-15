@@ -26,7 +26,7 @@ readonly class Product
 
     public function getWeight(): float
     {
-        return $this->weight;
+        return $this->weight ?: 0.1; // evita devolver 0 para productos sin el peso configurado
     }
 
     public function getBrandId(): int

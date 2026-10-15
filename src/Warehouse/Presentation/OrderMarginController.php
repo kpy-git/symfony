@@ -3,7 +3,9 @@
 namespace App\Warehouse\Presentation;
 
 use App\Shared\Domain\Exception\KpyException;
+use App\Shared\Domain\Exception\KpyProductNotFoundException;
 use App\Shared\Domain\Service\JsonResponseGenerator;
+use App\ShippingCostCalculator\Domain\Exception\ShippingCostException;
 use App\Warehouse\Infrastructure\Persistence\Repository\OrderMarginRepository;
 use App\Warehouse\Query\QueryBus;
 use App\Warehouse\Service\OrderMarginCalculator;
@@ -66,13 +68,28 @@ class OrderMarginController extends AbstractController
                 ]);
             }
 
+            $errors = [];
+            $calculated = 0;
+
             foreach ($orders as $order) {
-                $orderMargin = $orderMarginCalculator->computeMarginByOrder((int)$order['NUMERO_DOC']);
-                $orderMarginRepository->save($orderMargin);
+                $orderId = (int)$order['NUMERO_DOC'];
+
+                try {
+                    $orderMargin = $orderMarginCalculator->computeMarginByOrder($orderId);
+                    $orderMarginRepository->save($orderMargin);
+                    $calculated ++;
+
+                } catch (KpyProductNotFoundException $exception) {
+                    $errors[] = $exception->getMessage() . ", order " . $orderId;
+
+                } catch (ShippingCostException $exception) {
+                    $errors[] = $exception->getMessage() . ", order " . $orderId;
+                }
             }
 
             return $this->jsonResponseGenerator->success([
-                'msg' => count($orders) . ' orders margins calculated',
+                'msg' => $calculated . ' orders margins calculated',
+                'errors' => $errors,
             ]);
 
         } catch (KpyException $kpyException) {

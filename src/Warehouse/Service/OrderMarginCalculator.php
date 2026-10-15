@@ -5,6 +5,7 @@ namespace App\Warehouse\Service;
 use App\Shared\Bus\Query\KpyQueryNotFoundException;
 use App\Shared\Domain\Exception\KpyInvalidProductCode;
 use App\Shared\Domain\Exception\KpyOrderNotFoundException;
+use App\Shared\Domain\Exception\KpyProductNotFoundException;
 use App\Shared\Domain\ValueObject\ProductCode;
 use App\Shared\Infrastructure\API\KpyPublicApiInterface;
 use App\ShippingCostCalculator\Domain\Exception\ShippingCostException;
@@ -36,6 +37,7 @@ readonly class OrderMarginCalculator
      * @throws WarehouseNotFoundException
      * @throws KpyQueryNotFoundException
      * @throws ShippingCostException
+     * @throws KpyProductNotFoundException
      */
     public function computeMarginByOrder(int $orderId): OrderMargin
     {
@@ -70,6 +72,10 @@ readonly class OrderMarginCalculator
                 $productWarehouseModel = $this->warehouseProductRepository->findProductInWarehouse($productCode, $this->warehouseFactory->createFrom('TIENDA'));
             }
 
+            if (!$productWarehouseModel) {
+                throw new KpyProductNotFoundException('Product not found: ' . $productCode);
+            }
+
             $warehouseProduct = new Product(
                 $productCode,
                 $product->getBrandId(),
@@ -82,7 +88,7 @@ readonly class OrderMarginCalculator
                 (int)$orderProduct['NUMERO'],
                 (int)$orderProduct['POSICION'],
                 $orderProduct['quantity'],
-                $product->getWeight() * $orderProduct['quantity'],
+                (float)bcmul((string)$product->getWeight(), (string)$orderProduct['quantity'], 2),
                 $warehouseProduct->getCostPrice() * $orderProduct['quantity']
             );
 
