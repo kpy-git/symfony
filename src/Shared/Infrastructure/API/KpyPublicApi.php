@@ -110,4 +110,9 @@ readonly class KpyPublicApi implements KpyPublicApiInterface
             return $carry;
         }, []);
     }
+
+    public function isPymAffectedOrder(int $orderId): bool
+    {
+        return $this->queryBus->fetch('kpy.shared.query.pym_affedted_order', ['id_order' => $orderId]) > 0;
+    }
 }

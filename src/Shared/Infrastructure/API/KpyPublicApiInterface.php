@@ -23,4 +23,6 @@ interface KpyPublicApiInterface
     public function getAllFirstImagesIndexByProduct(): array;
 
     public function getProductSalesPricesByShop(Shop $shop): array;
+
+    public function isPymAffectedOrder(int $orderId): bool;
 }

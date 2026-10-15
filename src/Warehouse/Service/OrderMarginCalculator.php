@@ -120,6 +120,11 @@ readonly class OrderMarginCalculator
             ->getCommissionStrategy()
             ->calculateCommission($orderHeader['total_paid']);
 
+        // La forma de pago será PrestashopCheckout, pero no se han pagado con PayPal
+        if ($this->kpyPublicApi->isPymAffectedOrder($orderId)) {
+            $paymentCommission = 0;
+        }
+
         /** @var OrderMarginProduct $orderProduct */
         $orderProducts = $orderMargin->getProducts();
 
