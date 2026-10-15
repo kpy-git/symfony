@@ -50,7 +50,7 @@ class CarrierRepository extends ServiceEntityRepository implements CarrierReposi
         $carrier = $this->find($id);
 
         if (!$carrier) {
-            throw new CarrierNotFoundException('Carrier not found');
+            throw new CarrierNotFoundException('Carrier not found with id ' . $id);
         }
 
         return $this->createByCarrierDoctrine($carrier);
@@ -64,7 +64,7 @@ class CarrierRepository extends ServiceEntityRepository implements CarrierReposi
         $carrier = $this->findOneBy(['name' => $name]);
 
         if (!$carrier) {
-            throw new CarrierNotFoundException('Carrier not found');
+            throw new CarrierNotFoundException('Carrier not found with name ' . $name);
         }
 
         return $this->createByCarrierDoctrine($carrier);
@@ -78,7 +78,7 @@ class CarrierRepository extends ServiceEntityRepository implements CarrierReposi
         $carrier = $this->findOneBy(['service' => $service]);
 
         if (!$carrier) {
-            throw new CarrierNotFoundException('Carrier not found');
+            throw new CarrierNotFoundException('Carrier not found with service ' . $service);
         }
 
         return $this->createByCarrierDoctrine($carrier);
