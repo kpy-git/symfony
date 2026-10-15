@@ -29,6 +29,6 @@ readonly class CarrierBuilder
 
     public function getMRW(): Carrier
     {
-        return $this->getByService('6');
+        return $this->getByService('mrw_cordoba');
     }
 }
