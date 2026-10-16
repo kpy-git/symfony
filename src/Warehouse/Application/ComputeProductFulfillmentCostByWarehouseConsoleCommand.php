@@ -7,13 +7,13 @@ use App\Warehouse\Domain\ValueObject\WarehouseProductFulfillmentCost;
 use App\Warehouse\Domain\WarehouseFactory;
 use App\Warehouse\Infrastructure\Persistence\Repository\WarehouseProductRepository;
 use App\Warehouse\Service\FulfillmentProductCostCalculator;
-use Symfony\Component\Console\Attribute\Argument;
 use Symfony\Component\Console\Attribute\AsCommand;
-use Symfony\Component\Console\Attribute\Ask;
 use Symfony\Component\Console\Attribute\Option;
 use Symfony\Component\Console\Command\Command;
+use Symfony\Component\Console\Helper\QuestionHelper;
 use Symfony\Component\Console\Input\InputInterface;
 use Symfony\Component\Console\Output\OutputInterface;
+use Symfony\Component\Console\Question\Question;
 use Symfony\Component\Console\Style\SymfonyStyle;
 
 readonly class ComputeProductFulfillmentCostByWarehouseConsoleCommand
@@ -30,9 +30,8 @@ readonly class ComputeProductFulfillmentCostByWarehouseConsoleCommand
     public function __invoke(
         InputInterface $input,
         OutputInterface $output,
-        #[Argument]
-        #[Ask('Nombre del almacén [string]')]
-        string $warehouseName,
+        #[Option]
+        string $warehouseName = '',
         #[Option]
         bool $persist = false,
         #[Option]
@@ -42,6 +41,14 @@ readonly class ComputeProductFulfillmentCostByWarehouseConsoleCommand
         $io = new SymfonyStyle($input, $output);
 
         try {
+
+            if (empty($warehouseName)) {
+                $helper = new QuestionHelper();
+                $io->writeln('Nombre del almacén:');
+                $questionWarehouse = new Question('> ');
+                $warehouseName = $helper->ask($input, $output, $questionWarehouse);
+            }
+
             $warehouse = $this->warehouseFactory->createFrom($warehouseName);
             $productsFulfillmentCost = $this->fulfillmentProductCostCalculator->computeFulfillmentCostByWarehouse($warehouse);
             $count = 0;
