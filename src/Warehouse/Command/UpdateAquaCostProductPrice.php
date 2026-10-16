@@ -31,6 +31,13 @@ readonly class UpdateAquaCostProductPrice implements CommandInterface
             throw new KpyProductNotFoundException('SKU does not exist in AQUA, ' . $params['sku']);
         }
 
+        $stmtProduct = $this->aquaDatabase->prepare(
+            "UPDATE DATIN03 SET PRECIOENTREEMP=? WHERE CODIGO=?");
+        $stmtProduct->execute([
+            $params['cost'],
+            $params['sku'],
+        ]);
+
         $existsCostPrice = $this->aquaDatabase->getValue(
             "SELECT IIF(EXISTS (SELECT 1 FROM DATPC03 WITH(NOLOCK) WHERE CODIGO='{$params['sku']}' AND PROVEEDOR='{$params['supplier']}'), 'SI', 'NO') AS 'EXISTS'"
         ) === 'SI';
