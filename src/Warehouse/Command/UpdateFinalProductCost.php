@@ -23,33 +23,10 @@ readonly class UpdateFinalProductCost implements CommandInterface
             throw new KpyException('Required parameters missing');
         }
 
-        if ($this->doctrineDatabase->getValue(
-            "select exists (select 1 from warehouse_product
-                        where warehouse_id={$params['warehouse']}
-                          and id_product={$params['id_product']}
-                          and id_product_attribute={$params['id_product_attribute']}) as `exists`") > 0) {
-
-            $update = "UPDATE warehouse_product
-            SET final_cost_price={$params['final_cost']}
-            WHERE id_product={$params['id_product']}
-              AND id_product_attribute={$params['id_product_attribute']}
-              AND warehouse_id={$params['warehouse']}";
-
-            if ($params['warehouse'] !== 1) {
-                // siempre que se cambie el precio para un almacén que no sea tienda se cambiará para tienda también
-                $this->doctrineDatabase->execute("UPDATE warehouse_product
-                SET final_cost_price={$params['final_cost']}
-                WHERE id_product={$params['id_product']}
-                  AND id_product_attribute={$params['id_product_attribute']}
-                  AND warehouse_id=1");
-            }
-
-            return $this->doctrineDatabase->execute($update);
-        }
-
         $stmt = $this->doctrineDatabase->prepare(
             "INSERT INTO warehouse_product (id_product, id_product_attribute, final_cost_price, is_default, warehouse_id, fulfillment_price)
-            VALUES (:id_product, :id_product_attribute, :final_cost_price, :is_default, :warehouse_id, :fulfillment_price)");
+            VALUES (:id_product, :id_product_attribute, :final_cost_price, :is_default, :warehouse_id, :fulfillment_price)
+            ON DUPLICATE KEY UPDATE final_cost_price=:final_cost_price, fulfillment_price=:fulfillment_price");
 
         $stmt->execute([
             ':id_product' => $params['id_product'],
