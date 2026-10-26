@@ -23,7 +23,7 @@ readonly class UpdateDistrivetProductsCostConsoleCommand
     {
     }
 
-    #[AsCommand('kpy:warehouse:update-distrivet-cost')]
+    #[AsCommand('kpy:warehouse:update-distrivet-cost', description: "Actualiza el precio de coste de Distrivet en warehouse_product y AQUA")]
     public function __invoke(
         InputInterface  $input,
         OutputInterface $output,
