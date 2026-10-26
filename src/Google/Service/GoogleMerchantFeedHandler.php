@@ -384,7 +384,7 @@ class GoogleMerchantFeedHandler
                     $pack['image'] = $imagenesPersonalizadas[$pack['sku']];
                 }
 
-                $pack['price'] = $productsPrices[$pack['sku']]['sales_prices'] ?? 0;
+                $pack['price'] = $productsPrices[$pack['sku']]['sales_price'] ?? 0;
                 $pack['pvp'] = round($producto['pvp'] * (int)$packs[$sku]['quantity'], 2);
 
                 // hay packs que estan en la tabla pym_packs pero que ya no existen como producto en prestashop
