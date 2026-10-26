@@ -39,7 +39,7 @@ readonly class KompyProductsQuery implements QueryInterface
                         where id_feature=14 and id_product=p.id_product
                         limit 1) as mascota,
                     CASE WHEN tag_free_shipping.id_product IS NULL THEN 'no' ELSE 'yes' END AS free_shipping,
-                    ROUND((ps.price+pas.price)*(1+(ifnull(t.rate, 0)/100)), 2) as pvp,
+                    ROUND((ps.price+ifnull(pas.price,0))*(1+(ifnull(t.rate, 0)/100)), 2) as pvp,
                     IF(EXISTS(select * FROM ps_category_product WHERE id_product=p.id_product AND id_category=2292), 'si', 'no') as OUTLET,
                     sa.quantity as `stock`
                 FROM ps_product p
@@ -64,7 +64,7 @@ readonly class KompyProductsQuery implements QueryInterface
                         FROM ps_kpy_product_flag tg
                         WHERE tg.id_flag = 6 AND tg.active = 1) AS tag_free_shipping
                         ON tag_free_shipping.id_product = ps.id_product AND tag_free_shipping.id_product_attribute = pa.id_product_attribute
-                WHERE NOT EXISTS (select * FROM ps_category_product WHERE id_product=p.id_product AND id_category IN (1509, 586))
+                WHERE NOT EXISTS (select 1 FROM ps_category_product WHERE id_product=p.id_product AND id_category IN (1509, 586))
                 ORDER BY p.id_product, pa.id_product_attribute"
         );
 
