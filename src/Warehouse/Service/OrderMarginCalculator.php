@@ -16,17 +16,16 @@ use App\Warehouse\Domain\ValueObject\OrderMargin;
 use App\Warehouse\Domain\ValueObject\OrderMarginProduct;
 use App\Warehouse\Domain\ValueObject\Product;
 use App\Warehouse\Domain\WarehouseFactory;
-use App\Warehouse\Infrastructure\Persistence\Repository\WarehouseProductRepository;
 use App\Warehouse\Query\QueryBus;
 
 readonly class OrderMarginCalculator
 {
     public function __construct(
-        private WarehouseFactory $warehouseFactory,
-        private CalculatorShippingCost  $calculatorShippingCost,
-        private QueryBus $queryBus,
-        private KpyPublicApiInterface $kpyPublicApi,
-        private WarehouseProductRepository $warehouseProductRepository
+        private WarehouseFactory       $warehouseFactory,
+        private CalculatorShippingCost $calculatorShippingCost,
+        private QueryBus               $queryBus,
+        private KpyPublicApiInterface  $kpyPublicApi,
+        private ProductCostFinder      $productCostFinder,
     )
     {
     }
@@ -66,21 +65,11 @@ readonly class OrderMarginCalculator
 
             $orderWeight += $product->getWeight() * $orderProduct['quantity'];
 
-            $productWarehouseModel = $this->warehouseProductRepository->findProductInWarehouse($productCode, $warehouse);
-
-            if (!$productWarehouseModel) {
-                $productWarehouseModel = $this->warehouseProductRepository->findProductInWarehouse($productCode, $this->warehouseFactory->createFrom('TIENDA'));
-            }
-
-            if (!$productWarehouseModel) {
-                throw new KpyProductNotFoundException('Product not found: ' . $productCode);
-            }
-
             $warehouseProduct = new Product(
                 $productCode,
                 $product->getBrandId(),
                 $product->getWeight(),
-                $productWarehouseModel->getFinalCostPrice()
+                $this->productCostFinder->getFinalCostPrice($productCode, $warehouse)
             );
 
             $marginProduct = new OrderMarginProduct(
@@ -149,4 +138,6 @@ readonly class OrderMarginCalculator
 
         return $orderMargin;
     }
+
+
 }
