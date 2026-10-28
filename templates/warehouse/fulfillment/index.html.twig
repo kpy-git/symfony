@@ -16,7 +16,9 @@
 
 <header>
     <span>Pedidos pendientes de preparar</span>
-    <button id="btn__manifest">Manifiesto de carga</button>
+    {% if warehouse == 'EVOLUTION_PETS' %}
+        <button id="btn__manifest">Manifiesto de carga</button>
+    {% endif %}
 </header>
 
 <div class="contenedor-principal">
