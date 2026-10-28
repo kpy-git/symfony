@@ -28,6 +28,16 @@ class ShipmentEntity
     #[ORM\Column]
     private ?\DateTimeImmutable $createdAt = null;
 
+    #[ORM\Column]
+    private ?int $parcels = null;
+
+    #[ORM\Column(type: Types::DECIMAL, precision: 10, scale: 6)]
+    private ?string $weight = null;
+
+    #[ORM\ManyToOne]
+    #[ORM\JoinColumn(nullable: true)]
+    private ?Warehouse $warehouse = null;
+
     public function getId(): ?int
     {
         return $this->id;
@@ -81,4 +91,38 @@ class ShipmentEntity
 
         return $this;
     }
+
+    public function getParcels(): int
+    {
+        return $this->parcels;
+    }
+
+    public function setParcels(int $parcels): static
+    {
+        $this->parcels = $parcels;
+        return $this;
+    }
+
+    public function getWarehouse(): ?Warehouse
+    {
+        return $this->warehouse;
+    }
+
+    public function setWarehouse(?Warehouse $warehouse): static
+    {
+        $this->warehouse = $warehouse;
+        return $this;
+    }
+
+    public function getWeight(): ?string
+    {
+        return $this->weight;
+    }
+
+    public function setWeight(?string $weight): static
+    {
+        $this->weight = $weight;
+        return $this;
+    }
+
 }

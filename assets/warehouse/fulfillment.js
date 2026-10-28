@@ -3,6 +3,7 @@ import '../styles/warehouse/fulfillment.css';
 import qz from 'qz-tray';
 import {createCopyButtons} from "../app.js";
 
+const WAREHOUSE = document.getElementById('listaPedidos').dataset.warehouse;
 
 document.getElementById('listaPedidos').addEventListener('click', async (e) => {
     if (e.target.closest('.item-pedido')) {
@@ -34,6 +35,7 @@ async function verDetalle(id) {
     createCopyButtons();
 }
 
+
 document.getElementById('panelDetalle').addEventListener('click', async (e) => {
     if (e.target.matches('.btn-bulto')) {
         modificarBultos(e.target.classList.contains('add') ? 1 : -1);
@@ -54,6 +56,7 @@ document.getElementById('panelDetalle').addEventListener('click', async (e) => {
         body: new URLSearchParams({
             order: orderID,
             parcels: document.getElementById('input__parcels').value,
+            warehouse: WAREHOUSE,
         }),
     });
 
@@ -130,7 +133,7 @@ document.getElementById('panelDetalle').addEventListener('click', async (e) => {
         if (!qz.websocket.isActive()) {
             await qz.websocket.connect();
         }
-        
+
         let configuration;
         if (printerConfig.type === 'usb') {
             configuration = printerConfig.name;
@@ -161,3 +164,42 @@ function modificarBultos(delta) {
     if (valorActual < 1) valorActual = 1; // Mínimo 1 bulto
     input.value = valorActual;
 }
+
+const btnManifest = document.getElementById('btn__manifest');
+btnManifest.addEventListener('click', async () => {
+    btnManifest.disabled = true;
+
+    const response = await fetch('/manifest', {
+        method: 'POST',
+        body: new URLSearchParams({
+            warehouse: WAREHOUSE,
+        }),
+    });
+
+    if (!response.ok) {
+        let message = await response.json();
+        document.getElementById('panelDetalle').innerHTML = `
+            <div class="vista-vacia" style="flex-direction: column; gap: 10px;">
+                <span style="font-size: 3rem;">📦</span>
+                <p style="color: #555;">${message.message}</p>
+            </div>`;
+        btnManifest.disabled = false;
+        return;
+    }
+
+    const blob = await response.blob();
+    const url = URL.createObjectURL(blob);
+
+    const link = document.createElement('a');
+    link.href = url;
+    link.download = 'manifiesto.pdf';
+
+    document.body.appendChild(link);
+    link.click();
+    link.remove();
+
+    URL.revokeObjectURL(url);
+
+    btnManifest.disabled = false;
+
+});

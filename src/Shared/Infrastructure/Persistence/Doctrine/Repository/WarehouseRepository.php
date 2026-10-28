@@ -2,6 +2,7 @@
 
 namespace App\Shared\Infrastructure\Persistence\Doctrine\Repository;
 
+use App\Warehouse\Domain\Exception\WarehouseNotFoundException;
 use App\Warehouse\Infrastructure\Persistence\Doctrine\Model\Warehouse;
 use Doctrine\Bundle\DoctrineBundle\Repository\ServiceEntityRepository;
 use Doctrine\Persistence\ManagerRegistry;
@@ -14,6 +15,21 @@ class WarehouseRepository extends ServiceEntityRepository
     public function __construct(ManagerRegistry $registry)
     {
         parent::__construct($registry, Warehouse::class);
+    }
+
+    public function findByNameOrFail(string $name): Warehouse
+    {
+        $warehouse = $this->createQueryBuilder('w')
+            ->andWhere('w.name = :name')
+            ->setParameter('name', mb_strtoupper($name))
+            ->getQuery()
+            ->getOneOrNullResult();
+
+        if (!$warehouse) {
+            throw new WarehouseNotFoundException($name);
+        }
+
+        return $warehouse;
     }
 
     //    /**

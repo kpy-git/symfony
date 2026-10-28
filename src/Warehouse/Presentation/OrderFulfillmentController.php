@@ -9,8 +9,11 @@ use App\Warehouse\Application\ShipmentGenerator;
 use App\Warehouse\Domain\OrderFactory;
 use App\Warehouse\Domain\OrderTrackerUpdater;
 use App\Warehouse\Infrastructure\Persistence\Doctrine\Model\ShipmentEntity;
+use App\Warehouse\Infrastructure\Persistence\Doctrine\Model\Warehouse;
 use App\Warehouse\Infrastructure\Persistence\PrinterConfigRepository;
+use App\Warehouse\Infrastructure\Persistence\Repository\ShipmentManifestRepository;
 use App\Warehouse\Query\QueryBus;
+use App\Warehouse\Service\ManifestGenerator;
 use Doctrine\ORM\EntityManagerInterface;
 use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
 use Symfony\Component\DependencyInjection\Attribute\Autowire;
@@ -42,7 +45,8 @@ final class OrderFulfillmentController extends AbstractController
 
         return $this->render('warehouse/fulfillment/index.html.twig', [
             'pendingOrders' => $pendingOrders,
-            'printer_config' => $printerConfigRepository->getConfig($user->getUserIdentifier())
+            'printer_config' => $printerConfigRepository->getConfig($user->getUserIdentifier()),
+            'warehouse' => $user->getUserIdentifier() === 'kompy' ? 'TIENDA' : 'EVOLUTION_PETS',
         ]);
     }
 
@@ -63,10 +67,10 @@ final class OrderFulfillmentController extends AbstractController
 
     #[Route('/ajaxCreateShipment', name: '_ajax_create_shipment', methods: ['POST'])]
     public function createShipment(
-        Request $request,
-        OrderFactory $orderFactory,
-        ShipmentGenerator $shipmentGenerator,
-        EntityManagerInterface $entityManager,
+        Request                 $request,
+        OrderFactory            $orderFactory,
+        ShipmentGenerator       $shipmentGenerator,
+        EntityManagerInterface  $entityManager,
         OrderReadyToShipUpdater $orderReadyToShipUpdater,
     ): JsonResponse
     {
@@ -77,12 +81,18 @@ final class OrderFulfillmentController extends AbstractController
             $order = $orderFactory->from($orderId);
 
             $shipment = $shipmentGenerator->generateShipment($order, $parcels);
+            $warehouse = $entityManager->getRepository(Warehouse::class)->findBy(
+                ['name' => mb_strtoupper($request->request->get('warehouse'))]
+            );
 
             $entity = new ShipmentEntity();
             $entity
                 ->setOrderId($order->getOrderId())
                 ->setTrackingNumber($shipment->getTrackingNumber())
-                ->setLabel($shipment->getZpl());
+                ->setLabel($shipment->getZpl())
+                ->setParcels($parcels)
+                ->setWarehouse($warehouse)
+                ->setWeight($order->getWeight());
 
             $entityManager->persist($entity);
             $entityManager->flush();
@@ -113,7 +123,7 @@ final class OrderFulfillmentController extends AbstractController
     public function signPrint(
         Request $request,
         #[Autowire('%env(resolve:QZ_PRIVATE_KEY_PATH)%')]
-        string $privateKeyPath
+        string  $privateKeyPath
     ): Response
     {
         // 1. Obtener el 'toSign' que envía QZ Tray en el cuerpo de la petición
@@ -166,5 +176,30 @@ final class OrderFulfillmentController extends AbstractController
         $orderTrackerUpdater->updateHistoryByOrder($order);
 
         return $this->jsonResponseGenerator->success();
+    }
+
+    #[Route('/manifest', name: '_manifest', methods: ['POST'])]
+    public function manifest(
+        ShipmentManifestRepository $shipmentManifestRepository,
+        ManifestGenerator          $manifestGenerator,
+        Request                    $request,
+    ): Response
+    {
+        try {
+            $shipments = $shipmentManifestRepository->findAllTodayShipmentsByWarehouseName($request->request->get('warehouse'));
+
+            return new Response(
+                $manifestGenerator->generateManifest($shipments, new \DateTimeImmutable()),
+                Response::HTTP_OK,
+                [
+                    'Content-Type' => 'application/pdf',
+                    'Content-Disposition' => 'attachment; filename="manifiesto_' . date(DATE_ATOM) . '.pdf"',
+                    'Cache-Control' => 'private, no-store',
+                ]
+            );
+
+        } catch (KpyException $kpyException) {
+            return $this->jsonResponseGenerator->error($kpyException->getMessage());
+        }
     }
 }

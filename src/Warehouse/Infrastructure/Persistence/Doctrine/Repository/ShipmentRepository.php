@@ -3,6 +3,7 @@
 namespace App\Warehouse\Infrastructure\Persistence\Doctrine\Repository;
 
 use App\Warehouse\Infrastructure\Persistence\Doctrine\Model\ShipmentEntity;
+use App\Warehouse\Infrastructure\Persistence\Doctrine\Model\Warehouse;
 use Doctrine\Bundle\DoctrineBundle\Repository\ServiceEntityRepository;
 use Doctrine\Persistence\ManagerRegistry;
 
@@ -14,6 +15,20 @@ class ShipmentRepository extends ServiceEntityRepository
     public function __construct(ManagerRegistry $registry)
     {
         parent::__construct($registry, ShipmentEntity::class);
+    }
+
+    public function findAllTodayShipmentsByWarehouse(Warehouse $warehouse): array
+    {
+        $entityManager = $this->getEntityManager();
+        $query = $entityManager
+            ->createQuery(
+                'SELECT s
+                 FROM App\Warehouse\Infrastructure\Persistence\Doctrine\Model\ShipmentEntity s
+                 WHERE s.warehouse = :warehouse AND s.createdAt >= :today'
+            )->setParameter('warehouse', $warehouse->getId())
+            ->setParameter('today', date('Y-m-d 00:00:00'));
+
+        return $query->getResult();
     }
 
     //    /**

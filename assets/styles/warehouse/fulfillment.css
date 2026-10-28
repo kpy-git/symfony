@@ -12,6 +12,47 @@ header {
     padding: 15px 20px;
     font-size: 1.2rem;
     font-weight: bold;
+    display: flex;
+    justify-content: space-between;
+}
+
+#btn__manifest {
+    position: relative;
+    background-color: #2ecc71;
+    color: white;
+    border: none;
+    padding: 10px 5px;
+    border-radius: 5px;
+    font-size: 1rem;
+    font-weight: bold;
+    cursor: pointer;
+    transition: background 0.2s, color 0.2s;
+    min-width: 200px;
+    text-align: center;
+}
+#btn__manifest:hover:not(:disabled) {
+    background-color: #27ae60;
+}
+
+#btn__manifest:disabled {
+    background-color: #95a5a6;
+    cursor: not-allowed;
+    color: transparent;
+}
+
+#btn__manifest:disabled::after {
+    content: "";
+    position: absolute;
+    width: 15px;
+    height: 15px;
+    top: 50%;
+    left: 50%;
+    margin-top: -10px;
+    margin-left: -10px;
+    border: 3px solid rgba(255, 255, 255, 0.3);
+    border-radius: 50%;
+    border-left-color: #ffffff;
+    animation: spin 0.8s linear infinite;
 }
 
 .contenedor-principal {

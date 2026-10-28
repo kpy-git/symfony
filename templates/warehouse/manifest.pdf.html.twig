@@ -1,0 +1,236 @@
+
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <style>
+        @page {
+            size: A4 landscape;
+            margin: 18mm 7mm 18mm 7mm;
+        }
+
+        * {
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: DejaVu Sans, sans-serif;
+            font-size: 9px;
+            color: #111;
+        }
+
+        .header {
+            position: relative;
+            height: 25mm;
+        }
+
+        .logo {
+            position: absolute;
+            top: 0;
+            left: 4mm;
+            width: 27mm;
+        }
+
+        .header-center {
+            text-align: center;
+            padding-top: 0;
+        }
+
+        .franchise {
+            font-size: 18px;
+            margin-bottom: 14px;
+        }
+
+        .report-title {
+            font-size: 22px;
+            font-weight: bold;
+            font-style: italic;
+            margin: 0;
+        }
+
+        .parameters {
+            font-size: 10px;
+            line-height: 1.5;
+            margin: 0 4mm 7mm;
+        }
+
+        .parameters strong {
+            margin-right: 12px;
+        }
+
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            table-layout: fixed;
+        }
+
+        thead {
+            display: table-header-group;
+        }
+
+        th {
+            background: #d9d9d9;
+            padding: 5px 3px;
+            text-align: center;
+            font-size: 8px;
+            font-weight: bold;
+            border-right: 2px solid white;
+        }
+
+        td {
+            padding: 7px 4px;
+            vertical-align: top;
+            overflow-wrap: break-word;
+            font-size: 8.5px;
+        }
+
+        tbody tr:nth-child(even) {
+            background: #f2f2f2;
+        }
+
+        .center {
+            text-align: center;
+        }
+
+        .right {
+            text-align: right;
+        }
+
+        .totals {
+            margin-top: 7mm;
+            margin-left: 10mm;
+            width: auto;
+            border-collapse: separate;
+            border-spacing: 8px 0;
+        }
+
+        .totals td {
+            background: #d9d9d9;
+            padding: 4px 8px;
+            font-size: 11px;
+            font-weight: bold;
+        }
+
+        .totals .value {
+            text-align: right;
+            min-width: 35mm;
+        }
+
+        .footer {
+            position: fixed;
+            bottom: -12mm;
+            left: 10mm;
+            right: 3mm;
+            height: 8mm;
+            font-size: 8px;
+            font-weight: bold;
+        }
+
+        .footer-left {
+            float: left;
+        }
+
+        .footer-right {
+            float: right;
+            font-weight: normal;
+        }
+
+        .footer .label {
+            margin-right: 8px;
+        }
+    </style>
+</head>
+<body>
+
+<header class="header">
+    <img class="logo" src="{{ logoPath }}" alt="MRW">
+
+    <div class="header-center">
+        <div class="franchise">
+            {{ franchiseCode }} - {{ franchiseName }}
+        </div>
+
+        <h1 class="report-title">Listado de envíos</h1>
+    </div>
+</header>
+
+<section class="parameters">
+    <strong>Parámetros del informe:</strong>
+    Franquicia Recogida:{{ franchiseCode }};
+    Abonado:{{ subscriber }};
+    Fecha Recogida:{{ collectionDate|date('d/m/Y') }} 0:00:00;
+    Reembolso:Todos;
+    Ordenar por:FechaRecogida Sentido:ASC
+</section>
+
+<table>
+    <thead>
+    <tr>
+        <th style="width:8%">Núm. envío</th>
+        <th style="width:7%">Referencia</th>
+        <th style="width:8%">Obs Entrega</th>
+        <th style="width:7%">F. recogida</th>
+        <th style="width:12%">Nombre destinatario</th>
+        <th style="width:5%">D.P.</th>
+        <th style="width:13%">Población destinatario</th>
+        <th style="width:11%">Provincia destinatario</th>
+        {#<th style="width:4%">Km E</th>
+        <th style="width:4%">Km R</th>#}
+        <th style="width:7%">Servicio</th>
+        <th style="width:4%">Btos.</th>
+        <th style="width:3%">Kg</th>
+        <th style="width:7%">Reembolso</th>
+    </tr>
+    </thead>
+
+    <tbody>
+    {% for shipment in shipments %}
+        <tr>
+            <td>{{ shipment.number }}</td>
+            <td>{{ shipment.reference }}</td>
+            <td> </td>
+            <td>{{ shipment.collectionDate|date('d/m/Y') }}</td>
+            <td>{{ shipment.recipientName }}</td>
+            <td class="center">{{ shipment.postCode }}</td>
+            <td>{{ shipment.city }}</td>
+            <td>{{ shipment.province }}</td>
+            {#<td class="center">{{ shipment.outboundKm }}</td>
+            <td class="center">{{ shipment.returnKm }}</td>#}
+            <td>Ecommerce</td>
+            <td class="center">{{ shipment.packagesCount }}</td>
+            <td class="right">{{ shipment.weight }}</td>
+            <td class="right">
+                {{ shipment.codAmount|number_format(2, ',', '.') }} €
+            </td>
+        </tr>
+    {% endfor %}
+    </tbody>
+</table>
+
+<table class="totals">
+    <tr>
+        <td>TOTAL BULTOS:</td>
+        <td class="value">{{ totalPackages }}</td>
+        <td>TOTAL KILOS:</td>
+        <td class="value">
+            {{ totalWeight|number_format(2, ',', '.') }}
+        </td>
+    </tr>
+</table>
+
+<footer class="footer">
+    <div class="footer-left">
+        <span class="label">Fecha de impresión:</span>
+        {{ printedAt|date('d/m/Y') }}
+
+        <span class="label" style="margin-left: 45px">Hora:</span>
+        {{ printedAt|date('H:i') }}
+    </div>
+
+    <div class="footer-right">
+        Página <span class="page-number"></span>
+    </div>
+</footer>
+
+</body>
+</html>

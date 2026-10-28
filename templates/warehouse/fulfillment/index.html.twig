@@ -14,12 +14,15 @@
 </head>
 <body>
 
-<header>Pedidos pendientes de preparar</header>
+<header>
+    <span>Pedidos pendientes de preparar</span>
+    <button id="btn__manifest">Manifiesto de carga</button>
+</header>
 
 <div class="contenedor-principal">
 
     <!-- Columna Izquierda: Listado -->
-    <div class="columna-izquierda" id="listaPedidos">
+    <div class="columna-izquierda" id="listaPedidos" data-warehouse="{{ warehouse }}">
         {% for order in pendingOrders %}
             {{ include('warehouse/fulfillment/_order-preview.html.twig', {orderId: order.id_order, orderDate: order.date_add|date("d/m/Y H:i")}) }}
         {% endfor %}
