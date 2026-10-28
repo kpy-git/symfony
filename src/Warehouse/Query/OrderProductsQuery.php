@@ -38,7 +38,7 @@ readonly class OrderProductsQuery implements QueryInterface
             where o.id_order = {$params['id_order']})
             select orderlines.id_product,
                    orderlines.id_product_attribute,
-                   orderlines.quantity,
+                   sum(orderlines.quantity) as `quantity`,
                    if(pa.id_product_attribute = 0, p.ean13, pa.ean13) as `ean`,
                    CONCAT_WS(' - ', pl.name, (GROUP_CONCAT(DISTINCT CONCAT_WS(': ', agl.name, al.name) ORDER BY ag.position SEPARATOR ' '))) as `name`,
                    sum(p.weight + ifnull(pa.weight, 0)) as `weight`
