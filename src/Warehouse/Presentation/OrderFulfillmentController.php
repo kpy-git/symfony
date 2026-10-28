@@ -81,9 +81,7 @@ final class OrderFulfillmentController extends AbstractController
             $order = $orderFactory->from($orderId);
 
             $shipment = $shipmentGenerator->generateShipment($order, $parcels);
-            $warehouse = $entityManager->getRepository(Warehouse::class)->findBy(
-                ['name' => mb_strtoupper($request->request->get('warehouse'))]
-            );
+            $warehouse = $entityManager->getRepository(Warehouse::class)->findByNameOrFail(mb_strtoupper($request->request->get('warehouse')));
 
             $entity = new ShipmentEntity();
             $entity
