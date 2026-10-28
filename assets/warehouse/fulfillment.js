@@ -166,40 +166,42 @@ function modificarBultos(delta) {
 }
 
 const btnManifest = document.getElementById('btn__manifest');
-btnManifest.addEventListener('click', async () => {
-    btnManifest.disabled = true;
+if (btnManifest) {
+    btnManifest.addEventListener('click', async () => {
+        btnManifest.disabled = true;
 
-    const response = await fetch('/manifest', {
-        method: 'POST',
-        body: new URLSearchParams({
-            warehouse: WAREHOUSE,
-        }),
-    });
+        const response = await fetch('/manifest', {
+            method: 'POST',
+            body: new URLSearchParams({
+                warehouse: WAREHOUSE,
+            }),
+        });
 
-    if (!response.ok) {
-        let message = await response.json();
-        document.getElementById('panelDetalle').innerHTML = `
+        if (!response.ok) {
+            let message = await response.json();
+            document.getElementById('panelDetalle').innerHTML = `
             <div class="vista-vacia" style="flex-direction: column; gap: 10px;">
                 <span style="font-size: 3rem;">📦</span>
                 <p style="color: #555;">${message.message}</p>
             </div>`;
+            btnManifest.disabled = false;
+            return;
+        }
+
+        const blob = await response.blob();
+        const url = URL.createObjectURL(blob);
+
+        const link = document.createElement('a');
+        link.href = url;
+        link.download = 'manifiesto.pdf';
+
+        document.body.appendChild(link);
+        link.click();
+        link.remove();
+
+        URL.revokeObjectURL(url);
+
         btnManifest.disabled = false;
-        return;
-    }
 
-    const blob = await response.blob();
-    const url = URL.createObjectURL(blob);
-
-    const link = document.createElement('a');
-    link.href = url;
-    link.download = 'manifiesto.pdf';
-
-    document.body.appendChild(link);
-    link.click();
-    link.remove();
-
-    URL.revokeObjectURL(url);
-
-    btnManifest.disabled = false;
-
-});
+    });
+}
