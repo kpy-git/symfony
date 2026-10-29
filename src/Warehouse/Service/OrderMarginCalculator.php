@@ -46,6 +46,10 @@ readonly class OrderMarginCalculator
             throw new KpyOrderNotFoundException('Order not found: ' . $orderId);
         }
 
+        if ($orderHeader['cancelled'] > 0) {
+            throw new KpyOrderNotFoundException('Order cancelled: ' . $orderId);
+        }
+
         $orderMargin = new OrderMargin($orderId, $orderHeader['total_paid_tax_excl']);
 
         $warehouse = $this->warehouseFactory->createFrom($orderHeader['warehouse']);
