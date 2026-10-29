@@ -422,7 +422,8 @@ class GoogleMerchantFeedHandler
                         ($cuponesAplicadosDirectamenteEnGS[$packs[$sku]['id_pack']]['tipo'] === 'porcentaje' ? $cuponesAplicadosDirectamenteEnGS[$packs[$sku]['id_pack']]['valor'] : 0);
                 }
 
-                $pack['custom_label_0'] = $this->getCustomLabel0($packs[$sku]['id_pack']);
+                // $pack['custom_label_0'] = $this->getCustomLabel0($packs[$sku]['id_pack']);
+                $pack['custom_label_0'] = $producto['custom_label_0'];
                 $pack['custom_label_1'] = $this->getCustomLabel1($producto['sku']);
                 $pack['custom_label_2'] = $this->getCustomLabel2($packs[$sku]['id_pack']);
                 $pack['custom_label_3'] = $availability; // para la disponibilidad se coge el producto que va dentro del pack
