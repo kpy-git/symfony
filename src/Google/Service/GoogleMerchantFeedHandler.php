@@ -318,7 +318,7 @@ class GoogleMerchantFeedHandler
                 }, array_slice($this->imagenes[$producto['id_product']], 1, 10));
             }
 
-            $producto['custom_label_0'] = $this->getCustomLabel0($sku);
+            //$producto['custom_label_0'] = $this->getCustomLabel0($sku);
             $producto['custom_label_1'] = in_array($producto['id_manufacturer'], [200, 178, 77, 78, 75, 173]) || $producto['OUTLET'] === 'si' || $isMultipack
                 ? 'COMPETITIVO'
                 : $this->getCustomLabel1($sku);

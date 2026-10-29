@@ -41,7 +41,8 @@ readonly class KompyProductsQuery implements QueryInterface
                     CASE WHEN tag_free_shipping.id_product IS NULL THEN 'no' ELSE 'yes' END AS free_shipping,
                     ROUND((ps.price+ifnull(pas.price,0))*(1+(ifnull(t.rate, 0)/100)), 2) as pvp,
                     IF(EXISTS(select * FROM ps_category_product WHERE id_product=p.id_product AND id_category=2292), 'si', 'no') as OUTLET,
-                    sa.quantity as `stock`
+                    sa.quantity as `stock`,
+                    ifnull(gcl.custom_label_0, 'pmax') as `custom_label_0`
                 FROM ps_product p
                 inner join ps_product_shop ps
                     on ps.id_product = p.id_product and ps.id_shop = {$shopId} and ps.active = 1 and ps.visibility = 'both'
@@ -59,6 +60,8 @@ readonly class KompyProductsQuery implements QueryInterface
                     on t.id_tax_rules_group = ps.id_tax_rules_group
                 left join ps_stock_available sa
                     on sa.id_product = p.id_product and sa.id_product_attribute = ifnull(pa.id_product_attribute, 0)
+                LEFT JOIN ps_kpy_google_feed_custom_labels gcl
+                    on gcl.id_product = p.id_product and gcl.id_product_attribute = ifnull(pa.id_product_attribute, 0)
                 LEFT JOIN (
                     SELECT DISTINCT id_product, id_product_attribute
                         FROM ps_kpy_product_flag tg
