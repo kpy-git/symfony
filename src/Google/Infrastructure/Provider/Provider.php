@@ -308,7 +308,7 @@ class Provider
             return $measuring;
         }
         // salta la cabecera
-        fgetcsv($file);
+        fgets($file);
 
         while (($line = fgets($file)) !== false) {
             [$sku, $medida, $unit_pricing_measure, $unit_pricing_base_measure] = explode(';', $line);
