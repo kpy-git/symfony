@@ -41,7 +41,7 @@ class DSNParserTest extends TestCase
         $this->getDatabaseNameFrom('invalid-dsn;host=localhost;port=5432;dbname=test');
     }
 
-    public function testParseParams(): void
+    public function testParseDSN(): void
     {
         $params = [
             'host' => 'localhost',
@@ -49,6 +49,11 @@ class DSNParserTest extends TestCase
             'dbname' => 'testdb',
         ];
 
-        $this->assertArraysAreEqual($params, $this->parseParams('host=localhost;port=5432;dbname=testdb'));
+        $this->assertArraysAreEqual($params, $this->parseDSN('host=localhost;port=5432;dbname=testdb'));
+    }
+
+    public function testGetDatabaseFromURL(): void
+    {
+        $this->assertEquals('app_db', $this->getDatabaseNameFrom('mysql://app_user:app_passwd@app_host:3306/app_db?serverVersion=8.4.9&charset=utf8mb4'));
     }
 }

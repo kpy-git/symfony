@@ -12,36 +12,53 @@ trait DSNParser
 
     public function getDatabaseNameFrom(string $dsn): string
     {
+        if (filter_var($dsn, FILTER_VALIDATE_URL)) {
+            return $this->parseURL($dsn)['database'];
+        }
+
         if (!str_contains($dsn, ':')) {
             throw new \InvalidArgumentException('DSN mal formado');
         }
 
-        [$driver, $params] = explode(':', $dsn);
+        [$driver, $stringConnection] = explode(':', $dsn, 2);
 
         if (!in_array($driver, $this->acceptedDSNs)) {
             throw new \InvalidArgumentException('Driver no permitido, valores válidos: ' . implode(', ', $this->acceptedDSNs));
         }
 
-        $parsedParams = $this->parseParams($params);
+        $parsedParams = $this->parseDSN($stringConnection);
 
         return match ($driver) {
             'sqlsrv' => $parsedParams['database'],
             'mysql' => $parsedParams['dbname'],
-            'sqlite' => $params[0],
+            'sqlite' => $stringConnection[0],
             default => $dsn,
         };
     }
 
-    private function parseParams(string $params): array
+    private function parseDSN(string $dsn): array
     {
         $parsedParams = [];
-        $parts = explode(';', $params);
-        foreach ($parts as $part) {
-            [$key, $value] = explode('=', $part);
+        $params = explode(';', $dsn);
+        foreach ($params as $param) {
+            [$key, $value] = explode('=', $param);
             $parsedParams[trim($key)] = trim($value);
         }
 
         return $parsedParams;
     }
 
+    private function parseURL(string $url): array
+    {
+        // $url = 'mysql://app_user:app_passwd@app_host:3306/app_db?serverVersion=8.4.9&charset=utf8mb4';
+        $parts = parse_url($url);
+
+        return [
+            'user' => $parts['user'],
+            'pass' => $parts['pass'],
+            'driver' => $parts['host'],
+            'port' => $parts['port'],
+            'database' => ltrim($parts['path'], '/'),
+        ];
+    }
 }
