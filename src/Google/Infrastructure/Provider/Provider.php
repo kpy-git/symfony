@@ -169,18 +169,26 @@ class Provider
     {
         $sql = "SELECT id_product_pack, id_product_item, id_product_attribute_item, quantity
                     FROM ps_kpy_packs pp
-                    where exists (select * from ps_product_attribute where id_product_attribute = SUBSTRING_INDEX(pp.id_product_pack, '-', -1))
+                    where exists (select 1 from ps_product_attribute where id_product_attribute = SUBSTRING_INDEX(pp.id_product_pack, '-', -1))
                       /* para evitar sacar los packs que se crean para regalar un producto que vendemos normalmente */
-                    AND NOT EXISTS (SELECT * FROM ps_kpy_gifts r WHERE r.id_product_attribute = SUBSTRING_INDEX(pp.id_product_pack, '-', -1))
+                    AND NOT EXISTS (SELECT 1 FROM ps_kpy_gifts r WHERE r.id_product_attribute = SUBSTRING_INDEX(pp.id_product_pack, '-', -1))
+                    AND EXISTS (SELECT 1 FROM ps_product_shop ps where ps.id_product=SUBSTRING_INDEX(pp.id_product_pack, '-', 1) and ps.visibility='both' and ps.active=1 and ps.id_shop=1)
                     GROUP BY id_product_pack
                     having count(*) = 1";
 
         $data  = $this->kompyDatabase->execute($sql);
-        $packs = array();
+        $packs = [];
 
         foreach ($data as $pack) {
-            $packs[$pack['id_product_item'] . "-" . $pack['id_product_attribute_item']]['id_pack']     = $pack['id_product_pack'];
-            $packs[$pack['id_product_item'] . "-" . $pack['id_product_attribute_item']]['quantity'] = $pack['quantity'];
+            $skuItem = $pack['id_product_item'] . "-" . $pack['id_product_attribute_item'];
+            if (!isset($packs[$skuItem])) {
+                $packs[$skuItem] = [];
+            }
+
+            $packs[$skuItem][] = [
+                'id_pack' => $pack['id_product_pack'],
+                'quantity' => $pack['quantity']
+            ];
         }
 
         return $packs;

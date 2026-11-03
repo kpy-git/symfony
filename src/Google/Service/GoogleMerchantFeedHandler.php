@@ -357,108 +357,112 @@ class GoogleMerchantFeedHandler
 
             $googleFeed->agregaProducto($producto);
 
-            // si el producto tiene un pack se añade
-            // y no está desactivado ni está prohibido
-            if (array_key_exists($sku, $packs)
-                && !in_array($packs[$sku]['id_pack'], $productosProhibidos)
-                && !in_array(explode('-', $packs[$sku]['id_pack'])[1], $combinacionesDesactivadas)
-            ) {
-                $pack = $producto;
-
-                $pack['sku'] = $packs[$sku]['id_pack'];
-                $pack['quantity'] = $packs[$sku]['quantity'];
-                $pack['peso'] = round($this->infoAqua[$sku]['peso'] * (int)$packs[$sku]['quantity'], 2);
-                if (stripos($categoria, 'alimentaci') !== false) {
-                    $nombrePack = $packs[$sku]['quantity'] . 'x' . $nombreProducto . ' ¡Pack Ahorro!';
-                } else {
-                    $nombrePack = str_replace("Formato:", "", ucwords(strtolower(trim($this->infoAqua[$sku]['nombre']))));
-                }
-
-                $pack['name'] = $nombrePack . $this->getEtiquetasParaNombreProducto($pack['sku']);
-
-                if (array_key_exists($pack['sku'], $feedAlternativeNamesProduct)) {
-                    $pack['name'] = $feedAlternativeNamesProduct[$pack['sku']];
-                }
-
-                if (array_key_exists($pack['sku'], $imagenesPersonalizadas)) {
-                    $pack['image'] = $imagenesPersonalizadas[$pack['sku']];
-                }
-
-                $pack['price'] = $productsPrices[$pack['sku']]['sales_price'] ?? 0;
-                $pack['pvp'] = round($producto['pvp'] * (int)$packs[$sku]['quantity'], 2);
-
-                // hay packs que estan en la tabla pym_packs pero que ya no existen como producto en prestashop
-                if ($pack['price'] == 0 || $pack['pvp'] == 0) {
-                    continue;
-                }
-
-                if ($pack['pvp'] < $pack['price']) {
-                    $pack['pvp'] = $pack['price'];
-                }
-
-                if (stripos($categoria, 'alimentaci') !== false) {
-                    $nombreProducto = round((float)$this->infoAqua[$sku]['peso'], 2) . "Kg " . $producto['name'];
-                    $pack['unit_pricing_measure'] = $pack['peso'] . " kg";
-                }
-
-                $pack['gastosEnvio'] = $googleFeed->getGastosEnvio($pack['price']);
-
-                $pack['url'] = $this->urlGenerator->getProductLink(
-                    ProductCode::fromSKU($pack['sku']),
-                    $shop,
-                    $producto['category_rewrite'],
-                    $producto['product_rewrite']
-                );
-                //$pack['url'] = Context::getContext()->link->getProductLink($tokens[0], null, null, null, $lang, $shop, $tokens[1]);
-                if (in_array($packs[$sku]['id_pack'], $cuponesQueSoloAparecenDesdeGS)) {
-                    $pack['url'] .= '?' . md5('utm_gs') . '=1';
-                }
-
-                if (array_key_exists($packs[$sku]['id_pack'], $cuponesAplicadosDirectamenteEnGS)) {
-                    if (strpos('?', $pack['url']) === false) {
-                        $pack['url'] .= '?';
+            if (isset($packs[$sku])) {
+                foreach ($packs[$sku] as $pack) {
+                    if (in_array($pack['id_pack'], $productosProhibidos)
+                        || in_array(explode('-', $pack['id_pack'])[1], $combinacionesDesactivadas)
+                    ) {
+                        continue;
                     }
-                    $pack['url'] .= md5('utm_gs_dto') . '=' .
-                        ($cuponesAplicadosDirectamenteEnGS[$packs[$sku]['id_pack']]['tipo'] === 'porcentaje' ? $cuponesAplicadosDirectamenteEnGS[$packs[$sku]['id_pack']]['valor'] : 0);
-                }
 
-                // $pack['custom_label_0'] = $this->getCustomLabel0($packs[$sku]['id_pack']);
-                $pack['custom_label_0'] = $producto['custom_label_0'];
-                $pack['custom_label_1'] = $this->getCustomLabel1($producto['sku']);
-                $pack['custom_label_2'] = $this->getCustomLabel2($packs[$sku]['id_pack']);
-                $pack['custom_label_3'] = $availability; // para la disponibilidad se coge el producto que va dentro del pack
+                    $packAsProduct = $producto;
 
-                $precioPack = $pack['price'];
-                if (array_key_exists($pack['sku'], $this->productosConPrecioEspecial)) {
-                    // los productos con precio especial se le calcula el margen con el descuento original no con el de special price
-                    $precioPack = $pack['pvp'] * (1 - ($this->productosConPrecioEspecial[$pack['sku']]['old_discount'] / 100));
-                }
-
-                if (array_key_exists($packs[$sku]['id_pack'], $cuponesAplicadosDirectamenteEnGS)) {
-                    if ($cuponesAplicadosDirectamenteEnGS[$packs[$sku]['id_pack']]['tipo'] === 'porcentaje') {
-                        $pack['price'] = round($pack['price'] * (1 - ($cuponesAplicadosDirectamenteEnGS[$packs[$sku]['id_pack']]['valor'] / 100)), 2);
+                    $packAsProduct['sku'] = $pack['id_pack'];
+                    $packAsProduct['quantity'] = $pack['quantity'];
+                    $packAsProduct['peso'] = round($this->infoAqua[$sku]['peso'] * $pack['quantity'], 2);
+                    if (stripos($categoria, 'alimentaci') !== false) {
+                        $nombrePack = $pack['quantity'] . 'x' . $nombreProducto . ' ¡Pack Ahorro!';
                     } else {
-                        $pack['price'] = round($pack['price'] - $cuponesAplicadosDirectamenteEnGS[$packs[$sku]['id_pack']]['valor'], 2);
+                        $nombrePack = str_replace("Formato:", "", ucwords(strtolower(trim($this->infoAqua[$sku]['nombre']))));
                     }
-                }
 
-                $salesPriceWithoutVat = $precioPack / $ivaDeCompra;
-                if (isset($productsPrices[$pack['sku']]['fulfillment_price'])) {
-                    $grossMargin = round(($salesPriceWithoutVat - $productsPrices[$pack['sku']]['fulfillment_price']) / $salesPriceWithoutVat * 100, 2);
-                } else {
-                    $coste = $this->infoAqua[$sku]['costeConIva'] / $ivaDeCompra;
-                    $grossMargin = $this->calculateGrossMargin(
-                        $coste,
-                        $precio / (1 + ((float)$producto['iva'] / 100)),
-                        $producto['peso'],
-                        (int)$packs[$sku]['quantity']
+                    $packAsProduct['name'] = $nombrePack . $this->getEtiquetasParaNombreProducto($packAsProduct['sku']);
+
+                    if (array_key_exists($packAsProduct['sku'], $feedAlternativeNamesProduct)) {
+                        $packAsProduct['name'] = $feedAlternativeNamesProduct[$packAsProduct['sku']];
+                    }
+
+                    if (array_key_exists($packAsProduct['sku'], $imagenesPersonalizadas)) {
+                        $packAsProduct['image'] = $imagenesPersonalizadas[$packAsProduct['sku']];
+                    }
+
+                    $packAsProduct['price'] = $productsPrices[$packAsProduct['sku']]['sales_price'] ?? 0;
+                    $packAsProduct['pvp'] = round($producto['pvp'] * $pack['quantity'], 2);
+
+                    // hay packs que estan en la tabla pym_packs pero que ya no existen como producto en prestashop
+                    if ($packAsProduct['price'] == 0 || $packAsProduct['pvp'] == 0) {
+                        continue;
+                    }
+
+                    if ($packAsProduct['pvp'] < $packAsProduct['price']) {
+                        $packAsProduct['pvp'] = $packAsProduct['price'];
+                    }
+
+                    if (stripos($categoria, 'alimentaci') !== false) {
+                        $nombreProducto = round((float)$this->infoAqua[$sku]['peso'], 2) . "Kg " . $producto['name'];
+                        $packAsProduct['unit_pricing_measure'] = $packAsProduct['peso'] . " kg";
+                    }
+
+                    $packAsProduct['gastosEnvio'] = $googleFeed->getGastosEnvio($packAsProduct['price']);
+
+                    $packAsProduct['url'] = $this->urlGenerator->getProductLink(
+                        ProductCode::fromSKU($packAsProduct['sku']),
+                        $shop,
+                        $producto['category_rewrite'],
+                        $producto['product_rewrite']
                     );
+                    //$pack['url'] = Context::getContext()->link->getProductLink($tokens[0], null, null, null, $lang, $shop, $tokens[1]);
+                    if (in_array($pack['id_pack'], $cuponesQueSoloAparecenDesdeGS)) {
+                        $packAsProduct['url'] .= '?' . md5('utm_gs') . '=1';
+                    }
+
+                    if (array_key_exists($pack['id_pack'], $cuponesAplicadosDirectamenteEnGS)) {
+                        if (strpos('?', $packAsProduct['url']) === false) {
+                            $packAsProduct['url'] .= '?';
+                        }
+                        $packAsProduct['url'] .= md5('utm_gs_dto') . '=' .
+                            ($cuponesAplicadosDirectamenteEnGS[$pack['id_pack']]['tipo'] === 'porcentaje' ? $cuponesAplicadosDirectamenteEnGS[$pack['id_pack']]['valor'] : 0);
+                    }
+
+                    // $pack['custom_label_0'] = $this->getCustomLabel0($packs[$sku]['id_pack']);
+                    $packAsProduct['custom_label_0'] = $producto['custom_label_0'];
+                    $packAsProduct['custom_label_1'] = $this->getCustomLabel1($producto['sku']);
+                    $packAsProduct['custom_label_2'] = $this->getCustomLabel2($pack['id_pack']);
+                    $packAsProduct['custom_label_3'] = $availability; // para la disponibilidad se coge el producto que va dentro del pack
+
+                    $precioPack = $packAsProduct['price'];
+                    if (array_key_exists($packAsProduct['sku'], $this->productosConPrecioEspecial)) {
+                        // los productos con precio especial se le calcula el margen con el descuento original no con el de special price
+                        $precioPack = $packAsProduct['pvp'] * (1 - ($this->productosConPrecioEspecial[$packAsProduct['sku']]['old_discount'] / 100));
+                    }
+
+                    if (array_key_exists($pack['id_pack'], $cuponesAplicadosDirectamenteEnGS)) {
+                        if ($cuponesAplicadosDirectamenteEnGS[$pack['id_pack']]['tipo'] === 'porcentaje') {
+                            $packAsProduct['price'] = round($packAsProduct['price'] * (1 - ($cuponesAplicadosDirectamenteEnGS[$pack['id_pack']]['valor'] / 100)), 2);
+                        } else {
+                            $packAsProduct['price'] = round($packAsProduct['price'] - $cuponesAplicadosDirectamenteEnGS[$pack['id_pack']]['valor'], 2);
+                        }
+                    }
+
+                    $salesPriceWithoutVat = $precioPack / $ivaDeCompra;
+                    if (isset($productsPrices[$packAsProduct['sku']]['fulfillment_price'])) {
+                        $grossMargin = round(($salesPriceWithoutVat - $productsPrices[$packAsProduct['sku']]['fulfillment_price']) / $salesPriceWithoutVat * 100, 2);
+                    } else {
+                        $coste = $this->infoAqua[$sku]['costeConIva'] / $ivaDeCompra;
+                        $grossMargin = $this->calculateGrossMargin(
+                            $coste,
+                            $precio / (1 + ((float)$producto['iva'] / 100)),
+                            $producto['peso'],
+                            (int)$pack['quantity']
+                        );
+                    }
+
+                    $packAsProduct['custom_label_4'] = $googleFeed->obtieneEtiquetaDeMargen($grossMargin, $packAsProduct['price']);
+
+                    //print_r($pack);
+                    $googleFeed->agregaPack($packAsProduct);
+
                 }
-
-                $pack['custom_label_4'] = $googleFeed->obtieneEtiquetaDeMargen($grossMargin, $pack['price']);
-
-                //print_r($pack);
-                $googleFeed->agregaPack($pack);
             }
         }
 
