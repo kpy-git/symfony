@@ -12,6 +12,7 @@ use App\ShippingCostCalculator\Domain\Exception\ShippingCostException;
 use App\ShippingCostCalculator\Domain\Service\CalculatorShippingCost;
 use App\Warehouse\Domain\Exception\WarehouseNotFoundException;
 use App\Warehouse\Domain\PaymentCommissionStrategy\OrderPaymentType;
+use App\Warehouse\Domain\SupplierPromotionHandler;
 use App\Warehouse\Domain\ValueObject\OrderMargin;
 use App\Warehouse\Domain\ValueObject\OrderMarginProduct;
 use App\Warehouse\Domain\ValueObject\Product;
@@ -21,11 +22,12 @@ use App\Warehouse\Query\QueryBus;
 readonly class OrderMarginCalculator
 {
     public function __construct(
-        private WarehouseFactory       $warehouseFactory,
-        private CalculatorShippingCost $calculatorShippingCost,
-        private QueryBus               $queryBus,
-        private KpyPublicApiInterface  $kpyPublicApi,
-        private ProductCostFinder      $productCostFinder,
+        private WarehouseFactory         $warehouseFactory,
+        private CalculatorShippingCost   $calculatorShippingCost,
+        private QueryBus                 $queryBus,
+        private KpyPublicApiInterface    $kpyPublicApi,
+        private ProductCostFinder        $productCostFinder,
+        private SupplierPromotionHandler $supplierPromotionHandler,
     )
     {
     }
@@ -61,6 +63,7 @@ readonly class OrderMarginCalculator
         $productsCost = 0;
 
         $orderProducts = $this->queryBus->fetch('kpy.warehouse.query.order_margin_products', ['id_order' => $orderId]);
+        $distrivetBrands = $this->queryBus->fetch('kpy.warehouse.query.distrivet_brands');
 
         foreach ($orderProducts as $orderProduct) {
             $productCode = ProductCode::fromSKU($orderProduct['sku']);
@@ -69,11 +72,17 @@ readonly class OrderMarginCalculator
 
             $orderWeight += $product->getWeight() * $orderProduct['quantity'];
 
+            $costPrice = $this->productCostFinder->getFinalCostPrice($productCode, $warehouse);
+
+            if (!in_array($product->getBrandId(), $distrivetBrands)) {
+                $costPrice = $this->supplierPromotionHandler->applyPromotionIfExists($product, $costPrice, $orderHeader['date_add']);
+            }
+
             $warehouseProduct = new Product(
                 $productCode,
                 $product->getBrandId(),
                 $product->getWeight(),
-                $this->productCostFinder->getFinalCostPrice($productCode, $warehouse)
+                $costPrice
             );
 
             $marginProduct = new OrderMarginProduct(

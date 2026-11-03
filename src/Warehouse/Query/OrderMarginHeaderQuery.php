@@ -30,6 +30,7 @@ readonly class OrderMarginHeaderQuery implements QueryInterface
                 o.total_paid_tax_excl,
                 o.total_discounts_tax_excl,
                 ow.warehouse,
+                o.date_add,
                 if(exists(select 1 from ps_order_history oh where o.id_order=oh.id_order and oh.id_order_state={$this->cancelledOS}), 1, 0) as `cancelled`
             from ps_orders o
             inner join ps_kpy_order_warehouse ow on ow.id_order = o.id_order
