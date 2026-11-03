@@ -21,7 +21,7 @@ readonly class DistrivetBrandsQuery implements QueryInterface
     public function fetch(array $params = []): array
     {
         return json_decode(
-            $this->kompyDatabase->getValue("select value from `ps_configuration` where value = 'KPY_DISTRIVET_MANUFACTURERS'") ?: "[]",
+            $this->kompyDatabase->getValue("select value from `ps_configuration` where name = 'KPY_DISTRIVET_MANUFACTURERS'") ?: "[]",
             true,
         );
     }
