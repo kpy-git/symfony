@@ -5,6 +5,7 @@ namespace App\Warehouse\Service;
 use App\Shared\Bus\Query\KpyQueryNotFoundException;
 use App\Shared\Domain\Exception\KpyInvalidProductCode;
 use App\Shared\Domain\Exception\KpyOrderNotFoundException;
+use App\Shared\Domain\Exception\KpyOrderNotValidException;
 use App\Shared\Domain\Exception\KpyProductNotFoundException;
 use App\Shared\Domain\ValueObject\ProductCode;
 use App\Shared\Infrastructure\API\KpyPublicApiInterface;
@@ -39,6 +40,7 @@ readonly class OrderMarginCalculator
      * @throws KpyQueryNotFoundException
      * @throws ShippingCostException
      * @throws KpyProductNotFoundException
+     * @throws KpyOrderNotValidException
      */
     public function computeMarginByOrder(int $orderId): OrderMargin
     {
@@ -49,7 +51,7 @@ readonly class OrderMarginCalculator
         }
 
         if ($orderHeader['cancelled'] > 0) {
-            throw new KpyOrderNotFoundException('Order cancelled: ' . $orderId);
+            throw new KpyOrderNotValidException('Order cancelled: ' . $orderId);
         }
 
         $orderMargin = new OrderMargin($orderId, $orderHeader['total_paid_tax_excl']);
