@@ -11,9 +11,8 @@ enum SupplierPromotionType: int
     public function applyPromotion(float $costPrice, float $value): float
     {
         return match ($this) {
-            self::ADDITIONAL_DTO => $costPrice * (1 - ($value / 100)),
+            self::ADDITIONAL_DTO, self::REDENCION => $costPrice * (1 - ($value / 100)),
             self::TEMPORARY_COST_PRICE => $value,
-            default => $costPrice,
         };
     }
 }
