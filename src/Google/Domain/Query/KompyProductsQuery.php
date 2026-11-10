@@ -42,7 +42,7 @@ readonly class KompyProductsQuery implements QueryInterface
                     ROUND((ps.price+ifnull(pas.price,0))*(1+(ifnull(t.rate, 0)/100)), 2) as pvp,
                     IF(EXISTS(select * FROM ps_category_product WHERE id_product=p.id_product AND id_category=2292), 'si', 'no') as OUTLET,
                     sa.quantity as `stock`,
-                    ifnull(gcl.custom_label_0, 'pmax') as `custom_label_0`
+                    ifnull(gcl.custom_label_0, 'excluir') as `custom_label_0`
                 FROM ps_product p
                 inner join ps_product_shop ps
                     on ps.id_product = p.id_product and ps.id_shop = {$shopId} and ps.active = 1 and ps.visibility = 'both'
