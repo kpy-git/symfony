@@ -1,4 +1,8 @@
+import '@fortawesome/fontawesome-free/css/fontawesome.min.css';
+import '@fortawesome/fontawesome-free/js/all.min.js';
+
 import './styles/app.css';
+import './components/form.js';
 
 document.addEventListener('DOMContentLoaded', () => {
     createCopyButtons();
@@ -9,7 +13,7 @@ export const createCopyButtons = () => {
         const nuevoElemento = duplicaElementoConBotonParaCopiar(el);
         el.parentNode.replaceChild(nuevoElemento, el);
     });
-    console.log(document.querySelectorAll('[data-copy]'));
+    //console.log(document.querySelectorAll('[data-copy]'));
 }
 
 const duplicaElementoConBotonParaCopiar = (el) => {

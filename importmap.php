@@ -24,9 +24,10 @@
  */
 return [
     'app' => ['path' => './assets/app.js', 'entrypoint' => true],
+    'identity' => ['path' => './assets/identity/identity.js', 'entrypoint' => true],
     'warehouse-fulfillment' => ['path' => './assets/warehouse/fulfillment.js', 'entrypoint' => true],
-    '@hotwired/stimulus' => ['version' => '3.2.2'],
-    '@symfony/stimulus-bundle' => ['path' => './vendor/symfony/stimulus-bundle/assets/dist/loader.js'],
-    '@hotwired/turbo' => ['version' => '8.0.23'],
     'qz-tray' => ['version' => '2.2.6'],
+    '@fortawesome/fontawesome-free' => ['version' => '7.3.1'],
+    '@fortawesome/fontawesome-free/css/fontawesome.min.css' => ['version' => '7.3.1', 'type' => 'css'],
+    '@fortawesome/fontawesome-free/js/all.min.js' => ['version' => '7.3.1'],
 ];

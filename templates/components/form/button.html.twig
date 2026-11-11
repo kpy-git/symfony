@@ -1,0 +1,26 @@
+{% set type = type|default('button') %}
+{% set variant = variant|default('primary') %}
+{% set fullWidth = full_width|default(false) %}
+{% set loading = loading|default(false) %}
+{% set disabled = disabled|default(false) %}
+
+<button
+    type="{{ type }}"
+    class="btn btn--{{ variant }}{% if fullWidth %} btn--full-width{% endif %}"
+    {% if disabled or loading %}disabled{% endif %}
+    {% if loading %}aria-busy="true"{% endif %}
+>
+
+    {% if loading %}
+        <span class="btn__spinner" aria-hidden="true"></span>
+    {% endif %}
+
+    <span class="btn__text">
+        {% if loading %}
+            {{ loading_text|default('Procesando...') }}
+        {% else %}
+            {{ text|default('Aceptar') }}
+        {% endif %}
+    </span>
+
+</button>

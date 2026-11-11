@@ -41,27 +41,27 @@ security:
             security: false
 
         ops_feeds:
-            host: ^ops\.kompymascotas\.com$
+            host: ^ops\.kompymascotas\.(test|com)$
             pattern: ^/feed/
             provider: feed_provider
             http_basic:
                 realm: "Acceso protegido"
 
         ops_margin:
-            host: ^ops\.kompymascotas\.com$
+            host: ^ops\.kompymascotas\.(test|com)$
             pattern: ^/margin/
             provider: margin_provider
             http_basic:
                 realm: "Acceso protegido"
 
         warehouse:
-            host: ^(warehouse\.kompymascotas\.com|warehouse\.localhost)$
+            host: ^warehouse\.kompymascotas\.(test|com)$
             provider: warehouse_provider
             http_basic:
                 realm: "Acceso protegido"
 
         ops:
-            host: ^ops\.kompymascotas\.com$
+            host: ^ops\.kompymascotas\.(test|com)$
             stateless: true
             provider: cron_provider
             access_token:
@@ -74,10 +74,11 @@ security:
                 login_path: app_login
                 check_path: app_login
                 enable_csrf: true
+                success_handler: App\Identity\Domain\Service\AuthenticationSuccessHandler
             logout:
                 path: app_logout
                 # where to redirect after logout
-                # target: app_any_route
+                target: app_login
             # Activate different ways to authenticate:
             # https://symfony.com/doc/current/security.html#the-firewall
 
@@ -87,14 +88,17 @@ security:
     role_hierarchy:
         ROLE_KOMPY: [ROLE_WAREHOUSE]
         ROLE_EVOLUTION: [ROLE_WAREHOUSE]
+        ROLE_ROOT: [ROLE_KOMPY, ROLE_WAREHOUSE, ROLE_USER]
 
     # Note: Only the *first* matching rule is applied
     access_control:
-        - { host: ^ops\.kompymascotas\.com$, path: ^/feed/google, roles: ROLE_FEED_GOOGLE }
-        - { host: ^ops\.kompymascotas\.com$, path: ^/feed/priceshape, roles: ROLE_FEED_PRICESHAPE }
-        - { host: ^ops\.kompymascotas\.com$, path: ^/margin, roles: ROLE_MARGIN }
-        - { host: ^ops\.kompymascotas\.com$, roles: ROLE_CRONJOB }
-        - { host: ^(warehouse\.kompymascotas\.com|warehouse\.localhost)$, roles: ROLE_WAREHOUSE}
+        - { host: ^ops\.kompymascotas\.(test|com)$, path: ^/feed/google, roles: ROLE_FEED_GOOGLE }
+        - { host: ^ops\.kompymascotas\.(test|com)$, path: ^/feed/priceshape, roles: ROLE_FEED_PRICESHAPE }
+        - { host: ^ops\.kompymascotas\.(test|com)$, path: ^/margin, roles: ROLE_MARGIN }
+        - { host: ^ops\.kompymascotas\.(test|com)$, roles: ROLE_CRONJOB }
+        - { host: ^warehouse\.kompymascotas\.(test|com)$, roles: ROLE_WAREHOUSE }
+        - { host: ^app\.kompymascotas\.(test|com)$, roles: ROLE_USER }
+        - { host: ^auth\.kompymascotas\.(test|com)$, roles: PUBLIC_ACCESS }
         # - { path: ^/admin, roles: ROLE_ADMIN }
         # - { path: ^/profile, roles: ROLE_USER }
 

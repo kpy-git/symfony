@@ -4,7 +4,7 @@ framework:
 
     # Note that the session will be started ONLY if you read or write from it.
     session:
-        cookie_domain: '.kompymascotas.com'
+        cookie_domain: '%env(SESSION_COOKIE_DOMAIN)%'
         cookie_secure: auto
         cookie_httponly: true
         cookie_samesite: lax

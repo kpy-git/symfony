@@ -1,7 +1,40 @@
+:root {
+    --color-primary: #2a5c68;
+    --color-primary-dark: #214c56;
+    --color-primary-light: #36798a;
+
+    --color-accent: #f2c965;
+    --color-accent-light: #fff0bd;
+
+    --color-brand-coral: #f58a87;
+
+    --color-cream: #fff5d8;
+    --color-background: #fbfaf7;
+
+    --color-text: #173f49;
+    --color-text-muted: #687780;
+
+    --color-border: #d9dee0;
+
+    --color-error: #e45d57;
+
+    --radius: .5rem;
+    --radius-sm: 8px;
+    --radius-md: 12px;
+    --radius-lg: 20px;
+
+    --shadow-card:
+        0 18px 45px rgba(31, 65, 73, 0.08),
+        0 4px 12px rgba(31, 65, 73, 0.04);
+
+    --transition: 180ms ease;
+}
+
 * {
     box-sizing: border-box;
     margin: 0;
     padding: 0;
+    font-family: "Nunito", sans-serif;
 }
 
 .sku {
@@ -22,6 +55,66 @@
     content: ']';
 }
 
-body {
-    background-color: skyblue;
+.copy {
+    margin-left: .5rem;
+}
+
+.copy-ok {
+    color: var(--bs-success);
+}
+
+.copy:hover:not(.copy-ok) {
+    cursor: pointer;
+    color: var(--bs-pink);
+}
+
+.message {
+    display: flex;
+    align-items: center;
+    gap: 1rem;
+    padding: .75rem;
+    border: 1px solid var(--message-color);
+    border-radius: var(--radius);
+    background: var(--message-bg);
+    color: var(--message-color);
+    line-height: 1.5;
+}
+
+.message__icon {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    flex-shrink: 0;
+    width: 28px;
+    font-size: 22px;
+    color: var(--message-icon);
+}
+
+.message__content {
+    flex: 1;
+    min-width: 0;
+}
+
+.message--error {
+    --message-bg: #FDECEC;
+    --message-color: #A83232;
+    --message-icon: #D94747;
+}
+
+.message--success {
+    --message-bg: #EAF6EE;
+    --message-color: #276B40;
+    --message-icon: #31965A;
+}
+
+.message--warning {
+    --message-bg: #FFF3E5;
+    --message-color: #925018;
+    --message-icon: #D98224;
+}
+
+.message--info {
+    --message-bg: #EAF4FA;
+    --message-color: #285D7A;
+    --message-icon: #4295BD;
 }

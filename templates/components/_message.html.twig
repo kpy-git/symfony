@@ -1,0 +1,22 @@
+
+{% set type = type|default('info') %}
+{% set icons = {
+    'error': 'fa-solid fa-circle-exclamation',
+    'success': 'fa-solid fa-circle-check',
+    'warning': 'fa-solid fa-triangle-exclamation',
+    'info': 'fa-solid fa-circle-info'
+} %}
+
+{% set validTypes = ['error', 'success', 'warning', 'info'] %}
+
+{% if type not in validTypes %}
+    {% set type = 'info' %}
+{% endif %}
+
+<div class="message message--{{ type }}" role="{{ type == 'error' or type == 'warning' ? 'alert' : 'status' }}">
+    <i class="message__icon {{ icon|default(icons[type]) }}" aria-hidden="true"></i>
+
+    <div class="message__content">
+        {{ message }}
+    </div>
+</div>

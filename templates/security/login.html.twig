@@ -1,0 +1,147 @@
+{% extends 'base.html.twig' %}
+
+{% block importmap %}{{ importmap(['app', 'identity']) }}{% endblock %}
+
+
+{% block title %}Iniciar sesión - Kompymascotas{% endblock %}
+
+{% block body %}
+    <div class="login-page">
+        <section class="login-brand">
+
+            <div class="login-brand__decoration login-brand__decoration--top"></div>
+            <div class="login-brand__decoration login-brand__decoration--bottom"></div>
+
+            <div class="login-brand__content">
+
+                <img
+                    src="{{ asset('images/logo-kompy.svg') }}"
+                    alt="Kompymascotas"
+                    class="login-brand__logo"
+                >
+
+                <div class="login-brand__separator"></div>
+
+                <div class="login-brand__message">
+                    <span>Cada mascota merece lo mejor.</span>
+                    <span>Nosotros nos encargamos.</span>
+                </div>
+
+            </div>
+
+        </section>
+
+        <section class="login-panel">
+            <div class="login-card">
+                <div class="login-card__header">
+                    <div class="login-card__header">
+                        <div class="login-card__icon" aria-hidden="true">
+                            <img src="{{ asset('favicon.svg') }}" alt="kompymascotas.com">
+                        </div>
+
+                        <h1>Iniciar sesión</h1>
+
+                        <div class="login-card__separator"></div>
+
+                    </div>
+
+                    <form method="post" class="login-form" action="{{ path('app_login') }}">
+                        {#
+                        <label for="username">Username</label>
+                        <input type="text" value="{{ last_username }}" name="_username" id="username" class="form-control" autocomplete="username" required autofocus>
+                        <label for="password">Password</label>
+                        <input type="password" name="_password" id="password" class="form-control" autocomplete="current-password" required>
+                        #}
+
+                        {% if error %}
+                            {% include 'components/_message.html.twig' with {
+                                type: 'error',
+                                message: 'El usuario o la contraseña no son válidos'
+                            } only %}
+                        {% endif %}
+
+                        <div class="form-group">
+                            <label for="username">
+                                Usuario
+                            </label>
+
+                            {% include 'components/form/input.html.twig' with {
+                                type: 'text',
+                                name: '_username',
+                                id: 'username',
+                                placeholder: 'Introduce tu nombre de usuario',
+                                value: last_username|default(''),
+                                autocomplete: 'username',
+                                icon: 'user',
+                                required: true,
+                                autofocus: true
+                            } %}
+                        </div>
+
+                        <div class="form-group">
+                            <label for="password">
+                                Contraseña
+                            </label>
+
+                            {% include 'components/form/input.html.twig' with {
+                                type: 'password',
+                                name: '_password',
+                                id: 'password',
+                                placeholder: 'Introduce tu contraseña',
+                                autocomplete: 'current-password',
+                                icon: 'lock',
+                                password_toggle: true,
+                                required: true
+                            } %}
+
+                        </div>
+
+                        <input type="hidden" name="_csrf_token" data-controller="csrf-protection"
+                               value="{{ csrf_token('authenticate') }}">
+
+                        {# See https://symfony.com/doc/current/security/remember_me.html #}
+                        <div class="login-form__remember">
+                            <label class="checkbox">
+                                <input id="_remember_me"
+                                       type="checkbox"
+                                       name="_remember_me"
+                                       value="1">
+                                <span class="checkbox__box"></span>
+                                <span class="checkbox__label">
+                            Recordarme
+                        </span>
+
+                            </label>
+                        </div>
+
+
+                        {% include 'components/form/button.html.twig' with {
+                            type: 'submit',
+                            text: 'Iniciar sesión',
+                            variant: 'primary',
+                            full_width: true
+                        } %}
+
+                        {% if app.user %}
+                            <div class="mb-3">
+                                You are logged in as {{ app.user.userIdentifier }}, <a
+                                    href="{{ logout_path() }}">Logout</a>
+                            </div>
+                        {% endif %}
+
+                    </form>
+
+                </div>
+            </div>
+
+            <footer class="login-footer">
+                <span>© {{ "now"|date("Y") }}</span>
+                <span>·</span>
+                <strong>Kompymascotas</strong>
+            </footer>
+
+        </section>
+    </div>
+
+
+{% endblock %}
