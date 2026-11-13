@@ -28,6 +28,18 @@
         0 4px 12px rgba(31, 65, 73, 0.04);
 
     --transition: 180ms ease;
+
+    --color-header: #1f424a;
+    --color-header-hover: #28515b;
+    --color-sidebar: var(--color-cream);
+    --color-sidebar-hover: rgba(242, 201, 101, 0.16);
+    --color-sidebar-active: var(--color-accent);
+    --color-surface: #ffffff;
+    --color-surface-hover: #f8faf9;
+    --color-border-light: #e9edef;
+
+    --header-height: 65px;
+    --sidebar-width: 216px;
 }
 
 * {

@@ -120,4 +120,9 @@ class User implements UserInterface, PasswordAuthenticatedUserInterface
             $this->roles[] = 'ROLE_ROOT';
         }
     }
+
+    public function getFullname(): string
+    {
+        return sprintf('%s %s', ucfirst($this->firstname), ucfirst($this->lastname));
+    }
 }

@@ -2,6 +2,7 @@ import '@fortawesome/fontawesome-free/css/fontawesome.min.css';
 import '@fortawesome/fontawesome-free/js/all.min.js';
 
 import './styles/app.css';
+import './styles/layout.css';
 import './components/form.js';
 
 document.addEventListener('DOMContentLoaded', () => {
@@ -40,7 +41,7 @@ const creaIconoCopiar = () => {
         const tooltip = new Tooltip(elIcono.querySelector('span[data-bs-toggle]'))
         navigator.clipboard.writeText(event.target.closest('[data-copy]').dataset.copy);
         elIcono.classList.add('copy-ok');
-        // si se hace con data-bs-trigger="click" luego  no se puede ocultar manualmente
+        // si se hace con data-bs-trigger="click" luego no se puede ocultar manualmente
         tooltip.show()
         setTimeout(() => {
             tooltip.hide();
@@ -48,4 +49,60 @@ const creaIconoCopiar = () => {
         }, 1500);
     }
     return elIcono;
+}
+
+const appLayout = document.querySelector('.app-layout');
+const sidebarToggle = document.querySelector('.header-sidebar-toggle');
+const sidebarToggleFooter = document.querySelector('.footer-sidebar-toggle');
+
+if (appLayout && sidebarToggle) {
+    sidebarToggle.addEventListener('click', () => {
+        togogleSidebar();
+    });
+    sidebarToggleFooter.addEventListener('click', () => {
+        togogleSidebar();
+    });
+}
+
+function togogleSidebar() {
+    const isHidden = appLayout.classList.toggle('sidebar-hidden');
+
+    sidebarToggle.setAttribute('aria-expanded', String(!isHidden));
+    sidebarToggle.setAttribute(
+        'aria-label',
+        isHidden ? 'Mostrar menú' : 'Ocultar menú'
+    );
+}
+
+
+const userDropdown = document.querySelector('.user-dropdown');
+
+if (userDropdown) {
+    const userMenu = userDropdown.querySelector('.user-menu');
+
+    const closeDropdown = () => {
+        userDropdown.classList.remove('open');
+        userMenu.setAttribute('aria-expanded', 'false');
+    };
+
+    userMenu.addEventListener('click', () => {
+        const isOpen = userDropdown.classList.toggle('open');
+
+        userMenu.setAttribute('aria-expanded', String(isOpen));
+    });
+
+    // Cerrar al hacer clic fuera
+    document.addEventListener('click', (event) => {
+        if (!userDropdown.contains(event.target)) {
+            closeDropdown();
+        }
+    });
+
+    // Cerrar con Escape
+    document.addEventListener('keydown', (event) => {
+        if (event.key === 'Escape') {
+            closeDropdown();
+            userMenu.focus();
+        }
+    });
 }
