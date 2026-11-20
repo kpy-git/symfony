@@ -369,22 +369,6 @@
     font-size: 0.85rem;
 }
 
-.btn {
-    display: inline-flex;
-    align-items: center;
-    justify-content: center;
-    gap: 10px;
-    min-height: 48px;
-    padding: 12px 24px;
-    border: 1px solid transparent;
-    border-radius: var(--radius-sm);
-    font-family: inherit;
-    font-size: 1rem;
-    font-weight: 700;
-    cursor: pointer;
-    transition: background var(--transition), border-color var(--transition), box-shadow var(--transition), transform var(--transition);
-}
-
 .btn--primary {
     background: var(--color-primary);
     border-color: var(--color-primary);

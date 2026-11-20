@@ -1,26 +1,27 @@
 {% set type = type|default('button') %}
 {% set variant = variant|default('primary') %}
 {% set fullWidth = full_width|default(false) %}
-{% set loading = loading|default(false) %}
 {% set disabled = disabled|default(false) %}
+{% set classes = classes|default(false) %}
+{% set attributes = attributes|default({}) %}
 
 <button
     type="{{ type }}"
-    class="btn btn--{{ variant }}{% if fullWidth %} btn--full-width{% endif %}"
-    {% if disabled or loading %}disabled{% endif %}
-    {% if loading %}aria-busy="true"{% endif %}
+    class="btn btn--{{ variant }}{% if fullWidth %} btn--full-width{% endif %} {% if classes %}{{ classes }}{% endif %}"
+    {% if disabled%}disabled{% endif %}
+    {% if loading_text is defined %}
+        data-loading-text="{{ loading_text|e('html_attr') }}"
+    {% endif %}
+    {% for name, value in attributes %}
+        {% if value is same as(true) %}
+            {{ name }}
+        {% elseif value is not same as(false) and value is not null %}
+            {{ name }}="{{ value|e('html_attr') }}"
+        {% endif %}
+    {% endfor %}
 >
 
-    {% if loading %}
-        <span class="btn__spinner" aria-hidden="true"></span>
-    {% endif %}
+    <span class="btn__spinner" aria-hidden="true"></span>
 
-    <span class="btn__text">
-        {% if loading %}
-            {{ loading_text|default('Procesando...') }}
-        {% else %}
-            {{ text|default('Aceptar') }}
-        {% endif %}
-    </span>
-
+    <span class="btn__text">{{ text|default('Aceptar') }}</span>
 </button>

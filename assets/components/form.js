@@ -1,4 +1,5 @@
 import '../styles/components/form.css';
+import '../styles/components/button.css';
 
 document.addEventListener('click', (event) => {
     const toggle = event.target.closest('[data-password-toggle]');

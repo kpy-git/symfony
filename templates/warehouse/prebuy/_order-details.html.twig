@@ -1,0 +1,127 @@
+
+<div class="order-detail__content">
+    <div class="order-products-wrapper">
+        <table class="order-products">
+            <thead>
+            <tr>
+                <th>Producto</th>
+                <th>Unidades</th>
+                <th>Stock en tienda</th>
+                <th>¿Añadir a lista de la compra?</th>
+            </tr>
+            </thead>
+            <tbody>
+
+            {% for product in products %}
+                <tr data-product-row data-sku="{{ product.sku }}">
+                    <td>
+                        <div class="order-product">
+                            <div class="order-product__info">
+                                <span class="order-product__brand">{{ product.brand }}</span>
+                                <span class="order-product__name">{{ product.name }} <a href="{{ product.url }}" target="_blank" class="order-product__url"><i class="fa-solid fa-up-right-from-square"></i></a></span>
+
+                                <span class="sku" data-copy="{{ product.sku }}">{{ product.sku }}</span>
+                            </div>
+                        </div>
+                    </td>
+
+                    <td>
+                        <span class="order-product__units">
+                            {{ product.units }}
+                        </span>
+                    </td>
+
+                    <td>
+                        <span class="order-product__stock {{ product.stock_class }}">
+                            {{ product.stock }}
+                        </span>
+                    </td>
+
+                    <td>
+                        {% if product.brand != 'Boske' %}
+                        <div class="order-product__purchase">
+
+                            <fieldset>
+                                <legend class="visually-hidden">
+                                    ¿Realizar pedido a proveedor para {{ product.name }}?
+                                </legend>
+
+                                <input
+                                    type="radio"
+                                    id="purchase-{{ order_id }}-{{ loop.index }}-no"
+                                    name="{{ order_id }}-products[{{ loop.index0 }}]"
+                                    value="no"
+                                    data-purchase-choice
+                                >
+
+                                <label for="purchase-{{ order_id }}-{{ loop.index }}-no">
+                                    No
+                                </label>
+
+                                <input
+                                    type="radio"
+                                    id="purchase-{{ order_id }}-{{ loop.index }}-yes"
+                                    name="{{ order_id }}-products[{{ loop.index0 }}]"
+                                    value="yes"
+                                    data-purchase-choice
+                                >
+
+                                <label for="purchase-{{ order_id }}-{{ loop.index }}-yes">
+                                    Sí
+                                </label>
+                            </fieldset>
+
+                            <div class="order-product__quantity" hidden>
+                                <button
+                                    type="button"
+                                    class="order-product__quantity-btn"
+                                    data-quantity-decrease
+                                    aria-label="Disminuir unidades"
+                                >
+                                    <i class="fa-solid fa-minus"></i>
+                                </button>
+
+                                <input
+                                    type="number"
+                                    name="products[{{ loop.index0 }}][quantity]"
+                                    value="{{ product.units }}"
+                                    min="0"
+                                    max="{{ product.units }}"
+                                    step="1"
+                                    inputmode="numeric"
+                                    aria-label="Unidades a pedir de {{ product.name }}"
+                                    data-purchase-quantity
+                                >
+
+                                <button
+                                    type="button"
+                                    class="order-product__quantity-btn"
+                                    data-quantity-increase
+                                    aria-label="Aumentar unidades"
+                                >
+                                    <i class="fa-solid fa-plus"></i>
+                                </button>
+                            </div>
+
+                        </div>
+                        {% endif %}
+                    </td>
+                </tr>
+            {% endfor %}
+
+            </tbody>
+        </table>
+    </div>
+
+    <div class="order-detail__footer">
+        {% include 'components/form/button.html.twig' with {
+            variant: 'primary',
+            text: 'Marcar como revisado',
+            classes: 'check-order',
+            disabled: true,
+            attributes: {
+                'data-mark-reviewed': ''
+            }
+        } %}
+    </div>
+</div>

@@ -1,0 +1,28 @@
+{% extends 'base.html.twig' %}
+
+{% block title %}Precompra{% endblock %}
+
+{% block javascripts %}
+    {% block importmap %}{{ importmap(['warehouse-prebuy', 'app']) }}{% endblock %}
+{% endblock %}
+
+{% block content %}
+    <header>
+        <h1>Pedidos pendientes</h1>
+        <p>Consulta el contenido de cada pedido y decide si es necesario realizar pedido a proveedor</p>
+    </header>
+
+    <section class="orders-list">
+        {% for order in orders %}
+            {% include 'warehouse/prebuy/_order-preview.html.twig' with {
+                order_id: order.order_id,
+                op_number: order.operation,
+                date_order: order.date
+            } %}
+        {% else %}
+            {% include 'components/_message.html.twig' with {
+                message: 'No hay ningún pedido pendiente para revisar'
+            } %}
+        {% endfor %}
+    </section>
+{% endblock %}

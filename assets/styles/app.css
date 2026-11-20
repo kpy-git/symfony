@@ -3,6 +3,10 @@
     --color-primary-dark: #214c56;
     --color-primary-light: #36798a;
 
+    --color-secondary: #A97DF1;
+    --color-secondary-dark: #8669B8;
+    --color-secondary-light: #F7F2FF;
+
     --color-accent: #f2c965;
     --color-accent-light: #fff0bd;
 
@@ -40,24 +44,53 @@
 
     --header-height: 65px;
     --sidebar-width: 216px;
+
+    --color-danger: #c74742;
+    --color-danger-light: #fbe9e7;
+
+    --color-warning: #a96b13;
+    --color-warning-light: #fff2d9;
+
+    --color-success: #287a52;
+    --color-success-light: #e5f3eb;
+
+    --color-info: #287e9a;
+    --color-info-light: #e5f3f8;
 }
 
 * {
     box-sizing: border-box;
     margin: 0;
     padding: 0;
+}
+
+body {
     font-family: "Nunito", sans-serif;
+    color: var(--color-text);
+    font-size: .95rem;
+}
+body.modal-open {
+    overflow: hidden;
+}
+
+a {
+    text-decoration: none;
+    color: inherit;
+}
+
+a:hover {
+    text-decoration: underline;
 }
 
 .sku {
     font-size: small;
-    color: deepskyblue;
+    color: var(--color-brand-coral);
 }
 
 .sku {
     margin-left: 5px;
     margin-right: 5px;
-    width: 100px;
+    min-width: 100px;
     font-weight: 600;
 }
 .sku::before {
@@ -68,16 +101,16 @@
 }
 
 .copy {
-    margin-left: .5rem;
+    margin-left: .25rem;
 }
 
 .copy-ok {
-    color: var(--bs-success);
+    color: var(--color-success);
 }
 
 .copy:hover:not(.copy-ok) {
     cursor: pointer;
-    color: var(--bs-pink);
+    color: var(--color-danger);
 }
 
 .message {
@@ -129,4 +162,130 @@
     --message-bg: #EAF4FA;
     --message-color: #285D7A;
     --message-icon: #4295BD;
+}
+
+
+.app-modal {
+    position: fixed;
+    inset: 0;
+    z-index: 9999;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 20px;
+
+    visibility: hidden;
+    opacity: 0;
+    pointer-events: none;
+
+    transition:
+        opacity .2s ease,
+        visibility .2s ease;
+}
+.app-modal [hidden] {
+    display: none !important;
+}
+.app-modal.is-visible {
+    visibility: visible;
+    opacity: 1;
+    pointer-events: auto;
+}
+
+.app-modal__backdrop {
+    position: absolute;
+    inset: 0;
+    background: rgba(20, 35, 40, .55);
+    backdrop-filter: blur(3px);
+}
+
+.app-modal__dialog {
+    position: relative;
+    width: 100%;
+    max-width: 520px;
+    padding: 28px;
+    border-radius: 16px;
+    background: #fff;
+    box-shadow: 0 15px 50px rgba(0, 0, 0, .18);
+
+    transform: translateY(12px) scale(.98);
+    transition: transform .2s ease;
+}
+
+.app-modal.is-visible .app-modal__dialog {
+    transform: translateY(0) scale(1);
+}
+
+.app-modal__header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    margin-bottom: 20px;
+}
+
+.app-modal__icon {
+    width: 48px;
+    height: 48px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    border-radius: 50%;
+    font-size: 22px;
+}
+
+.app-modal__close {
+    border: 0;
+    background: transparent;
+    color: var(--color-text-muted);
+    font-size: 20px;
+    cursor: pointer;
+}
+
+.app-modal__content h2 {
+    margin: 0 0 10px;
+    color: var(--color-text);
+    font-size: 1.35rem;
+    font-weight: 800;
+}
+
+.app-modal__content p {
+    margin: 0;
+    color: var(--color-text-muted);
+    line-height: 1.6;
+    white-space: pre-line;
+}
+
+.app-modal__footer {
+    display: flex;
+    justify-content: flex-end;
+    margin-top: 26px;
+}
+
+.app-modal__icon--success {
+    color: var(--color-success);
+    background: var(--color-success-light);
+}
+
+.app-modal__icon--error {
+    color: var(--color-danger);
+    background: var(--color-danger-light);
+}
+
+.app-modal__icon--warning {
+    color: var(--color-warning);
+    background: var(--color-warning-light);
+}
+
+.app-modal__icon--info {
+    color: var(--color-info);
+    background: var(--color-info-light);
+}
+
+.app-modal__accept i {
+    margin-inline: .5rem;
+}
+
+@media (max-width: 480px) {
+    .app-modal__dialog {
+        padding: 24px;
+    }
 }

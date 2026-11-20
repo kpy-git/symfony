@@ -95,9 +95,10 @@
         </header>
 
         <aside class="app-sidebar">
+            {% set currentRoute = app.request.attributes.get('_route') %}
             <nav class="sidebar-navigation" aria-label="Navegación principal">
                 {# INICIO #}
-                <a href="{{ path('app_index') }}" class="nav-item active">
+                <a href="{{ path('app_index') }}" class="nav-item {{ currentRoute == 'app_index' ? 'active': '' }}">
                     <i class="fa-solid fa-house" aria-hidden="true"></i>
                     <span>Inicio</span>
                 </a>
@@ -107,7 +108,7 @@
                     <span class="nav-section-title">Tienda</span>
 
                     {# PEDIDOS #}
-                    <details class="nav-group">
+                    <details class="nav-group" {{ currentRoute starts with 'warehouse_' ? 'open' : '' }}>
                         <summary class="nav-item">
                             <i class="fa-solid fa-cart-shopping" aria-hidden="true"></i>
                             <span>Pedidos</span>
@@ -115,16 +116,26 @@
                         </summary>
 
                         <div class="nav-submenu">
-                            <a href="#">Pedidos sin stock</a>
-                            <a href="#">Pendientes</a>
-                            <a href="#">Procesando</a>
-                            <a href="#">Enviados</a>
-                            <a href="#">Entregados</a>
-                            <a href="#">Cancelados</a>
+                            <a href="#">Preparación de pedidos</a>
+                        </div>
+                    </details>
+
+                    <details class="nav-group" {{ currentRoute starts with 'warehouse_' ? 'open' : '' }}>
+                        <summary class="nav-item">
+                            <i class="fa-solid fa-cart-shopping" aria-hidden="true"></i>
+                            <span>Compras</span>
+                            <i class="fa-solid fa-chevron-down nav-chevron" aria-hidden="true"></i>
+                        </summary>
+
+                        <div class="nav-submenu">
+                            <a href="{{ path('warehouse_prebuy_list') }}" class="nav-item {{ currentRoute == 'warehouse_prebuy_list' ? 'active': '' }}">Precompra</a>
+                            <a href="#">Propuesta de compra</a>
+                            <a href="#">Preparación de pedidos</a>
                         </div>
                     </details>
 
 
+                {% if is_granted('ROLE_ROOT') %}
                     <details class="nav-group">
                         <summary class="nav-item">
                             <i class="fa-solid fa-box" aria-hidden="true"></i>
@@ -156,7 +167,7 @@
                     </details>
                 </div>
 
-                {#
+
                 <div class="nav-section">
                     <span class="nav-section-title">Marketing</span>
 
@@ -208,10 +219,9 @@
                     </details>
 
                 </div>
-                #}
 
 
-                {% if is_granted('ROLE_ROOT') %}
+
                 {# SISTEMA #}
                     <div class="nav-section">
                         <span class="nav-section-title">Sistema</span>
@@ -243,6 +253,45 @@
         <main class="app-main">
             {% block content %}{% endblock %}
         </main>
+    </div>
+
+    <div id="app-modal" class="app-modal" aria-hidden="true">
+        <div class="app-modal__backdrop"></div>
+
+        <div class="app-modal__dialog"
+             role="dialog"
+             aria-modal="true"
+             aria-labelledby="app-modal-title"
+             aria-describedby="app-modal-message">
+
+            <div class="app-modal__header">
+                <h3 id="app-modal-title"></h3>
+
+                <button type="button"
+                        class="app-modal__close"
+                        aria-label="Cerrar">
+                    <i class="fa-solid fa-xmark"></i>
+                </button>
+            </div>
+
+            <div class="app-modal__content">
+                <div class="app-modal__icon" id="app-modal-icon"></div>
+                <div id="app-modal-message"></div>
+            </div>
+
+            <div class="app-modal__footer">
+                <button type="button"
+                        class="btn btn-secondary app-modal__cancel">
+                    Cerrar
+                </button>
+
+                <button type="button"
+                        class="btn btn-primary app-modal__accept">
+                    Aceptar
+                </button>
+            </div>
+
+        </div>
     </div>
 {% endblock %}
 </body>

@@ -4,17 +4,22 @@ import '@fortawesome/fontawesome-free/js/all.min.js';
 import './styles/app.css';
 import './styles/layout.css';
 import './components/form.js';
+import './components/modal.js';
 
 document.addEventListener('DOMContentLoaded', () => {
     createCopyButtons();
 });
 
-export const createCopyButtons = () => {
-    document.querySelectorAll('[data-copy]').forEach(el => {
-        const nuevoElemento = duplicaElementoConBotonParaCopiar(el);
-        el.parentNode.replaceChild(nuevoElemento, el);
+export const createCopyButtons = (el = document) => {
+    el.querySelectorAll('[data-copy]').forEach(item => {
+        createCopyButton(item);
     });
     //console.log(document.querySelectorAll('[data-copy]'));
+}
+
+export const createCopyButton = (el) => {
+    const nuevoElemento = duplicaElementoConBotonParaCopiar(el);
+    el.parentNode.replaceChild(nuevoElemento, el);
 }
 
 const duplicaElementoConBotonParaCopiar = (el) => {
@@ -38,15 +43,15 @@ const creaIconoCopiar = () => {
     elIcono.classList.add('copy');
     elIcono.innerHTML = `<span data-bs-toggle="tooltip" data-bs-title="¡Copiado!" data-bs-trigger="manual"><i class="fas fa-copy"></i><span></span>`;
     elIcono.onclick = (event) => {
-        const tooltip = new Tooltip(elIcono.querySelector('span[data-bs-toggle]'))
         navigator.clipboard.writeText(event.target.closest('[data-copy]').dataset.copy);
         elIcono.classList.add('copy-ok');
+        /*const tooltip = new Tooltip(elIcono.querySelector('span[data-bs-toggle]'))
         // si se hace con data-bs-trigger="click" luego no se puede ocultar manualmente
         tooltip.show()
         setTimeout(() => {
             tooltip.hide();
             elIcono.classList.remove('copy-ok');
-        }, 1500);
+        }, 1500);*/
     }
     return elIcono;
 }
@@ -57,14 +62,14 @@ const sidebarToggleFooter = document.querySelector('.footer-sidebar-toggle');
 
 if (appLayout && sidebarToggle) {
     sidebarToggle.addEventListener('click', () => {
-        togogleSidebar();
+        toggleSidebar();
     });
     sidebarToggleFooter.addEventListener('click', () => {
-        togogleSidebar();
+        toggleSidebar();
     });
 }
 
-function togogleSidebar() {
+function toggleSidebar() {
     const isHidden = appLayout.classList.toggle('sidebar-hidden');
 
     sidebarToggle.setAttribute('aria-expanded', String(!isHidden));
@@ -105,4 +110,61 @@ if (userDropdown) {
             userMenu.focus();
         }
     });
+}
+
+export const htmlToElement = (html) => {
+    const template = document.createElement('template');
+    template.innerHTML = html;
+    return template.content.firstChild;
+}
+
+
+
+export const makeFetchPost = async (url, params) => {
+    const response = await fetch(url, {
+        method: 'POST',
+        headers: new Headers({
+            'Content-type': 'application/x-www-form-urlencoded',
+            'Accept': 'application/json;charset=UTF-8',
+        }),
+        body: new URLSearchParams(params),
+    });
+
+    return response.json();
+}
+
+export const makeFetchJSON = async (url, data) => {
+    const response = await fetch(url, {
+        method: 'POST',
+        headers: new Headers({
+            'Content-Type': 'application/json;charset=UTF-8',
+            'Accept': 'application/json;charset=UTF-8',
+        }),
+        body: JSON.stringify(data),
+    });
+
+    return response.json();
+}
+
+const makeFetchCustom = async(url, params, method) => {
+    if (Object.keys(params).length) {
+        url += `?${new URLSearchParams(params).toString()}`;
+    }
+    const response = await fetch(url, {
+        method,
+        headers: {
+            'Content-type': 'application/x-www-form-urlencoded',
+            'Accept': 'application/json;charset=UTF-8',
+        },
+    });
+
+    return response.json();
+}
+
+export const makeFetchGet = async (url, params = {}) => {
+    return makeFetchCustom(url, params, 'GET');
+}
+
+export const makeFetchDelete = async (url) => {
+    return makeFetchCustom(url, {}, 'DELETE');
 }

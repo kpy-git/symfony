@@ -1,0 +1,38 @@
+<article class="order-item" id="order-{{ order_id }}" data-order="{{ order_id }}" data-operation="{{ op_number }}">
+
+    <button
+        class="order-preview"
+        type="button"
+        aria-expanded="false"
+        aria-controls="order-detail-{{ order_id }}"
+        data-order-trigger
+    >
+        <span class="order-preview__chevron" aria-hidden="true">
+            <i class="fa-solid fa-chevron-right"></i>
+        </span>
+
+        <span class="order-preview__loader" aria-hidden="true">
+            <i class="fa-solid fa-circle-notch fa-spin"></i>
+        </span>
+
+        <span class="order-preview__number">
+                #{{ order_id }}
+            </span>
+
+        <span class="order-preview__date">
+                <i class="fa-regular fa-calendar-days"
+                   aria-hidden="true"></i>
+
+                <time>{{ date_order|date("d/m/Y H:i") }}</time>
+            </span>
+    </button>
+
+    <div
+        class="order-detail"
+        id="order-detail-{{ order_id }}"
+        data-order-detail
+        hidden
+    >
+    </div>
+
+</article>
