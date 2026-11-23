@@ -12,6 +12,8 @@ framework:
     #esi: true
     #fragments: true
 
+    default_locale: es
+
 when@test:
     framework:
         test: true
