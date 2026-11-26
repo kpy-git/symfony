@@ -129,8 +129,7 @@
 
                         <div class="nav-submenu">
                             <a href="{{ path('warehouse_prebuy_list') }}" class="nav-item {{ currentRoute == 'warehouse_prebuy_list' ? 'active': '' }}">Precompra</a>
-                            <a href="#">Propuesta de compra</a>
-                            <a href="#">Preparación de pedidos</a>
+                            <a href="{{ path('warehouse_proposal_index') }}" class="nav-item {{ currentRoute == 'warehouse_proposal_index' ? 'active': '' }}">Propuesta de compra</a>
                         </div>
                     </details>
 
@@ -290,6 +289,19 @@
                     Aceptar
                 </button>
             </div>
+
+        </div>
+    </div>
+
+    <div id="modal-loading" class="loading-modal" aria-hidden="true">
+        <div class="loading-modal__backdrop"></div>
+
+        <div class="loading-modal__dialog"
+             role="dialog"
+             aria-modal="true"
+             aria-label="Cargando">
+
+            <div class="loading-modal__spinner"></div>
 
         </div>
     </div>

@@ -5,6 +5,7 @@ import './styles/app.css';
 import './styles/layout.css';
 import './components/form.js';
 import './components/modal.js';
+import {showLoadingModal} from "./components/modal.js";
 
 document.addEventListener('DOMContentLoaded', () => {
     createCopyButtons();
@@ -119,7 +120,6 @@ export const htmlToElement = (html) => {
 }
 
 
-
 export const makeFetchPost = async (url, params) => {
     const response = await fetch(url, {
         method: 'POST',
@@ -146,7 +146,7 @@ export const makeFetchJSON = async (url, data) => {
     return response.json();
 }
 
-const makeFetchCustom = async(url, params, method) => {
+const makeFetchCustom = async (url, params, method) => {
     if (Object.keys(params).length) {
         url += `?${new URLSearchParams(params).toString()}`;
     }
@@ -168,3 +168,28 @@ export const makeFetchGet = async (url, params = {}) => {
 export const makeFetchDelete = async (url) => {
     return makeFetchCustom(url, {}, 'DELETE');
 }
+
+document.addEventListener('click', async (event) => {
+    const link = event.target.closest('a[data-loading-navigation]');
+    if (!link) {
+        return;
+    }
+
+    // Respetar el comportamiento de apertura en otra pestaña.
+    if (
+        event.defaultPrevented ||
+        event.button !== 0 ||
+        event.ctrlKey ||
+        event.metaKey ||
+        event.shiftKey ||
+        event.altKey ||
+        link.target === '_blank'
+    ) {
+        return;
+    }
+
+    event.preventDefault();
+    showLoadingModal();
+    window.location.href = link.href;
+
+});

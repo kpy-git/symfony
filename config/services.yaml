@@ -36,6 +36,9 @@ services:
             $aquaDSN: '%env(AQUA_DSN)%'
             $aquaUser: '%env(AQUA_USER)%'
             $aquaPassword: '%env(AQUA_PASSWORD)%'
+            $aquaCompany: '%env(AQUA_COMPANY)%'
+            $aquaExercise: '%env(AQUA_EXERCISE)%'
+            $aquaDefaultWarehouse: '%env(AQUA_DEFAULT_WAREHOUSE)%'
 
             $kompyDbUser: '%env(KOMPY_DB_USER)%'
             $kompyDbPassword: '%env(KOMPY_DB_PASSWORD)%'

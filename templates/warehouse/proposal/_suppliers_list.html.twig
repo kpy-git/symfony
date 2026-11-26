@@ -1,0 +1,8 @@
+{% for supplier in suppliers %}
+    {% include 'warehouse/proposal/_supplier_preview.html.twig' with {supplier: supplier} %}
+{% else %}
+    {% include 'components/_message.html.twig' with {
+        type: 'success',
+        message: 'No es necesario hacer ningún pedido a proveedor'
+    } %}
+{% endfor %}

@@ -1,0 +1,104 @@
+{% extends 'warehouse/proposal/index.html.twig' %}
+
+{% block importmap %}{{ importmap(['warehouse-proposal', 'app']) }}{% endblock %}
+
+{% block content %}
+    <header>
+        <a class="btn btn--secondary" href="{{ path('warehouse_proposal_index') }}"><i class="fa-solid fa-chevron-left"></i></a>
+        <h1>Propuesta de compra</h1>
+        {% if orderTotal.taxExcl < supplier.minPurchaseAmount %}<button class="btn btn--primary">Completar importe mínimo</button>{% endif %}
+        <button id="btn__create-order-supplier" class="btn btn--danger">Crear pedido</button>
+    </header>
+
+    <section class="supplier-details" data-supplier="{{ supplier.code }}">
+        <div class="supplier-details__name">{{ supplier.name }}</div>
+        <div class="supplier-details__note"><i class='fas fa-clock'></i> {{ supplier.cutoffTime }} - {{ supplier.minPurchaseAmount|format_currency('EUR') }} de pedido mínimo</div>
+    </section>
+
+    <section class="supplier-table-products">
+        <table class="table-order">
+            <thead>
+            <tr>
+                <th>
+                    <input type="checkbox" checked aria-label="Seleccionar todos" id="master-checkbox">
+                </th>
+                <th>SKU</th>
+                <th>EAN</th>
+                <th>Referencia</th>
+                <th>Producto</th>
+                <th>Stock disponible</th>
+                <th>Unidades</th>
+                <th>Importe</th>
+                <th>Total</th>
+                <th>Compra mínima</th>
+            </tr>
+            </thead>
+
+            <tbody>
+            {% for product in products %}
+                <tr
+                    data-sku="{{ product.productCode }}"
+                    data-weight="{{ product.weight }}"
+                    data-volume="{{ product.volume }}"
+                    data-tariff="{{ product.tariff }}"
+                    data-discount="{{ product.discount }}"
+                    data-iva="{{ product.tax.aquaType }}"
+                >
+                    <td>
+                        <input
+                            type="checkbox"
+                            checked
+                            aria-label="Seleccionar {{ product.name }}"
+                        >
+                    </td>
+
+                    <td><span data-copy="{{ product.productCode }}">{{ product.productCode }}</span></td>
+                    <td><span data-copy="{{ product.ean }}">{{ product.ean }}</span> </td>
+                    <td><span data-copy="{{ product.reference }}">{{ product.reference }}</span></td>
+                    <td class="product-name">{{ product.name }} <a href="{{ product.url }}" class="url" target="_blank"><i class="fa-solid fa-up-right-from-square"></i></a></td>
+                    <td class="text-center">{{ product.stockAvailable }}</td>
+
+                    <td>
+                        <input
+                            type="number"
+                            name="quantity"
+                            value="{{ max(product.units, product.minimalQuantity) }}"
+                            min="{{ product.minimalQuantity }}"
+                            class="form-control order-quantity"
+                            step="{{ product.minimalQuantity }}"
+                        >
+                    </td>
+
+                    <td class="text-end" data-unit-price="{{ product.unitPriceTaxExcl }}">
+                        {{ product.unitPriceTaxExcl|format_currency('EUR') }}
+                    </td>
+
+                    <td class="text-end" data-total-amount="{{ product.totalPriceTaxExcl }}">
+                        {{ product.totalPriceTaxExcl|format_currency('EUR') }}
+                    </td>
+
+                    <td class="text-center">
+                        {{ product.minimalQuantity }}
+                    </td>
+                </tr>
+            {% endfor %}
+            </tbody>
+
+            <tfoot>
+            <tr>
+                <td colspan="6"></td>
+                <th colspan="2" class="text-end">Total del pedido:</th>
+                <td class="text-end" data-order-total="{{ orderTotal.taxExcl }}">
+                    {{ orderTotal.taxExcl|format_currency('EUR') }}
+                </td>
+                <td>&nbsp;</td>
+            </tr>
+            <tr>
+                <td colspan="7"></td>
+                <td></td>
+            </tr>
+            </tfoot>
+        </table>
+
+    </section>
+{% endblock %}

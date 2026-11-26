@@ -1,0 +1,16 @@
+{% extends 'base.html.twig' %}
+
+{% block title %}Propuesta de compra{% endblock %}
+
+{% block importmap %}{{ importmap(['warehouse-proposal-list', 'app']) }}{% endblock %}
+
+{% block content %}
+    <header>
+        <h1>Propuesta de compra</h1>
+        <button id="btn__refresh" class="btn btn--secondary"><i class="fa-solid fa-rotate-left"></i></button>
+    </header>
+
+    <section class="suppliers-list">
+
+    </section>
+{% endblock %}

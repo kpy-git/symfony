@@ -27,7 +27,7 @@ class MandatoryParamsRequestPolicy extends RequestPolicy
         try {
             $requestParams = $context->request->getContentTypeFormat() === 'json'
                 ? array_keys(json_decode($context->request->getContent(), true, 512, JSON_THROW_ON_ERROR))
-                : $context->request->request->keys();
+                : $context->request->getPayload()->keys();
 
             $this->missingMandatoryParams = array_diff($context->options[parent::MANDATORY_PARAMS], $requestParams);
 

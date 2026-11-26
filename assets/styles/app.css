@@ -56,6 +56,9 @@
 
     --color-info: #287e9a;
     --color-info-light: #e5f3f8;
+
+    --fs-small: .9rem;
+    --fs-mini: .85rem;
 }
 
 * {
@@ -71,6 +74,12 @@ body {
 }
 body.modal-open {
     overflow: hidden;
+}
+
+.hidden {
+    display: none;
+    visibility: hidden;
+    opacity: 0;
 }
 
 a {
@@ -102,6 +111,7 @@ a:hover {
 
 .copy {
     margin-left: .25rem;
+    color: var(--color-brand-coral);
 }
 
 .copy-ok {
@@ -111,6 +121,28 @@ a:hover {
 .copy:hover:not(.copy-ok) {
     cursor: pointer;
     color: var(--color-danger);
+}
+
+.url {
+    color: var(--color-secondary);
+}
+
+.url:hover {
+    color: var(--color-secondary-dark);
+}
+
+.text-center {
+    text-align: center;
+}
+
+.text-right,
+.text-end {
+    text-align: right;
+}
+
+.text-left,
+.text-start {
+    text-align: left;
 }
 
 .message {
@@ -206,9 +238,20 @@ a:hover {
     border-radius: 16px;
     background: #fff;
     box-shadow: 0 15px 50px rgba(0, 0, 0, .18);
-
     transform: translateY(12px) scale(.98);
     transition: transform .2s ease;
+}
+
+.app-modal__dialog--sm {
+    max-width: 300px;
+}
+
+.app-modal__dialog--xl {
+    max-width: 1140px;
+}
+
+.app-modal__dialog--xxl {
+    max-width: 1320px;
 }
 
 .app-modal.is-visible .app-modal__dialog {
@@ -287,5 +330,61 @@ a:hover {
 @media (max-width: 480px) {
     .app-modal__dialog {
         padding: 24px;
+    }
+}
+
+/* Loading modal */
+.loading-modal {
+    position: fixed;
+    inset: 0;
+    z-index: 9999;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    visibility: hidden;
+    opacity: 0;
+    pointer-events: none;
+    transition:
+        opacity 0.2s ease,
+        visibility 0.2s ease;
+}
+
+.loading-modal.is-visible {
+    visibility: visible;
+    opacity: 1;
+    pointer-events: auto;
+}
+
+.loading-modal__backdrop {
+    position: absolute;
+    inset: 0;
+    background: rgba(0, 0, 0, 0.45);
+}
+
+.loading-modal__dialog {
+    position: relative;
+    z-index: 1;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 90px;
+    height: 90px;
+    background: var(--color-background);
+    border-radius: 12px;
+    box-shadow: 0 8px 30px rgba(0, 0, 0, 0.15);
+}
+
+.loading-modal__spinner {
+    width: 42px;
+    height: 42px;
+    border: 4px solid var(--color-border);
+    border-top-color: var(--color-primary);
+    border-radius: 50%;
+    animation: loading-spin 0.8s linear infinite;
+}
+
+@keyframes loading-spin {
+    to {
+        transform: rotate(360deg);
     }
 }

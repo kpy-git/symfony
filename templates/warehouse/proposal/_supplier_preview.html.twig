@@ -1,0 +1,6 @@
+<a class="card-supplier-preview {{ supplier.CssClass }}" href="{{ path('warehouse_proposal_supplier', {supplierCode: supplier.code}) }}" data-loading-navigation>
+    <h4 class="supplier-preview__name">{{ supplier.name }}</h4>
+    <span class="supplier-preview__cutoff-time"><i class='fas fa-clock'></i>{{ supplier.cutoffTime }}</span>
+    <span class="supplier-preview__total">{{ supplier.total|format_currency('EUR', locale: 'es') }} | {{ supplier.lines }} líneas</span>
+    <span class="supplier-preview__min">min: {{ supplier.minAmount|format_currency('EUR') }}</span>
+</a>

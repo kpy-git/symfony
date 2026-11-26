@@ -82,6 +82,20 @@ const AppModal = (() => {
 
         previousFocus = document.activeElement;
 
+        modal.classList.remove(
+            'app-modal__dialog--sm',
+            'app-modal__dialog--xl',
+            'app-modal__dialog--xxl'
+        );
+
+        const size = ['sm', 'xl', 'xxl'].includes(options.size)
+            ? options.size
+            : '';
+
+        if (size !== '') {
+            modal.classList.add(`app-modal__dialog--${size}`);
+        }
+
         modal.classList.add('is-visible');
         modal.setAttribute('aria-hidden', 'false');
 
@@ -243,4 +257,16 @@ export const showConfirmModal = (
     confirmText = 'Confirmar'
 ) => {
     AppModal.showConfirm(options, callback, cancelText, confirmText);
+}
+
+const loadingModalElement = document.getElementById('modal-loading');
+
+export const showLoadingModal = ()  => {
+    loadingModalElement.classList.add('is-visible');
+    loadingModalElement.setAttribute('aria-hidden', 'false');
+}
+
+export const hideLoadingModal = () => {
+    loadingModalElement.classList.remove('is-visible');
+    loadingModalElement.setAttribute('aria-hidden', 'true');
 }

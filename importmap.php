@@ -27,6 +27,8 @@ return [
     'identity' => ['path' => './assets/identity/identity.js', 'entrypoint' => true],
     'warehouse-fulfillment' => ['path' => './assets/warehouse/fulfillment.js', 'entrypoint' => true],
     'warehouse-prebuy' => ['path' => './assets/warehouse/prebuy.js', 'entrypoint' => true],
+    'warehouse-proposal' => ['path' => './assets/warehouse/proposal.js', 'entrypoint' => true],
+    'warehouse-proposal-list' => ['path' => './assets/warehouse/proposal-list.js', 'entrypoint' => true],
     'qz-tray' => ['version' => '2.2.6'],
     '@fortawesome/fontawesome-free' => ['version' => '7.3.1'],
     '@fortawesome/fontawesome-free/css/fontawesome.min.css' => ['version' => '7.3.1', 'type' => 'css'],

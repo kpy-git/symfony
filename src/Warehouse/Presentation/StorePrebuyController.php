@@ -18,7 +18,7 @@ use Symfony\Component\Routing\Attribute\Route;
 class StorePrebuyController extends AbstractController
 {
     public function __construct(
-        private readonly OrderPrebuyProvider $orderPrebuyProvider,
+        private readonly OrderPrebuyProvider   $orderPrebuyProvider,
         private readonly JsonResponseGenerator $jsonResponseGenerator)
     {
     }
