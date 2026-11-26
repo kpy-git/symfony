@@ -53,7 +53,7 @@ readonly class OrderPrebuyProvider
     {
         return match (true) {
             $stock > $units => 'is-sufficient',
-            $stock > 0 && $units - $stock > 0 => 'is-low',
+            $stock > 0 && $units - $stock <= 0 => 'is-low',
             default => 'is-unavailable',
         };
     }
