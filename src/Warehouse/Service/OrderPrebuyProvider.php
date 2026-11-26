@@ -40,8 +40,8 @@ readonly class OrderPrebuyProvider
                 'name' => ucwords(mb_strtolower($row['PRODUCTO'])),
                 'brand' => ucwords(mb_strtolower($row['MARCA'])),
                 'units' => (int)$row['UNIDADES'],
-                'stock' => max(0, (int)$row['STOCK']),
-                'stock_class' => $this->getStockClass((int)$row['UNIDADES'], (int)$row['STOCK']),
+                'stock' => max(0, (int)$row['UNIDADES'] + (int)$row['STOCK']),
+                'stock_class' => $this->getStockClass((int)$row['UNIDADES'], (int)$row['UNIDADES'] + (int)$row['STOCK']),
                 'url' => $this->urlGenerator->generateProductLink(ProductCode::fromSKU($row['SKU']))
             ];
         }, $this->queryBus->fetch('kpy.warehouse.query.prebuy_order_products', [
@@ -52,8 +52,8 @@ readonly class OrderPrebuyProvider
     private function getStockClass(int $units, int $stock): string
     {
         return match (true) {
-            $stock > $units => 'is-sufficient',
-            $stock > 0 && $units - $stock <= 0 => 'is-low',
+            $stock >= $units => 'is-sufficient',
+            $stock > 0 && $units - $stock < 0 => 'is-low',
             default => 'is-unavailable',
         };
     }
