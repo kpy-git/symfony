@@ -118,7 +118,7 @@ document.addEventListener('click', async (event) => {
 
 function getArrayProductsFromDetail(orderDetail) {
     return Array.from(orderDetail.querySelectorAll('[data-sku]'))
-        .filter((item) => item.querySelector('[data-purchase-choice]:checked').value === 'yes')
+        .filter((item) => item.querySelector('[data-purchase-choice]:checked')?.value === 'yes')
         .map((item) => {
             return {sku: item.dataset.sku, quantity: Number(item.querySelector('[data-purchase-quantity]').value)}
         });
