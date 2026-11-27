@@ -18,14 +18,14 @@ class Pvpr
     #[ORM\Column(options: ["unsigned" => true])]
     private ?int $id_product_attribute = null;
 
-    #[ORM\Column(length: 2)]
-    private ?string $country = null;
+    #[ORM\Column(length: 2, options: ["default" => 'es'])]
+    private string $country;
 
-    #[ORM\Column(type: Types::DECIMAL, precision: 6, scale: 2)]
-    private ?string $pvpr = null;
+    #[ORM\Column(type: Types::DECIMAL, precision: 6, scale: 2, options: ['default' => 0])]
+    private string $pvpr = "0.00";
 
-    #[ORM\Column(type: Types::DECIMAL, precision: 6, scale: 2)]
-    private ?string $minPvp = null;
+    #[ORM\Column(type: Types::DECIMAL, precision: 6, scale: 2, options: ['default' => 0])]
+    private string $minPvp = "0.00";
 
 
     public function getIdProduct(): ?int
