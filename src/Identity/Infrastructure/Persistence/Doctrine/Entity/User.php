@@ -32,6 +32,9 @@ class User implements UserInterface, PasswordAuthenticatedUserInterface
     #[ORM\Column(length: 50)]
     private ?string $username = null;
 
+    #[ORM\Column(length: 50, nullable: true, options: ['default' => null])]
+    private ?string $avatar = null;
+
     #[ORM\Column]
     private array $roles = [];
 
@@ -124,5 +127,20 @@ class User implements UserInterface, PasswordAuthenticatedUserInterface
     public function getFullname(): string
     {
         return sprintf('%s %s', ucfirst($this->firstname), ucfirst($this->lastname));
+    }
+
+    public function getAvatar(): ?string
+    {
+        if (in_array('ROLE_ROOT', $this->roles, true)) {
+            return 'admin.svg';
+        }
+
+        return $this->avatar ?? '0.svg';
+    }
+
+    public function setAvatar(?string $avatar): User
+    {
+        $this->avatar = $avatar;
+        return $this;
     }
 }

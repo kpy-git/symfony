@@ -60,7 +60,7 @@
                         aria-expanded="false"
                         aria-controls="user-dropdown-menu"
                     >
-                        <img src="{{ asset('images/avatars/admin.svg') }}" alt="{{ app.user.userIdentifier }}">
+                        <img src="{{ asset('images/avatars/' ~ app.user.avatar) }}" alt="{{ app.user.userIdentifier }}">
 
                         <span class="user-info">
             <strong>{{ app.user.userIdentifier }}</strong>
@@ -72,7 +72,7 @@
                     <div class="user-dropdown-menu" id="user-dropdown-menu">
 
                         <div class="user-dropdown-header">
-                            <img src="{{ asset('images/avatars/admin.svg') }}" alt="{{ app.user.userIdentifier }}">
+                            <img src="{{ asset('images/avatars/' ~ app.user.avatar) }}" alt="{{ app.user.userIdentifier }}">
 
                             <div>
                                 <strong>{{ app.user.fullname }}</strong>

@@ -43,4 +43,13 @@ class CreateUserInput
             $this->lastName = ucwords(trim($value));
         }
     }
+
+    #[Argument]
+    #[Ask('Avatar (presiona Enter para usar el avatar por defecto)')]
+    public string $avatar {
+        set(?string $value) {
+            $this->avatar = $value ?? '0.svg';
+        }
+    }
+
 }

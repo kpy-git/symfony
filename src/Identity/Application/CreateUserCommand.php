@@ -43,7 +43,8 @@ readonly class CreateUserCommand
                 ->setUsername(strtolower($userInput->username))
                 ->setEmail(strtolower($userInput->email))
                 ->setFirstname($userInput->firstName)
-                ->setLastname($userInput->lastName);
+                ->setLastname($userInput->lastName)
+                ->setAvatar($userInput->avatar);
 
             $user->setPassword($passwordHasher->hashPassword($user, $userInput->password));
 
