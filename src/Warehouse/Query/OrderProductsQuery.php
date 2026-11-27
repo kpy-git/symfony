@@ -35,7 +35,7 @@ readonly class OrderProductsQuery implements QueryInterface
                 group by kp.id_product_pack
                 having count(*) = 1
                 ) kp on kp.id_product_pack = CONCAT_WS('-', od.product_id, od.product_attribute_id)
-            where o.id_order = {$params['id_order']})
+            where o.id_order = {$params['id_order']} and od.product_id not in(4606, 4607, 8288, 8287))
             select orderlines.id_product,
                    orderlines.id_product_attribute,
                    sum(orderlines.quantity) as `quantity`,
