@@ -24,6 +24,9 @@ class Pvpr
     #[ORM\Column(type: Types::DECIMAL, precision: 6, scale: 2)]
     private ?string $pvpr = null;
 
+    #[ORM\Column(type: Types::DECIMAL, precision: 6, scale: 2)]
+    private ?string $minPvp = null;
+
 
     public function getIdProduct(): ?int
     {
@@ -70,6 +73,17 @@ class Pvpr
     {
         $this->pvpr = $pvpr;
 
+        return $this;
+    }
+
+    public function getMinPvp(): ?string
+    {
+        return $this->minPvp;
+    }
+
+    public function setMinPvp(?string $minPvp): static
+    {
+        $this->minPvp = $minPvp;
         return $this;
     }
 }
