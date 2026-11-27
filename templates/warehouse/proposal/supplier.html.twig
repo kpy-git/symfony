@@ -55,7 +55,11 @@
                     <td><span data-copy="{{ product.productCode }}">{{ product.productCode }}</span></td>
                     <td><span data-copy="{{ product.ean }}">{{ product.ean }}</span> </td>
                     <td><span data-copy="{{ product.reference }}">{{ product.reference }}</span></td>
-                    <td class="product-name">{{ product.name }} <a href="{{ product.url }}" class="url" target="_blank"><i class="fa-solid fa-up-right-from-square"></i></a></td>
+                    <td class="product-name">{{ product.name }}
+                        {% if product.url is not null %}
+                            <a href="{{ product.url }}" class="url" target="_blank"><i class="fa-solid fa-up-right-from-square"></i></a>
+                        {% endif %}
+                    </td>
                     <td class="text-center">{{ product.stockAvailable }}</td>
 
                     <td>

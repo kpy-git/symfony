@@ -18,8 +18,11 @@
                         <div class="order-product">
                             <div class="order-product__info">
                                 <span class="order-product__brand">{{ product.brand }}</span>
-                                <span class="order-product__name">{{ product.name }} <a href="{{ product.url }}" target="_blank" class="order-product__url"><i class="fa-solid fa-up-right-from-square"></i></a></span>
-
+                                <span class="order-product__name">{{ product.name }}
+                                {% if product.url %}
+                                    <a href="{{ product.url }}" target="_blank" class="order-product__url"><i class="fa-solid fa-up-right-from-square"></i></a>
+                                {% endif %}
+                                </span>
                                 <span class="sku" data-copy="{{ product.sku }}">{{ product.sku }}</span>
                             </div>
                         </div>

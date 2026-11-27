@@ -31,13 +31,17 @@ readonly class UrlGenerator
         return "https://{$shop->getDomain()}/{$imageId}-{$format}/{$linkRewrite}.jpg";
     }
 
-    public function generateProductLink(ProductCode $productCode, Shop $shop = Shop::KOMPY_ES): string
+    public function generateProductLink(ProductCode $productCode, Shop $shop = Shop::KOMPY_ES): ?string
     {
         $rewrites = $this->queryBus->fetch('kpy.shared.query.rewrite_elements_by_product', [
             'id_product' => $productCode->getProductId(),
             'id_lang' => $shop->getLanguageId(),
             'id_shop' => $shop->getId(),
         ]);
+
+        if (empty($rewrites)) {
+            return null;
+        }
 
         return $this->getProductLink($productCode, $shop, $rewrites['category_rewrite'], $rewrites['product_rewrite']);
     }
